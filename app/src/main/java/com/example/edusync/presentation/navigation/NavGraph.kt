@@ -41,7 +41,7 @@ fun Navigator(navController: NavHostController) {
         composable(NavRoutes.ChangePassword.route) {
             ChangePasswordAfterForgotScreen(navController)
         }
-        composable(NavRoutes.InfoStudent.route) {
+        composable(NavRoutes.InfoScreen.route) {
             InfoStudentScreen(navController)
         }
     }
