@@ -78,7 +78,7 @@ fun BaseTextField(
         label = "borderColorAnimation"
     )
 
-    Column(modifier = modifier.padding(vertical = 5.dp)) {
+    Column {
         Box(
             modifier = Modifier
                 .fillMaxWidth()

@@ -90,7 +90,7 @@ fun Login(navController: NavController) {
                         errorMessage = state.emailError
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     PasswordTextField(
                         value = state.password ?: "",
@@ -99,7 +99,7 @@ fun Login(navController: NavController) {
                         errorMessage = state.passwordError
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -108,18 +108,17 @@ fun Login(navController: NavController) {
                         Text(
                             text = "Забыли пароль?",
                             modifier = Modifier
-                                .clickable { navController.navigate(NavRoutes.ForgotPassword.route) }
-                                .padding(top = 8.dp, bottom = 8.dp, end = 8.dp),
+                                .clickable { navController.navigate(NavRoutes.ForgotPassword.route) },
                             style = AppTypography.body1.copy(fontSize = 16.sp),
                             color = AppColors.Primary
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
                         onClick = {
-                            navController.navigate(NavRoutes.InfoStudent.route)
+                            navController.navigate(NavRoutes.MainScreen.route)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = AppColors.Primary

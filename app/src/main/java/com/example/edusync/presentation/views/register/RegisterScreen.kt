@@ -88,7 +88,7 @@ fun RegisterScreen(navController: NavController) {
                 errorMessage = state.emailError
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             PasswordTextField(
                 value = state.password ?: "",
@@ -97,7 +97,7 @@ fun RegisterScreen(navController: NavController) {
                 errorMessage = state.passwordError
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             PasswordTextField(
                 label = "Подтвердите пароль",
@@ -139,9 +139,9 @@ fun RegisterScreen(navController: NavController) {
             Button(
                 onClick = {
                     if (isTeacherSelected) {
-                        navController.navigate(NavRoutes.InfoTeacher.route)
+                        navController.navigate(NavRoutes.InfoScreen.route)
                     } else {
-                        navController.navigate(NavRoutes.InfoStudent.route)
+                        navController.navigate(NavRoutes.InfoScreen.route)
                     }
                 },
                 modifier = Modifier

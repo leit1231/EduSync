@@ -10,6 +10,7 @@ import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.views.changePasswordAfterForgot.ChangePasswordAfterForgotScreen
 import com.example.edusync.presentation.views.enterCode.EnterCodeScreen
 import com.example.edusync.presentation.views.forgotPassword.ForgotPasswordScreen
+import com.example.edusync.presentation.views.infoScreen.InfoStudentScreen
 import com.example.edusync.presentation.views.login.Login
 import com.example.edusync.presentation.views.onboarding.onboarding_navigation_pager.OnboardingPagerScreen
 import com.example.edusync.presentation.views.register.RegisterScreen
@@ -39,6 +40,9 @@ fun Navigator(navController: NavHostController) {
         }
         composable(NavRoutes.ChangePassword.route) {
             ChangePasswordAfterForgotScreen(navController)
+        }
+        composable(NavRoutes.InfoStudent.route) {
+            InfoStudentScreen(navController)
         }
     }
 }

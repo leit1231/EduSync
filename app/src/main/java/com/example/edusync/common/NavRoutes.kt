@@ -8,6 +8,6 @@ sealed class NavRoutes(val route: String) {
     object ForgotPassword : NavRoutes("forgot_password")
     object EnterCode : NavRoutes("enter_code")
     object ChangePassword : NavRoutes("change_password")
-    object InfoStudent: NavRoutes("info_student")
-    object InfoTeacher: NavRoutes("info_teacher")
+    object InfoScreen: NavRoutes("info_student")
+    object MainScreen: NavRoutes("main_screen_student")
 }

@@ -3,6 +3,7 @@ package com.example.edusync.di
 import com.example.edusync.presentation.viewModels.changePasswordAfterForgot.ChangePasswordAfterForgotViewModel
 import com.example.edusync.presentation.viewModels.enterCode.EnterCodeViewModel
 import com.example.edusync.presentation.viewModels.forgotPassword.ForgotPasswordViewModel
+import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewModel
 import com.example.edusync.presentation.viewModels.login.LoginViewModel
 import com.example.edusync.presentation.viewModels.register.RegisterViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -14,4 +15,5 @@ val viewModelModule = module {
     viewModel { ForgotPasswordViewModel() }
     viewModel { EnterCodeViewModel() }
     viewModel { ChangePasswordAfterForgotViewModel() }
+    viewModel { InfoStudentViewModel() }
 }
