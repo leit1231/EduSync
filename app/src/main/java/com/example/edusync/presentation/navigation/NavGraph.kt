@@ -9,11 +9,16 @@ import androidx.navigation.compose.composable
 import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.views.changePasswordAfterForgot.ChangePasswordAfterForgotScreen
 import com.example.edusync.presentation.views.enterCode.EnterCodeScreen
+import com.example.edusync.presentation.views.favorities.FavoritiesScreen
 import com.example.edusync.presentation.views.forgotPassword.ForgotPasswordScreen
 import com.example.edusync.presentation.views.infoScreen.InfoStudentScreen
 import com.example.edusync.presentation.views.login.Login
+import com.example.edusync.presentation.views.main.MainScreen
+import com.example.edusync.presentation.views.materials.MaterialsScreen
 import com.example.edusync.presentation.views.onboarding.onboarding_navigation_pager.OnboardingPagerScreen
+import com.example.edusync.presentation.views.profile.ProfileScreen
 import com.example.edusync.presentation.views.register.RegisterScreen
+import com.example.edusync.presentation.views.settings_screen.SettingsScreen
 import com.example.edusync.presentation.views.splash.SplashScreen
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -43,6 +48,21 @@ fun Navigator(navController: NavHostController) {
         }
         composable(NavRoutes.InfoScreen.route) {
             InfoStudentScreen(navController)
+        }
+        composable(NavRoutes.MainScreen.route){
+            MainScreen(navController)
+        }
+        composable(NavRoutes.MaterialsScreen.route){
+            MaterialsScreen(navController)
+        }
+        composable(NavRoutes.FavoritiesScreen.route){
+            FavoritiesScreen(navController)
+        }
+        composable(NavRoutes.ProfileScreen.route){
+            ProfileScreen(navController)
+        }
+        composable(NavRoutes.SettingsScreen.route){
+            SettingsScreen(navController)
         }
     }
 }

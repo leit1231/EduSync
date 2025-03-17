@@ -10,4 +10,8 @@ sealed class NavRoutes(val route: String) {
     object ChangePassword : NavRoutes("change_password")
     object InfoScreen: NavRoutes("info_student")
     object MainScreen: NavRoutes("main_screen_student")
+    object MaterialsScreen: NavRoutes("materials_screen")
+    object FavoritiesScreen: NavRoutes("favorities_screen")
+    object ProfileScreen: NavRoutes("profile_screen")
+    object SettingsScreen: NavRoutes("settings_screen")
 }

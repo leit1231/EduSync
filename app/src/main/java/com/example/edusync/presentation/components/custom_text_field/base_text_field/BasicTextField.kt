@@ -56,7 +56,7 @@ fun BaseTextField(
     keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
     trailingIcon: (@Composable (() -> Unit))? = null,
     maxLines: Int = 1,
-    isScrollable: Boolean = true,
+    isScrollable: Boolean = false,
     fieldHeight: Dp = 56.dp,
     backgroundColor: Color = AppColors.Background,
     borderColor: Color = AppColors.Secondary,
@@ -64,8 +64,6 @@ fun BaseTextField(
 ) {
     val scrollState = rememberScrollState()
     val isMultiLine = maxLines > 1
-    val placeholderTopPadding = if (isMultiLine) 8.dp else 17.dp
-    val textVerticalPadding = if (isMultiLine) 8.dp else 14.dp
     var isFocused by remember { mutableStateOf(false) }
     val focusRequester = FocusRequester()
 
@@ -98,8 +96,8 @@ fun BaseTextField(
                     fontSize = 16.sp,
                     fontFamily = FontFamily(Font(R.font.ubuntu_regular)),
                     modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 16.dp, top = placeholderTopPadding),
+                        .align(Alignment.CenterStart)
+                        .padding(start = 16.dp, end = 16.dp),
                     style = textStyle
                 )
             }
@@ -121,9 +119,7 @@ fun BaseTextField(
                     .align(if (isMultiLine) Alignment.TopStart else Alignment.CenterStart)
                     .padding(
                         start = 16.dp,
-                        end = if (trailingIcon != null) 40.dp else 16.dp,
-                        top = textVerticalPadding,
-                        bottom = textVerticalPadding
+                        end = if (trailingIcon != null) 40.dp else 16.dp
                     )
                     .let { if (isScrollable) it.horizontalScroll(scrollState) else it }
                     .focusRequester(focusRequester)
