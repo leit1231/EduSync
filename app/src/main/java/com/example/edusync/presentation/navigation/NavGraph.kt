@@ -15,6 +15,7 @@ import com.example.edusync.presentation.views.infoScreen.InfoStudentScreen
 import com.example.edusync.presentation.views.login.Login
 import com.example.edusync.presentation.views.main.MainScreen
 import com.example.edusync.presentation.views.materials.MaterialsScreen
+import com.example.edusync.presentation.views.materials.group.CreateGroupScreen
 import com.example.edusync.presentation.views.onboarding.onboarding_navigation_pager.OnboardingPagerScreen
 import com.example.edusync.presentation.views.profile.ProfileScreen
 import com.example.edusync.presentation.views.register.RegisterScreen
@@ -63,6 +64,9 @@ fun Navigator(navController: NavHostController) {
         }
         composable(NavRoutes.SettingsScreen.route){
             SettingsScreen(navController)
+        }
+        composable(NavRoutes.CreateGroupScreen.route){
+            CreateGroupScreen(navController)
         }
     }
 }

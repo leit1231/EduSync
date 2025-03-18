@@ -60,7 +60,8 @@ fun BaseTextField(
     fieldHeight: Dp = 56.dp,
     backgroundColor: Color = AppColors.Background,
     borderColor: Color = AppColors.Secondary,
-    shape: Shape = RoundedCornerShape(5.dp)
+    shape: Shape = RoundedCornerShape(5.dp),
+    enabled: Boolean = true
 ) {
     val scrollState = rememberScrollState()
     val isMultiLine = maxLines > 1
@@ -125,6 +126,7 @@ fun BaseTextField(
                     .focusRequester(focusRequester)
                     .onFocusChanged { isFocused = it.isFocused },
                 maxLines = maxLines,
+                enabled = enabled
             )
 
             trailingIcon?.let {
