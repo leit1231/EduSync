@@ -87,7 +87,7 @@ fun EmptyMaterialsScreen(navController: NavController) {
     if (isModalOpen) {
         androidx.compose.ui.window.Dialog(
             onDismissRequest = { isModalOpen = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false) // Добавьте эту строку
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         )
         {
             JoinGroupModalWindow(

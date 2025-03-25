@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.base_text_field.BaseTextField
@@ -67,7 +66,7 @@ fun SearchField(
         ),
         backgroundColor = AppColors.Background,
         borderColor = AppColors.Primary,
-        shape = RoundedCornerShape(30.dp),
+        shape = RoundedCornerShape(10.dp),
         fieldHeight = 60.dp
     )
 }

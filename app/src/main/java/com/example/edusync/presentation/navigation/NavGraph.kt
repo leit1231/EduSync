@@ -13,12 +13,14 @@ import com.example.edusync.presentation.views.favorities.FavoritiesScreen
 import com.example.edusync.presentation.views.forgotPassword.ForgotPasswordScreen
 import com.example.edusync.presentation.views.infoScreen.InfoStudentScreen
 import com.example.edusync.presentation.views.login.Login
+import com.example.edusync.presentation.views.main.AllScheduleLayout
 import com.example.edusync.presentation.views.main.MainScreen
 import com.example.edusync.presentation.views.materials.MaterialsScreen
 import com.example.edusync.presentation.views.materials.group.CreateGroupScreen
 import com.example.edusync.presentation.views.onboarding.onboarding_navigation_pager.OnboardingPagerScreen
 import com.example.edusync.presentation.views.profile.ProfileScreen
 import com.example.edusync.presentation.views.register.RegisterScreen
+import com.example.edusync.presentation.views.search_screen.SearchScreen
 import com.example.edusync.presentation.views.settings_screen.SettingsScreen
 import com.example.edusync.presentation.views.splash.SplashScreen
 
@@ -67,6 +69,14 @@ fun Navigator(navController: NavHostController) {
         }
         composable(NavRoutes.CreateGroupScreen.route){
             CreateGroupScreen(navController)
+        }
+        composable(NavRoutes.SearchScreen.route){
+            SearchScreen(onSearchResult = { query ->
+                navController.popBackStack()
+            })
+        }
+        composable(NavRoutes.AllScheduleLayout.route){
+            AllScheduleLayout()
         }
     }
 }

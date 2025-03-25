@@ -48,7 +48,7 @@ fun MaterialsScreen(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntry?.destination?.route ?: "materials_screen"
     val groups by remember { mutableStateOf(viewModel.groups) }
     val searchQuery = remember { mutableStateOf("") }
-    val isTeacher = true
+    val isTeacher = false
     val isModalDialogVisible = remember { mutableStateOf(false) }
 
     Scaffold(
@@ -99,7 +99,7 @@ fun MaterialsScreen(navController: NavHostController) {
                         .fillMaxWidth()
                         .weight(1f)) {
                         items(groups) { group ->
-                            GroupItem(group)
+                            GroupItem(group, navController)
                         }
                     }
                 }

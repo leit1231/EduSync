@@ -16,7 +16,7 @@ class MaterialsScreenViewModel : ViewModel() {
         if (hasGroups) {
             _groups.addAll(
                 listOf(
-
+                    (Group("test", "test"))
                 )
             )
         }

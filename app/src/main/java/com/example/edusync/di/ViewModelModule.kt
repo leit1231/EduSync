@@ -11,6 +11,7 @@ import com.example.edusync.presentation.viewModels.materials.CreateGroupViewMode
 import com.example.edusync.presentation.viewModels.materials.MaterialsScreenViewModel
 import com.example.edusync.presentation.viewModels.profile.ProfileScreenViewModel
 import com.example.edusync.presentation.viewModels.register.RegisterViewModel
+import com.example.edusync.presentation.viewModels.search.SearchViewModel
 import com.example.edusync.presentation.viewModels.settings.SettingsViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -28,4 +29,5 @@ val viewModelModule = module {
     viewModel { FavoritesViewModel() }
     viewModel { MaterialsScreenViewModel() }
     viewModel { CreateGroupViewModel() }
+    viewModel { SearchViewModel() }
 }
