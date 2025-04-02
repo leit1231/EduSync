@@ -16,7 +16,10 @@ class MaterialsScreenViewModel : ViewModel() {
         if (hasGroups) {
             _groups.addAll(
                 listOf(
-                    (Group("test", "test"))
+                    (Group("Экономика в профессиональной деятельности", "Григорьева Л.Ф.")),
+                    (Group("Программирование", "Григорьева Л.Ф.")),
+                    (Group("Тест", "Григорьева Л.Ф.")),
+                    (Group("ПОПД", "Григорьева Л.Ф."))
                 )
             )
         }

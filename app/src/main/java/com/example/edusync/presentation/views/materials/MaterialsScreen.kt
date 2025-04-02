@@ -48,7 +48,7 @@ fun MaterialsScreen(navController: NavHostController) {
     val currentRoute = navController.currentBackStackEntry?.destination?.route ?: "materials_screen"
     val groups by remember { mutableStateOf(viewModel.groups) }
     val searchQuery = remember { mutableStateOf("") }
-    val isTeacher = false
+    val isTeacher = true
     val isModalDialogVisible = remember { mutableStateOf(false) }
 
     Scaffold(

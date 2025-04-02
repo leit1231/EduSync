@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.edusync.R
-import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.materials.Group
@@ -37,7 +36,7 @@ fun GroupItem(group: Group, navController: NavHostController) {
             .padding(vertical = 8.dp)
             .background(AppColors.Background)
             .border(1.dp, AppColors.Primary, shape = RoundedCornerShape(10.dp))
-            .clickable {navController.navigate(NavRoutes.GroupScreen.route)},
+            .clickable {navController.navigate("group_screen/${group.name}")},
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(10.dp)
     ) {

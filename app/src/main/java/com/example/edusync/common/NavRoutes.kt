@@ -15,7 +15,7 @@ sealed class NavRoutes(val route: String) {
     object ProfileScreen: NavRoutes("profile_screen")
     object SettingsScreen: NavRoutes("settings_screen")
     object CreateGroupScreen: NavRoutes("create_group_screen")
-    object GroupScreen: NavRoutes("group_screen")
+    object GroupScreen : NavRoutes("group_screen/{subjectName}")
     object SearchScreen: NavRoutes("search_screen")
     object AllScheduleLayout: NavRoutes("all_schedule_layout")
 }

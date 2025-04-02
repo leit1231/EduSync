@@ -9,4 +9,6 @@ object AppColors {
     val Error = Color(0xFFFF3D3D)
     val OnBackground = Color(0xFF1F222B)
     val SecondaryTransparent = Color(0x80F1F2F7)
+    val ChatColor = Color(0xFF383838)
+    val Highlight = Color(0x4DA5EF6C)
 }

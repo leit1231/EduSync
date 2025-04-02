@@ -118,7 +118,7 @@ fun MainScreen(navController: NavHostController) {
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { viewModel.showAllSchedule() }
+                        .clickable {if (!isAllScheduleVisible) viewModel.showAllSchedule() else viewModel.showSchedule()}
                 )
 
                 if (isAllScheduleVisible) {

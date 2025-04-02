@@ -11,6 +11,7 @@ import com.example.edusync.presentation.views.changePasswordAfterForgot.ChangePa
 import com.example.edusync.presentation.views.enterCode.EnterCodeScreen
 import com.example.edusync.presentation.views.favorities.FavoritiesScreen
 import com.example.edusync.presentation.views.forgotPassword.ForgotPasswordScreen
+import com.example.edusync.presentation.views.group.GroupScreen
 import com.example.edusync.presentation.views.infoScreen.InfoStudentScreen
 import com.example.edusync.presentation.views.login.Login
 import com.example.edusync.presentation.views.main.AllScheduleLayout
@@ -77,6 +78,9 @@ fun Navigator(navController: NavHostController) {
         }
         composable(NavRoutes.AllScheduleLayout.route){
             AllScheduleLayout()
+        }
+        composable(NavRoutes.GroupScreen.route) { backStackEntry ->
+            GroupScreen(navController)
         }
     }
 }

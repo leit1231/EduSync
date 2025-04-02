@@ -4,6 +4,7 @@ import com.example.edusync.presentation.viewModels.changePasswordAfterForgot.Cha
 import com.example.edusync.presentation.viewModels.enterCode.EnterCodeViewModel
 import com.example.edusync.presentation.viewModels.favorite.FavoritesViewModel
 import com.example.edusync.presentation.viewModels.forgotPassword.ForgotPasswordViewModel
+import com.example.edusync.presentation.viewModels.group.GroupViewModel
 import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewModel
 import com.example.edusync.presentation.viewModels.login.LoginViewModel
 import com.example.edusync.presentation.viewModels.mainScreen.MainScreenViewModel
@@ -30,4 +31,5 @@ val viewModelModule = module {
     viewModel { MaterialsScreenViewModel() }
     viewModel { CreateGroupViewModel() }
     viewModel { SearchViewModel() }
+    viewModel { GroupViewModel() }
 }
