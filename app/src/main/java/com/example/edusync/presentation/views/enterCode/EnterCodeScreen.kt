@@ -130,7 +130,6 @@ fun EnterCodeScreen(
             Button(
                 onClick = {
                     val code = state.code.joinToString("") { it?.toString().orEmpty() }
-                    viewModel.sendCode(code)
                     navController.navigate(NavRoutes.ChangePassword.route)
                 },
                 enabled = isButtonEnabled,

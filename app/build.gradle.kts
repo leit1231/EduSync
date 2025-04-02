@@ -64,5 +64,5 @@ dependencies {
     implementation("io.insert-koin:koin-android:3.5.3")
     implementation("io.insert-koin:koin-androidx-compose:3.5.3")
     implementation("androidx.compose.ui:ui:1.7.8")
-//    implementation("io.github.marat101:pdf-viewer:1.0.0-alpha")
+    implementation("io.github.marat101:pdf-viewer:1.0.0-alpha")
 }

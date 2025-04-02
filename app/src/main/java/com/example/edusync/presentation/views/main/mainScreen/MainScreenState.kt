@@ -1,4 +1,7 @@
-package com.example.edusync.presentation.views.main
+package com.example.edusync.presentation.views.main.mainScreen
+
+import com.example.edusync.common.LoadingState
+import com.example.edusync.presentation.views.main.shedule.Schedule
 
 data class MainScreenState(
     val selectedGroup: String? = null,
@@ -9,10 +12,3 @@ data class MainScreenState(
     val groupsLoadingState: LoadingState = LoadingState.Success,
     val isEditMode: Boolean = false,
 )
-
-sealed class LoadingState {
-    data object Loading: LoadingState()
-    data object Success: LoadingState()
-    data object Empty: LoadingState()
-    data class Error(val error: String): LoadingState()
-}

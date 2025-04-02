@@ -23,9 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -33,8 +31,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.PairInfo
-import com.example.edusync.presentation.views.main.PairItem
+import com.example.edusync.presentation.views.main.shedule.PairInfo
+import com.example.edusync.presentation.views.main.shedule.PairItem
 
 @Composable
 fun CreateEditPairDialog(

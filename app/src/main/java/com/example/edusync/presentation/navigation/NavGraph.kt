@@ -14,8 +14,8 @@ import com.example.edusync.presentation.views.forgotPassword.ForgotPasswordScree
 import com.example.edusync.presentation.views.group.GroupScreen
 import com.example.edusync.presentation.views.infoScreen.InfoStudentScreen
 import com.example.edusync.presentation.views.login.Login
-import com.example.edusync.presentation.views.main.AllScheduleLayout
-import com.example.edusync.presentation.views.main.MainScreen
+import com.example.edusync.presentation.views.main.shedule.AllWeekScheduleLayout
+import com.example.edusync.presentation.views.main.mainScreen.MainScreen
 import com.example.edusync.presentation.views.materials.MaterialsScreen
 import com.example.edusync.presentation.views.materials.group.CreateGroupScreen
 import com.example.edusync.presentation.views.onboarding.onboarding_navigation_pager.OnboardingPagerScreen
@@ -77,7 +77,7 @@ fun Navigator(navController: NavHostController) {
             })
         }
         composable(NavRoutes.AllScheduleLayout.route){
-            AllScheduleLayout()
+            AllWeekScheduleLayout()
         }
         composable(NavRoutes.GroupScreen.route) { backStackEntry ->
             GroupScreen(navController)

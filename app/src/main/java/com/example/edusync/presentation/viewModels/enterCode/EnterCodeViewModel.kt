@@ -1,14 +1,12 @@
 package com.example.edusync.presentation.viewModels.enterCode
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.edusync.presentation.views.enterCode.EnterScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
-class EnterCodeViewModel() : ViewModel() {
+class EnterCodeViewModel: ViewModel() {
 
     private val _state = MutableStateFlow(EnterScreenState())
     val state: StateFlow<EnterScreenState> = _state
@@ -47,14 +45,6 @@ class EnterCodeViewModel() : ViewModel() {
                 code = newCode,
                 focusedIndex = previousIndex
             )
-        }
-    }
-
-    fun sendCode(code: String) {
-        viewModelScope.launch {
-            try {
-            } catch (e: Exception) {
-            }
         }
     }
 }

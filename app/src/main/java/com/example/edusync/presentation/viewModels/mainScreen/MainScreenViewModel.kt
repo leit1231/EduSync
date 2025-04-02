@@ -2,12 +2,12 @@ package com.example.edusync.presentation.viewModels.mainScreen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.edusync.presentation.views.main.Day
-import com.example.edusync.presentation.views.main.LoadingState
-import com.example.edusync.presentation.views.main.MainScreenState
-import com.example.edusync.presentation.views.main.PairInfo
-import com.example.edusync.presentation.views.main.PairItem
-import com.example.edusync.presentation.views.main.Schedule
+import com.example.edusync.common.LoadingState
+import com.example.edusync.presentation.views.main.shedule.Day
+import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
+import com.example.edusync.presentation.views.main.shedule.PairInfo
+import com.example.edusync.presentation.views.main.shedule.PairItem
+import com.example.edusync.presentation.views.main.shedule.Schedule
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class MainScreenViewModel() : ViewModel() {
+class MainScreenViewModel: ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
     val isAllScheduleVisible: StateFlow<Boolean> = _isAllScheduleVisible.asStateFlow()
@@ -179,7 +179,8 @@ class MainScreenViewModel() : ViewModel() {
             time = "$currentTime - $currentTime",
             isoDateStart = "$date $currentTime:00",
             isoDateEnd = "$date $currentTime:00",
-            pairInfo = listOf(PairInfo(
+            pairInfo = listOf(
+                PairInfo(
                 doctrine = "",
                 teacher = "",
                 auditoria = "",
@@ -188,7 +189,8 @@ class MainScreenViewModel() : ViewModel() {
                 start = currentTime,
                 end = currentTime,
                 warn = ""
-            ))
+            )
+            )
         )
     }
 

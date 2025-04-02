@@ -10,7 +10,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,7 +17,6 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.edusync.R
 import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.theme.ui.AppColors

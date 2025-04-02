@@ -22,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.Day
-import com.example.edusync.presentation.views.main.PairItem
+import com.example.edusync.presentation.views.main.shedule.Day
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import com.example.edusync.presentation.views.main.component.dateItem.toDayOfWeek
 import com.example.edusync.presentation.views.main.component.dateItem.toFullMonth
@@ -89,37 +88,5 @@ fun DayScheduleCard(day: Day, expandedDays: MutableMap<String, Boolean>) {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun PairItemCardContent(pair: PairItem, number: Int) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = "$number. ${pair.pairInfo.first().doctrine}",
-            color = AppColors.Secondary,
-            style = AppTypography.body1.copy(fontSize = 16.sp),
-        )
-        Text(
-            text = pair.pairInfo.first().teacher,
-            color = AppColors.SecondaryTransparent,
-            style = AppTypography.body1.copy(fontSize = 14.sp),
-            modifier = Modifier.padding(top = 4.dp)
-        )
-        Text(
-            text = "${pair.pairInfo.first().auditoria} ауд.",
-            color = AppColors.SecondaryTransparent,
-            style = AppTypography.body1.copy(fontSize = 14.sp),
-        )
-        Text(
-            text = pair.time,
-            color = AppColors.Secondary,
-            style = AppTypography.body1.copy(fontSize = 14.sp),
-            modifier = Modifier.padding(top = 4.dp)
-        )
     }
 }

@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.group
+package com.example.edusync.presentation.views.group.components.survey
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing

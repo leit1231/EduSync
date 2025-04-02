@@ -74,7 +74,7 @@ fun InfoStudentScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (uiState.selectedUniversity.isNotEmpty() && isTeacher == false) {
+        if (uiState.selectedUniversity.isNotEmpty() && !isTeacher) {
             CustomDropdownMenu(
                 label = "Выберите вашу группу",
                 options = viewModel.availableGroups,

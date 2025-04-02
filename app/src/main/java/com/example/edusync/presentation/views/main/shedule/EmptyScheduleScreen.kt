@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.main
+package com.example.edusync.presentation.views.main.shedule
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

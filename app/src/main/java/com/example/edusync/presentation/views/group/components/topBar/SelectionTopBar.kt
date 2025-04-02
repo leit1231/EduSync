@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.group.components
+package com.example.edusync.presentation.views.group.components.topBar
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon

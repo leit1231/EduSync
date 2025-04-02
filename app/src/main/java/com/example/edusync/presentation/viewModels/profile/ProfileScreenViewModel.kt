@@ -46,8 +46,4 @@ class ProfileScreenViewModel: ViewModel() {
     fun onGroupSelected(newValue: String) {
         _uiState.value = _uiState.value.copy(selectedGroup = newValue)
     }
-
-    fun onSave() {
-        // TODO: Добавить логику сохранения (БД, API и т.д.)
-    }
 }

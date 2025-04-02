@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.main
+package com.example.edusync.presentation.views.main.shedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -24,7 +24,7 @@ import com.example.edusync.presentation.views.main.component.day_schedule_card.D
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AllScheduleLayout() {
+fun AllWeekScheduleLayout() {
 
     val viewModel: MainScreenViewModel = koinViewModel()
     val scheduleState by viewModel.state.collectAsState()

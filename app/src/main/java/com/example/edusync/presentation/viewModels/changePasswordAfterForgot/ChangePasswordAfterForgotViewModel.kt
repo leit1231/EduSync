@@ -13,12 +13,4 @@ class ChangePasswordAfterForgotViewModel : ViewModel() {
     fun onNewPasswordChanged(newPassword: String) {
         _uiState.value = _uiState.value.copy(newPassword = newPassword)
     }
-
-    fun onSaveClicked(email: String, onOnboarding: () -> Unit) {
-
-    }
-
-    private fun validatePassword(password: String): String? {
-        return if (password.length < 8) "Пароль должен содержать минимум 8 символов" else null
-    }
 }

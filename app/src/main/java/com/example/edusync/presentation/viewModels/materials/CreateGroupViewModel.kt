@@ -15,7 +15,6 @@ class CreateGroupViewModel: ViewModel() {
         "РКСИ" to listOf("ИС-11", "ИС-21", "ИС-31", "ИС-41", "ИС-12", "ИС-22")
     )
 
-    var expandedUniversity by mutableStateOf(false)
     var expandedGroup by mutableStateOf(false)
 
     val availableGroups: List<String>
@@ -33,9 +32,5 @@ class CreateGroupViewModel: ViewModel() {
 
     fun onGroupSelected(newValue: String) {
         _uiState.value = _uiState.value.copy(selectedGroup = newValue)
-    }
-
-    fun onSave() {
-        // TODO: Добавить логику сохранения (БД, API и т.д.)
     }
 }

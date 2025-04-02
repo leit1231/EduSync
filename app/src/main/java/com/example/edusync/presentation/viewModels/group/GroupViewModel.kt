@@ -106,14 +106,13 @@ class GroupViewModel : ViewModel() {
 
     fun sendMessage(text: String, files: List<FileAttachment>) {
         val trimmedText = text.trim()
-        val attachedFiles = files
 
-        if (trimmedText.isBlank() && attachedFiles.isEmpty()) return
+        if (trimmedText.isBlank() && files.isEmpty()) return
 
         editingMessage.value?.let { existingMessage ->
             val updatedMessage = existingMessage.copy(
                 text = trimmedText,
-                files = attachedFiles,
+                files = files,
                 timestamp = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
                 isEdited = true
             )
@@ -130,7 +129,7 @@ class GroupViewModel : ViewModel() {
                 sender = "You",
                 timestamp = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date()),
                 isMe = true,
-                files = attachedFiles,
+                files = files,
                 showSenderName = _messages.value?.firstOrNull()?.sender != "Вы",
                 replyTo = _replyMessage.value
             )
@@ -260,6 +259,24 @@ class GroupViewModel : ViewModel() {
             "png", "jpg", "jpeg" -> "image/*"
             else -> "*/*"
         }
+    }
+}
+
+
+fun sendMessage(
+    text: String,
+    viewModel: GroupViewModel,
+    context: Context
+) {
+    val trimmedText = text.trim()
+    val attachedFiles = viewModel.attachedFiles.value.orEmpty()
+
+    if (attachedFiles.isNotEmpty() || trimmedText.isNotBlank()) {
+        viewModel.sendMessage(
+            text = trimmedText,
+            files = attachedFiles
+        )
+        viewModel.clearAttachments()
     }
 }
 

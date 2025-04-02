@@ -54,8 +54,8 @@ fun FileItemView(file: FileItem, onFavoriteToggle: () -> Unit, onDownloadToggle:
                     .padding(start = 8.dp),
                 verticalArrangement = Arrangement.Top
             ) {
-                Text(text = file.name, color = AppColors.Secondary, style = AppTypography.body1.copy(fontSize = 16.sp),)
-                Text(text = file.size, color = AppColors.SecondaryTransparent, style = AppTypography.body1.copy(fontSize = 12.sp),)
+                Text(text = file.name, color = AppColors.Secondary, style = AppTypography.body1.copy(fontSize = 16.sp))
+                Text(text = file.size, color = AppColors.SecondaryTransparent, style = AppTypography.body1.copy(fontSize = 12.sp))
             }
 
             Row(

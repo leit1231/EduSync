@@ -16,6 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.EduSync"
+        android:name=".application.App"
         tools:targetApi="31">
         <activity
             android:name=".presentation.views.main.MainActivity"

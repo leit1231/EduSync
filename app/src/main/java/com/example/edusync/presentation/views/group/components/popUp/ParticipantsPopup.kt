@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.group.components
+package com.example.edusync.presentation.views.group.components.popUp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

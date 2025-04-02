@@ -138,11 +138,13 @@ fun CustomDropdownMenu(
                         color = AppColors.Secondary
                     ),
                     singleLine = true,
-                    colors = TextFieldDefaults.textFieldColors(
+                    colors = TextFieldDefaults.colors(
                         cursorColor = AppColors.Secondary,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        containerColor = Color.Transparent
+                        focusedContainerColor = Color.Transparent,
+                        errorContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
                     ),
                     modifier = Modifier
                         .fillMaxWidth()

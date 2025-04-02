@@ -1,19 +1,15 @@
-package com.example.edusync.presentation.views.main
+package com.example.edusync.presentation.views.main.mainScreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -29,12 +25,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.edusync.R
+import com.example.edusync.common.LoadingState
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.mainScreen.MainScreenViewModel
+import com.example.edusync.presentation.views.main.shedule.AllWeekScheduleLayout
+import com.example.edusync.presentation.views.main.shedule.EmptyScheduleScreen
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import com.example.edusync.presentation.views.main.component.dateItem.toFullMonth
-import com.example.edusync.presentation.views.main.component.scheduleLayout.ScheduleLayout
+import com.example.edusync.presentation.views.main.component.scheduleScreen.ScheduleLayout
 import com.example.edusync.presentation.views.main.component.select_group.SelectGroupTopBar
 import com.example.edusync.presentation.views.navigation_menu.NavigationMenu
 import org.koin.androidx.compose.koinViewModel
@@ -122,10 +121,10 @@ fun MainScreen(navController: NavHostController) {
                 )
 
                 if (isAllScheduleVisible) {
-                    AllScheduleLayout()
+                    AllWeekScheduleLayout()
                 } else {
                     when (state.value.scheduleLoading) {
-                        LoadingState.Loading -> LoadingLayout()
+                        LoadingState.Loading -> EmptyMainScreen()
                         LoadingState.Success -> {
                             state.value.schedule?.let { schedule ->
                                 if (schedule.days.isEmpty()) {

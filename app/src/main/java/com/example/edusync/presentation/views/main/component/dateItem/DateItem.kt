@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,26 +24,8 @@ import androidx.compose.ui.unit.sp
 import com.example.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.Day
-import java.text.SimpleDateFormat
+import com.example.edusync.presentation.views.main.shedule.Day
 import java.util.Calendar
-import java.util.Locale
-
-fun String.toCalendar(): Calendar {
-    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    val date = sdf.parse(this) ?: throw IllegalArgumentException("Invalid date format")
-    return Calendar.getInstance().apply { time = date }
-}
-
-fun Calendar.toFullMonth(): String {
-    return SimpleDateFormat("MMMM", Locale.getDefault()).format(time)
-        .replaceFirstChar { it.uppercase() }
-}
-
-fun Calendar.toDayOfWeek(): String {
-    return SimpleDateFormat("EEEE", Locale.getDefault()).format(time)
-        .replaceFirstChar { it.uppercase() }
-}
 
 @Composable
 fun DateItem(day: Day, onClick: () -> Unit, onLeftClick: () -> Unit, onRightClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -65,7 +47,7 @@ fun DateItem(day: Day, onClick: () -> Unit, onLeftClick: () -> Unit, onRightClic
                 .rotate(180F)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(bounded = false),
+                    indication = ripple(bounded = false),
                     onClick = onLeftClick
                 ),
             painter = painterResource(id = R.drawable.ic_arrow_go),
@@ -77,7 +59,7 @@ fun DateItem(day: Day, onClick: () -> Unit, onLeftClick: () -> Unit, onRightClic
             modifier = Modifier
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = rememberRipple(),
+                    indication = ripple(),
                     onClick = onClick
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -103,7 +85,7 @@ fun DateItem(day: Day, onClick: () -> Unit, onLeftClick: () -> Unit, onRightClic
                 .size(20.dp)
                 .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = false),
+                indication = ripple(bounded = false),
                 onClick = onRightClick
             ),
             painter = painterResource(id = R.drawable.ic_arrow_go),

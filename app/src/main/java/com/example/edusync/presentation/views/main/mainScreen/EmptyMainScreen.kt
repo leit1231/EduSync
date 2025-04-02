@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.main
+package com.example.edusync.presentation.views.main.mainScreen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.example.edusync.presentation.theme.ui.AppColors
 
 @Composable
-fun LoadingLayout() {
+fun EmptyMainScreen() {
     Column(
         Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,

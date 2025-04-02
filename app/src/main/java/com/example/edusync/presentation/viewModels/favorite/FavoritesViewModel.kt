@@ -4,7 +4,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 
 class FavoritesViewModel : ViewModel() {
-    private val _favoriteFiles = mutableStateListOf<FileItem>()
     val favoriteFiles: List<FileItem>
         get() = _allFiles.filter { it.isFavorite }
     private val _allFiles = mutableStateListOf<FileItem>()
