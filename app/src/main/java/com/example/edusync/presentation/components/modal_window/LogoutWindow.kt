@@ -21,13 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
-fun LogoutWindow(navController: NavController, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+fun LogoutWindow(onClick: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
 
     Column(
         modifier = modifier
@@ -80,7 +78,7 @@ fun LogoutWindow(navController: NavController, onDismiss: () -> Unit, modifier: 
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { navController.navigate(NavRoutes.Login.route)
+                Button(onClick = { onClick
                     onDismiss()},
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

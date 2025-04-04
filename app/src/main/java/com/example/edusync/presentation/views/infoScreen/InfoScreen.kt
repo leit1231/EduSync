@@ -17,8 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.components.custom_text_field.dropdownMenu.CustomDropdownMenu
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -27,7 +25,7 @@ import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewMo
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun InfoStudentScreen(navController: NavController) {
+fun InfoScreen() {
     val viewModel: InfoStudentViewModel = koinViewModel()
     val uiState by viewModel.uiState
     val expandedUniversity = viewModel.expandedUniversity
@@ -91,7 +89,7 @@ fun InfoStudentScreen(navController: NavController) {
 
         Button(
             onClick = {
-                navController.navigate(NavRoutes.MainScreen.route)
+                viewModel.goToMainScreen()
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppColors.Primary

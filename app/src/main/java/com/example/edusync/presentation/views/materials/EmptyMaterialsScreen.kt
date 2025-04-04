@@ -22,15 +22,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import androidx.navigation.NavController
 import com.example.edusync.R
-import com.example.edusync.common.NavRoutes
 import com.example.edusync.presentation.components.modal_window.JoinGroupModalWindow
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
+import com.example.edusync.presentation.viewModels.materials.MaterialsScreenViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun EmptyMaterialsScreen(navController: NavController) {
+fun EmptyMaterialsScreen() {
+    val viewModel = koinViewModel<MaterialsScreenViewModel>()
     var isModalOpen by remember { mutableStateOf(false) }
     val isTeacher = false
 
@@ -59,7 +60,7 @@ fun EmptyMaterialsScreen(navController: NavController) {
 
         if (isTeacher) {
             Button(
-                onClick = { navController.navigate(NavRoutes.CreateGroupScreen.route) },
+                onClick = {viewModel.goToCreateGroup()},
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
                 modifier = Modifier.fillMaxWidth()
             ) {

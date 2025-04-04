@@ -2,8 +2,9 @@ package com.example.edusync.presentation.viewModels.favorite
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import com.example.edusync.presentation.navigation.Navigator
 
-class FavoritesViewModel : ViewModel() {
+class FavoritesViewModel(private val navigator: Navigator) : ViewModel() {
     val favoriteFiles: List<FileItem>
         get() = _allFiles.filter { it.isFavorite }
     private val _allFiles = mutableStateListOf<FileItem>()

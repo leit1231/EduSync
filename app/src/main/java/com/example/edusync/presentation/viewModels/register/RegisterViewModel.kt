@@ -2,12 +2,16 @@ package com.example.edusync.presentation.viewModels.register
 
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.edusync.presentation.navigation.Destination
+import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.register.RegisterState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class RegisterViewModel : ViewModel() {
+class RegisterViewModel(private val navigator: Navigator) : ViewModel() {
     private val _state = MutableStateFlow(RegisterState())
     val state: StateFlow<RegisterState> = _state
 
@@ -42,5 +46,21 @@ class RegisterViewModel : ViewModel() {
 
     fun setRole(role: String) {
         _state.update { it.copy(role = role) }
+    }
+
+    fun goToLogin(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.LoginScreen
+            )
+        }
+    }
+
+    fun goToInfoScreen(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.InfoScreen
+            )
+        }
     }
 }

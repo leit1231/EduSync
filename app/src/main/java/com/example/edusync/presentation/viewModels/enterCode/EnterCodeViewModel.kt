@@ -1,12 +1,16 @@
 package com.example.edusync.presentation.viewModels.enterCode
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.edusync.presentation.navigation.Destination
+import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.enterCode.EnterScreenState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class EnterCodeViewModel: ViewModel() {
+class EnterCodeViewModel(private val navigator: Navigator): ViewModel() {
 
     private val _state = MutableStateFlow(EnterScreenState())
     val state: StateFlow<EnterScreenState> = _state
@@ -45,6 +49,20 @@ class EnterCodeViewModel: ViewModel() {
                 code = newCode,
                 focusedIndex = previousIndex
             )
+        }
+    }
+
+    fun goToChangePassword(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.ChangePasswordScreen
+            )
+        }
+    }
+
+    fun goBack(){
+        viewModelScope.launch {
+            navigator.navigateUp()
         }
     }
 }

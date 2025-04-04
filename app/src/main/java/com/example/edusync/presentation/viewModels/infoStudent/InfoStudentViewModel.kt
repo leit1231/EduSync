@@ -5,9 +5,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.edusync.presentation.navigation.Destination
+import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.infoScreen.InfoScreenState
+import kotlinx.coroutines.launch
 
-class InfoStudentViewModel: ViewModel() {
+class InfoStudentViewModel(private val navigator: Navigator): ViewModel() {
     private val _uiState = mutableStateOf(InfoScreenState())
     val uiState: State<InfoScreenState> = _uiState
 
@@ -47,4 +51,16 @@ class InfoStudentViewModel: ViewModel() {
         _uiState.value = _uiState.value.copy(selectedGroup = newValue)
     }
 
+    fun goToMainScreen(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.MainGraph,
+                navOptions = {
+                    popUpTo(Destination.AuthGraph){
+                        inclusive = true
+                    }
+                }
+            )
+        }
+    }
 }

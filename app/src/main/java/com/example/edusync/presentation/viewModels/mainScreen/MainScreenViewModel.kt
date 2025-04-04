@@ -3,6 +3,8 @@ package com.example.edusync.presentation.viewModels.mainScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
+import com.example.edusync.presentation.navigation.Destination
+import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.main.shedule.Day
 import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
 import com.example.edusync.presentation.views.main.shedule.PairInfo
@@ -19,7 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class MainScreenViewModel: ViewModel() {
+class MainScreenViewModel(private val navigator: Navigator): ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
     val isAllScheduleVisible: StateFlow<Boolean> = _isAllScheduleVisible.asStateFlow()
@@ -42,6 +44,14 @@ class MainScreenViewModel: ViewModel() {
                     scheduleLoading = LoadingState.Success
                 )
             }
+        }
+    }
+
+    fun goToSearch(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.SearchScreen
+            )
         }
     }
 

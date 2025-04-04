@@ -1,13 +1,18 @@
 package com.example.edusync.presentation.viewModels.profile
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.edusync.presentation.navigation.Destination
+import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.profile.ProfileState
+import kotlinx.coroutines.launch
 
-class ProfileScreenViewModel: ViewModel() {
+class ProfileScreenViewModel(private val navigator: Navigator): ViewModel() {
     private val _uiState = mutableStateOf(ProfileState())
     val uiState: State<ProfileState> = _uiState
 
@@ -16,6 +21,27 @@ class ProfileScreenViewModel: ViewModel() {
         "ДГТУ" to listOf("ДГТУ-1", "ДГТУ-2", "ДГТУ-3"),
         "РИНХ" to listOf("РИНХ-1", "РИНХ-2", "РИНХ-3")
     )
+
+    fun goToSettings(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.SettingsScreen
+            )
+        }
+    }
+
+    fun goToLogin(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.AuthGraph,
+                navOptions = {
+                    popUpTo(Destination.MainGraph){
+                        inclusive = true
+                    }
+                }
+            )
+        }
+    }
 
     var expandedUniversity by mutableStateOf(false)
     var expandedGroup by mutableStateOf(false)

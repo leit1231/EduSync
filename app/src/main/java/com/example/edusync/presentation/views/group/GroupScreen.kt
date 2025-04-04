@@ -35,12 +35,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.example.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.search_field.SearchField
 import com.example.edusync.presentation.components.modal_window.CreateCodeToJoinGroupWindow
 import com.example.edusync.presentation.components.modal_window.CreateNotificationWindow
 import com.example.edusync.presentation.components.modal_window.DeleteGroupExitAccountWindow
+import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.viewModels.group.FileAttachment
 import com.example.edusync.presentation.viewModels.group.GroupViewModel
@@ -54,13 +54,11 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupScreen(navController: NavHostController) {
+fun GroupScreen(groupName: Destination.GroupScreen) {
 
     val viewModel: GroupViewModel = koinViewModel()
     val messages by viewModel.messages.observeAsState(emptyList())
-    val subjectName = navController.currentBackStackEntry
-        ?.arguments
-        ?.getString("subjectName") ?: ""
+    val subjectName = groupName.name
 
     val listState = rememberLazyListState()
     val highlightedMessage by viewModel.highlightedMessage.observeAsState()
@@ -155,7 +153,7 @@ fun GroupScreen(navController: NavHostController) {
                             modifier = Modifier.clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { navController.popBackStack() }
+                            ) { viewModel.goBack() }
                         )
                     },
                     actions = {
@@ -220,7 +218,6 @@ fun GroupScreen(navController: NavHostController) {
     }
     if (showDeleteExitDialog) {
         DeleteGroupExitAccountWindow(
-            navController = navController,
             onDismiss = { showDeleteExitDialog = false },
             isTeacher = true
         )

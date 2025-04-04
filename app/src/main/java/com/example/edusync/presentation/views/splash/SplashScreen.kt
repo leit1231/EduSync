@@ -19,15 +19,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.edusync.R
-import com.example.edusync.common.NavRoutes
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
+import com.example.edusync.presentation.viewModels.splash.SplashViewMode
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen() {
+    val viewModel = koinViewModel<SplashViewMode>()
+
     val context = LocalContext.current
 
     val encryptedPrefs = remember { EncryptedSharedPreference(context) }
@@ -38,9 +40,9 @@ fun SplashScreen(navController: NavController) {
 
     LaunchedEffect(isFirstLaunch) {
         if (isFirstLaunch) {
-            navController.navigate(NavRoutes.Onboarding.route)
-        } else {
-            navController.navigate(NavRoutes.Login.route)
+            viewModel.goToOnboarding()
+        } else{
+            viewModel.goToLogin()
         }
     }
 

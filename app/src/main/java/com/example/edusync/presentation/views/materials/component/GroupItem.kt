@@ -22,21 +22,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.example.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.materials.Group
+import com.example.edusync.presentation.viewModels.materials.MaterialsScreenViewModel
 
 @Composable
-fun GroupItem(group: Group, navController: NavHostController) {
+fun GroupItem(group: Group, viewModel: MaterialsScreenViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .background(AppColors.Background)
             .border(1.dp, AppColors.Primary, shape = RoundedCornerShape(10.dp))
-            .clickable {navController.navigate("group_screen/${group.name}")},
+            .clickable {viewModel.goToGroup(group.name)},
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(10.dp)
     ) {

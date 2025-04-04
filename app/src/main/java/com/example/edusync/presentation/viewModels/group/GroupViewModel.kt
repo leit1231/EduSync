@@ -9,6 +9,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.edusync.presentation.navigation.Destination
+import com.example.edusync.presentation.navigation.Navigator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -17,7 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class GroupViewModel : ViewModel() {
+class GroupViewModel(private val navigator: Navigator) : ViewModel() {
 
     private val _highlightedMessage = MutableLiveData<Message?>()
     val highlightedMessage: LiveData<Message?> = _highlightedMessage
@@ -45,6 +47,12 @@ class GroupViewModel : ViewModel() {
             current.toMutableSet().apply {
                 if (contains(file)) remove(file) else add(file)
             }
+        }
+    }
+
+    fun goBack(){
+        viewModelScope.launch {
+            navigator.navigateUp()
         }
     }
 

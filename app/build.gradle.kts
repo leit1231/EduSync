@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -20,6 +21,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -65,4 +67,5 @@ dependencies {
     implementation("io.insert-koin:koin-androidx-compose:3.5.3")
     implementation("androidx.compose.ui:ui:1.7.8")
     implementation("io.github.marat101:pdf-viewer:1.0.0-alpha")
+    implementation(libs.kotlinx.serialization.json)
 }
