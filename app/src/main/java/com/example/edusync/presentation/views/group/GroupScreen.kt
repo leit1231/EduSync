@@ -1,14 +1,18 @@
 package com.example.edusync.presentation.views.group
 
 import android.net.Uri
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,16 +28,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.search_field.SearchField
@@ -51,6 +58,7 @@ import com.example.edusync.presentation.views.group.components.chatBubble.ChatBu
 import com.example.edusync.presentation.views.group.components.messageInput.MessageInput
 import com.example.edusync.presentation.views.group.components.popUp.ShowGroupDropdownMenu
 import org.koin.androidx.compose.koinViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +67,15 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
     val viewModel: GroupViewModel = koinViewModel()
     val messages by viewModel.messages.observeAsState(emptyList())
     val subjectName = groupName.name
+
+    val swipeThreshold = 200f
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var isSwiping by remember { mutableStateOf(false) }
+
+    val animatedOffsetX by animateFloatAsState(
+        targetValue = if (isSwiping) offsetX else 0f,
+        label = "SwipeAnimation"
+    )
 
     val listState = rememberLazyListState()
     val highlightedMessage by viewModel.highlightedMessage.observeAsState()
@@ -100,52 +117,42 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
         )
     }
 
-    Scaffold(
-        topBar = {
-            if (isInSelectionMode) {
-                SelectionTopBar(viewModel)
-            } else if (isSearchActive) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 16.dp, top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_back),
-                        contentDescription = "Назад",
-                        tint = AppColors.Primary,
-                        modifier = Modifier.clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) { isSearchActive = false }
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    SearchField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        onSearch = { /* Логика поиска */ },
-                        imeAction = ImeAction.Search
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            } else {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = subjectName,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }) {
-                                    showParticipantsPopup = true
-                                }
-                        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .offset { IntOffset(animatedOffsetX.roundToInt(), 0) }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { _, dragAmount ->
+                        if (offsetX + dragAmount >= 0) {
+                            offsetX += dragAmount
+                            isSwiping = true
+                        }
                     },
-                    navigationIcon = {
+                    onDragEnd = {
+                        if (offsetX > swipeThreshold) {
+                            offsetX = 1000f
+                            isSwiping = true
+                            viewModel.goBack()
+                        } else {
+                            offsetX = 0f
+                            isSwiping = false
+                        }
+                    }
+                )
+            }
+    ) {
+        Scaffold(
+            topBar = {
+                if (isInSelectionMode) {
+                    SelectionTopBar(viewModel)
+                } else if (isSearchActive) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 16.dp, top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_back),
                             contentDescription = "Назад",
@@ -153,92 +160,128 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
                             modifier = Modifier.clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { viewModel.goBack() }
+                            ) { isSearchActive = false }
                         )
-                    },
-                    actions = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_more_vert),
-                            contentDescription = "Дополнительно",
-                            tint = AppColors.Primary,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clickable(indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }) {
-                                    showGroupPopup = true
-                                }
+                        Spacer(modifier = Modifier.weight(1f))
+                        SearchField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            onSearch = { /* Логика поиска */ },
+                            imeAction = ImeAction.Search
                         )
+                        Spacer(modifier = Modifier.weight(1f))
                     }
-                )
-            }
-        },
-        content = { paddingValues ->
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(AppColors.Background)
-                    .padding(paddingValues)
-            ) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.weight(1f),
-                    reverseLayout = true
-                ) {
-                    items(messages) { message ->
-                        ChatBubble(
-                            message = message,
-                            viewModel,
-                            context = LocalContext.current,
-                        )
-                    }
+                } else {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = subjectName,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }) {
+                                        showParticipantsPopup = true
+                                    }
+                            )
+                        },
+                        navigationIcon = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_back),
+                                contentDescription = "Назад",
+                                tint = AppColors.Primary,
+                                modifier = Modifier.clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) { viewModel.goBack() }
+                            )
+                        },
+                        actions = {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_more_vert),
+                                contentDescription = "Дополнительно",
+                                tint = AppColors.Primary,
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clickable(indication = null,
+                                        interactionSource = remember { MutableInteractionSource() }) {
+                                        showGroupPopup = true
+                                    }
+                            )
+                        }
+                    )
                 }
-                MessageInput(viewModel)
-            }
-        })
-    if (showParticipantsPopup) {
-        ParticipantsPopup(
-            onDismiss = { showParticipantsPopup = false },
-            initialParticipants = List(30) { "Лютый Николай Денисович" },
-            title = subjectName
-        )
-    }
-    if (showGroupPopup) {
-        ShowGroupDropdownMenu(
-            onDismiss = { showGroupPopup = false },
-            modifier = Modifier.width(200.dp),
-            isTeacher = true,
-            onAddStudentClick = { showCreateCodeDialog = true },
-            onToggleNotifications = { notificationsEnabled = !notificationsEnabled },
-            onSearchMaterialsClick = { isSearchActive = true },
-            onCreateNotificationClick = { showCreateNotificationDialog = true },
-            onDeleteExitGroupClick = { showDeleteExitDialog = true },
-            onCreatePollClick = { showCreatePollDialog = true }
-        )
-    }
-    if (showDeleteExitDialog) {
-        DeleteGroupExitAccountWindow(
-            onDismiss = { showDeleteExitDialog = false },
-            isTeacher = true
-        )
-    }
-    if (showCreateCodeDialog) {
-        CreateCodeToJoinGroupWindow(
-            onDismiss = { showCreateCodeDialog = false },
-            onParticipantAdded = { /* Логика добавления */ }
-        )
-    }
+            },
+            content = { paddingValues ->
 
-    if (showCreateNotificationDialog) {
-        CreateNotificationWindow(onDismiss = { showCreateNotificationDialog = false })
-    }
-    if (showCreatePollDialog) {
-        CreatePollDialog(
-            onDismiss = { showCreatePollDialog = false },
-            onPollCreated = { question, options ->
-                viewModel.sendPoll(question, options)
-                showCreatePollDialog = false
-            }
-        )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AppColors.Background)
+                        .padding(paddingValues)
+                ) {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.weight(1f),
+                        reverseLayout = true
+                    ) {
+                        items(messages) { message ->
+                            ChatBubble(
+                                message = message,
+                                viewModel,
+                                context = LocalContext.current,
+                            )
+                        }
+                    }
+                    MessageInput(viewModel)
+                }
+            })
+        if (showParticipantsPopup) {
+            ParticipantsPopup(
+                onDismiss = { showParticipantsPopup = false },
+                initialParticipants = List(30) { "Лютый Николай Денисович" },
+                title = subjectName
+            )
+        }
+        if (showGroupPopup) {
+            ShowGroupDropdownMenu(
+                onDismiss = { showGroupPopup = false },
+                modifier = Modifier.width(200.dp),
+                isTeacher = true,
+                onAddStudentClick = { showCreateCodeDialog = true },
+                onToggleNotifications = { notificationsEnabled = !notificationsEnabled },
+                onSearchMaterialsClick = { isSearchActive = true },
+                onCreateNotificationClick = { showCreateNotificationDialog = true },
+                onDeleteExitGroupClick = { showDeleteExitDialog = true },
+                onCreatePollClick = { showCreatePollDialog = true }
+            )
+        }
+        if (showDeleteExitDialog) {
+            DeleteGroupExitAccountWindow(
+                onDismiss = { showDeleteExitDialog = false },
+                isTeacher = true
+            )
+        }
+        if (showCreateCodeDialog) {
+            CreateCodeToJoinGroupWindow(
+                onDismiss = { showCreateCodeDialog = false },
+                onParticipantAdded = { /* Логика добавления */ }
+            )
+        }
+
+        if (showCreateNotificationDialog) {
+            CreateNotificationWindow(onDismiss = { showCreateNotificationDialog = false })
+        }
+        if (showCreatePollDialog) {
+            CreatePollDialog(
+                onDismiss = { showCreatePollDialog = false },
+                onPollCreated = { question, options ->
+                    viewModel.sendPoll(question, options)
+                    showCreatePollDialog = false
+                }
+            )
+        }
     }
 }

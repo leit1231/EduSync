@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="ru.eduHub.edusync" />
+                  <option name="mobileSdkAppId" value="1:412876360813:android:4d1412ecbff73395158364" />
+                  <option name="projectId" value="edusync-d5244" />
+                  <option name="projectNumber" value="412876360813" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

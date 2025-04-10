@@ -27,24 +27,83 @@ class RegisterViewModel(private val navigator: Navigator) : ViewModel() {
         }
     }
 
-    fun setConfirmPassword(password: String) {
-        _state.update {
-            it.copy(password = password, passwordError = validatePassword(password))
+    fun setConfirmPassword(passwordConfirmation: String) {
+        _state.update { state ->
+            val passwordError = validatePasswordConfirmation(
+                state.password,
+                passwordConfirmation
+            )
+            state.copy(
+                passwordConfirmation = passwordConfirmation,
+                passwordConfirmationError = passwordError
+            )
         }
     }
 
-    private fun validateEmail(email: String): String? {
-        return if (!Patterns.EMAIL_ADDRESS.matcher(email).matches())
-            "Invalid email"
-        else null
-    }
-    private fun validatePassword(email: String): String? {
-        return if (email.length < 8)
-            "Invalid password"
-        else null
+
+    private fun validatePasswordConfirmation(
+        password: String,
+        passwordConfirmation: String
+    ): String? {
+        return if (password != passwordConfirmation) {
+            "Пароли не совпадают"
+        } else if (passwordConfirmation.length < 8) {
+            "Пароль должен быть не менее 8 символов"
+        } else {
+            null
+        }
     }
 
-    fun setRole(role: String) {
+    fun register() {
+        if (validateAllFields()) {
+            goToInfoScreen(
+                state.value.email,
+                state.value.password,
+                state.value.role
+            )
+        }
+    }
+
+    private fun validateAllFields(): Boolean {
+        val currentState = state.value
+        var isValid = true
+
+        if (currentState.emailError != null) isValid = false
+        if (currentState.passwordError != null) isValid = false
+        if (currentState.passwordConfirmationError != null) isValid = false
+
+        if (currentState.password != currentState.passwordConfirmation) {
+            _state.update { it.copy(passwordConfirmationError = "Пароли не совпадают") }
+            isValid = false
+        }
+
+        return isValid
+    }
+
+    private fun validateEmail(email: String): String? {
+        val emailRegex = "^[a-zA-Z0-9._%+-]{3,}@[a-zA-Z0-9.-]{3,}\\.[a-zA-Z]{2,}\$".toRegex()
+
+        return when {
+            email.isEmpty() -> "Поле не должно быть пустым!"
+            email.startsWith(' ') -> "Поле не должно начинаться с пробела"
+            email.firstOrNull()?.isDigit() == true -> "Email не должен начинаться с цифры"
+            !email.matches(emailRegex) -> "Некорректный формат email"
+            else -> null
+        }
+    }
+
+    private fun validatePassword(password: String): String? {
+        val passwordRegex = "^(?=.*[0-9])(?=.*[!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?])[A-Za-z0-9!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]{8,30}\$".toRegex()
+
+        return when {
+            password.isEmpty() -> "Поле не должно быть пустым!"
+            password.startsWith(' ') -> "Поле не должно начинаться с пробела"
+            !password.matches(passwordRegex) -> "Пароль должен содержать 8-30 символов, включая цифры, спецсимволы и латинские буквы"
+            else -> null
+        }
+    }
+
+    fun setRole(role: Boolean) {
         _state.update { it.copy(role = role) }
     }
 
@@ -56,10 +115,14 @@ class RegisterViewModel(private val navigator: Navigator) : ViewModel() {
         }
     }
 
-    fun goToInfoScreen(){
+    private fun goToInfoScreen(email: String, password: String, role: Boolean) {
         viewModelScope.launch {
             navigator.navigate(
-                destination = Destination.InfoScreen
+                destination = Destination.InfoScreen(
+                    email = email,
+                    password = password,
+                    role = role
+                )
             )
         }
     }

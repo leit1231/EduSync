@@ -29,4 +29,16 @@ class SplashViewMode(private val navigator: Navigator): ViewModel() {
         }
     }
 
+    fun goToMainScreen(){
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.MainGraph,
+                navOptions = {
+                    popUpTo(Destination.OnboardingGraph){
+                        inclusive = true
+                    }
+                }
+            )
+        }
+    }
 }

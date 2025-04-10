@@ -38,4 +38,16 @@ class EncryptedSharedPreference(context: Context) {
     fun setFirstLaunch(isFirstLaunch: Boolean) {
         sharedPreferences.edit().putBoolean("is_first_launch", isFirstLaunch).apply()
     }
+
+    fun saveAccessToken(token: String) {
+        sharedPreferences.edit().putString("access_token", token).apply()
+    }
+
+    fun getAccessToken(): String? {
+        return sharedPreferences.getString("access_token", null)
+    }
+
+    fun clearTokens() {
+        sharedPreferences.edit().remove("access_token").apply()
+    }
 }

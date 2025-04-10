@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.crashlytics)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -10,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.edusync"
+        applicationId = "ru.eduHub.edusync"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -67,5 +69,15 @@ dependencies {
     implementation("io.insert-koin:koin-androidx-compose:3.5.3")
     implementation("androidx.compose.ui:ui:1.7.8")
     implementation("io.github.marat101:pdf-viewer:1.0.0-alpha")
+    //
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.retrofit)
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+    implementation(libs.converter.gson)
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 }

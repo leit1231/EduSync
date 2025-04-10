@@ -7,5 +7,5 @@ data class RegisterState(
     val passwordError: String? = null,
     val passwordConfirmation: String = "",
     val passwordConfirmationError: String? = null,
-    val role: String? = null
+    val role: Boolean = false
 )

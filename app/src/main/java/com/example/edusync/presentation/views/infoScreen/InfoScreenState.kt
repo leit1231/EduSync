@@ -6,4 +6,11 @@ data class InfoScreenState(
     val patronymic: String = "",
     val selectedUniversity: String = "",
     val selectedGroup: String = "",
+    val availableUniversities: List<String> = emptyList(),
+    val availableGroups: List<String> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val surnameError: String? = null,
+    val nameError: String? = null,
+    val patronymicError: String? = null,
 )

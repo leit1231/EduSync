@@ -1,8 +1,11 @@
 package com.example.edusync.presentation.views.register
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +27,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.presentation.components.custom_text_field.email_text_field.EmailTextField
@@ -41,6 +51,13 @@ fun RegisterScreen() {
     val viewModel: RegisterViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
     var isTeacherSelected by remember { mutableStateOf(false) }
+
+    val isFormValid = state.email.isNotBlank() &&
+            state.password.isNotBlank() &&
+            state.passwordConfirmation.isNotBlank() &&
+            state.emailError == null &&
+            state.passwordError == null &&
+            state.passwordConfirmationError == null
 
     Column(
         modifier = Modifier
@@ -91,11 +108,11 @@ fun RegisterScreen() {
             selected = isTeacherSelected,
             onStudentClick = {
                 isTeacherSelected = false
-                viewModel.setRole("student")
+                viewModel.setRole(false)
             },
             onTeacherClick = {
                 isTeacherSelected = true
-                viewModel.setRole("teacher")
+                viewModel.setRole(true)
             }
         )
 
@@ -115,15 +132,14 @@ fun RegisterScreen() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = {
-                viewModel.goToInfoScreen()
-            },
+            onClick = { viewModel.register() },
+            enabled = isFormValid,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppColors.Primary
-            ),
+            )
         ) {
             Text(
                 text = "Регистрация",
@@ -136,7 +152,7 @@ fun RegisterScreen() {
 
         Text(
             text = "Есть аккаунт?",
-            style = AppTypography.title.copy(fontSize = 16.sp),
+            style = AppTypography.body1.copy(fontSize = 16.sp),
             color = AppColors.Secondary
         )
 
@@ -163,11 +179,40 @@ fun RegisterScreen() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        val annotatedString = buildAnnotatedString {
+            withStyle(style = SpanStyle(color = Color.White, fontSize = 14.sp)) {
+                append("При регистрации и входе\nвы соглашаетесь с ")
+
+                pushStringAnnotation(tag = "URL", annotation = "https://gitlab.serega-pirat.ru/")
+                withStyle(style = SpanStyle(color = Color.Red)) {
+                    append("политикой конфиденциальности")
+                }
+                pop()
+            }
+        }
+
+        val context = LocalContext.current
+        val textLayoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+
         Text(
-            text = "При регистрации и входе \n" +
-                    "вы соглашаетесь с политикой конфеденциальности",
-            color = AppColors.Secondary,
-            style = AppTypography.body1.copy(fontSize = 14.sp),
+            text = annotatedString,
+            modifier = Modifier
+                .fillMaxWidth()
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        textLayoutResult.value?.let { layoutResult ->
+                            val textOffset = layoutResult.getOffsetForPosition(offset)
+                            annotatedString.getStringAnnotations(textOffset, textOffset)
+                                .firstOrNull { it.tag == "URL" }?.let { annotation ->
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                    context.startActivity(intent)
+                                }
+                        }
+                    }
+                },
+            onTextLayout = { textLayoutResult.value = it },
+            softWrap = false,
+            overflow = TextOverflow.Visible
         )
     }
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -20,7 +19,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.example.edusync.presentation.theme.ui.AppColors
+import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewModel
 import com.example.edusync.presentation.views.changePasswordAfterForgot.ChangePasswordAfterForgotScreen
+import com.example.edusync.presentation.views.confirmEmail.ConfirmEmailScreen
 import com.example.edusync.presentation.views.enterCode.EnterCodeScreen
 import com.example.edusync.presentation.views.favorities.FavoritiesScreen
 import com.example.edusync.presentation.views.forgotPassword.ForgotPasswordScreen
@@ -38,6 +39,8 @@ import com.example.edusync.presentation.views.register.RegisterScreen
 import com.example.edusync.presentation.views.search_screen.SearchScreen
 import com.example.edusync.presentation.views.settings_screen.SettingsScreen
 import com.example.edusync.presentation.views.splash.SplashScreen
+import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -108,7 +111,12 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                         RegisterScreen()
                     }
                     composable<Destination.InfoScreen> {
-                        InfoScreen()
+                        val (email, password, role) = it.toRoute<Destination.InfoScreen>()
+                        val viewModel: InfoStudentViewModel = koinViewModel(parameters = { parametersOf(email, password, role) } )
+                        InfoScreen(viewModel)
+                    }
+                    composable<Destination.ConfirmEmailScreen> {
+                        ConfirmEmailScreen()
                     }
                 }
 

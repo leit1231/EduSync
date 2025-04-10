@@ -22,15 +22,12 @@ import com.example.edusync.presentation.components.custom_text_field.generic_tex
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewModel
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun InfoScreen() {
-    val viewModel: InfoStudentViewModel = koinViewModel()
+fun InfoScreen(viewModel: InfoStudentViewModel) {
+
     val uiState by viewModel.uiState
-    val expandedUniversity = viewModel.expandedUniversity
-    val universities = listOf("РКСИ", "ДГТУ", "РИНХ")
-    val isTeacher = true
+    val isTeacher = viewModel.role
 
     Column(
         modifier = Modifier
@@ -48,24 +45,51 @@ fun InfoScreen() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        GenericTextField(value = uiState.surname, onValueChange = viewModel::onSurnameChange, label = "Фамилия")
+        GenericTextField(
+            value = uiState.surname,
+            onValueChange = { newValue ->
+                viewModel.onSurnameChange(newValue)
+                viewModel.validateSurname()
+            },
+            label = "Фамилия",
+            isError = viewModel.surnameError.value != null,
+            errorMessage = viewModel.surnameError.value
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        GenericTextField(value = uiState.name, onValueChange = viewModel::onNameChange, label = "Имя")
+        GenericTextField(
+            value = uiState.name,
+            onValueChange = { newValue ->
+                viewModel.onNameChange(newValue)
+                viewModel.validateName()
+            },
+            label = "Имя",
+            isError = viewModel.nameError.value != null,
+            errorMessage = viewModel.nameError.value
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        GenericTextField(value = uiState.patronymic, onValueChange = viewModel::onPatronymicChange, label = "Отчество")
+        GenericTextField(
+            value = uiState.patronymic,
+            onValueChange = { newValue ->
+                viewModel.onPatronymicChange(newValue)
+                viewModel.validatePatronymic()
+            },
+            label = "Отчество",
+            isError = viewModel.patronymicError.value != null,
+            errorMessage = viewModel.patronymicError.value
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CustomDropdownMenu(
             label = "Выберите ваше учебное заведение",
-            options = universities,
+            options = uiState.availableUniversities,
             selectedOption = uiState.selectedUniversity,
             onOptionSelected = viewModel::onUniversitySelected,
-            expanded = expandedUniversity,
+            expanded = viewModel.expandedUniversity,
             onExpandedChange = { viewModel.expandedUniversity = it },
             isChanged = true
         )
@@ -75,13 +99,23 @@ fun InfoScreen() {
         if (uiState.selectedUniversity.isNotEmpty() && !isTeacher) {
             CustomDropdownMenu(
                 label = "Выберите вашу группу",
-                options = viewModel.availableGroups,
+                options = uiState.availableGroups,
                 selectedOption = uiState.selectedGroup,
                 onOptionSelected = viewModel::onGroupSelected,
                 expanded = viewModel.expandedGroup,
                 onExpandedChange = { viewModel.expandedGroup = it },
-                isChanged = true,
-                modifier = Modifier.fillMaxWidth()
+                isChanged = true
+            )
+        }
+
+        if (!uiState.error.isNullOrEmpty()) {
+            Text(
+                text = uiState.error!!,
+                color = AppColors.Error,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .fillMaxWidth()
             )
         }
 
@@ -89,12 +123,14 @@ fun InfoScreen() {
 
         Button(
             onClick = {
-                viewModel.goToMainScreen()
+                viewModel.registerUser()
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppColors.Primary
             ),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
         ) {
             Text(
                 text = "Сохранить",

@@ -1,6 +1,7 @@
 package com.example.edusync.di
 
 import com.example.edusync.presentation.viewModels.changePasswordAfterForgot.ChangePasswordAfterForgotViewModel
+import com.example.edusync.presentation.viewModels.confirmEmail.ConfirmEmailViewModel
 import com.example.edusync.presentation.viewModels.enterCode.EnterCodeViewModel
 import com.example.edusync.presentation.viewModels.favorite.FavoritesViewModel
 import com.example.edusync.presentation.viewModels.forgotPassword.ForgotPasswordViewModel
@@ -20,14 +21,19 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val viewModelModule = module {
+    viewModel { ConfirmEmailViewModel(get()) }
     viewModel { SplashViewMode(get()) }
     viewModel { OnboardingViewModel(get()) }
-    viewModel { LoginViewModel(get()) }
+    viewModel { LoginViewModel(get(), get(), get()) }
     viewModel { RegisterViewModel(get()) }
     viewModel { ForgotPasswordViewModel(get()) }
     viewModel { EnterCodeViewModel(get()) }
     viewModel { ChangePasswordAfterForgotViewModel(get()) }
-    viewModel { InfoStudentViewModel(get()) }
+    viewModel {
+        parameters ->
+        InfoStudentViewModel(get(), get(), get(), email = parameters.get(), password = parameters.get(), role = parameters.get(), get()
+        )
+    }
     viewModel { MainScreenViewModel(get()) }
     viewModel { ProfileScreenViewModel(get()) }
     viewModel { SettingsViewModel(get()) }

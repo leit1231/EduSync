@@ -9,8 +9,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,21 +26,21 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SplashScreen() {
+
     val viewModel = koinViewModel<SplashViewMode>()
-
-    val context = LocalContext.current
-
+    val context = LocalContext.current.applicationContext
     val encryptedPrefs = remember { EncryptedSharedPreference(context) }
+    val accessToken = encryptedPrefs.getAccessToken()
 
-    val isFirstLaunch by remember {
-        mutableStateOf(encryptedPrefs.isFirstLaunch())
-    }
-
-    LaunchedEffect(isFirstLaunch) {
-        if (isFirstLaunch) {
-            viewModel.goToOnboarding()
-        } else{
-            viewModel.goToLogin()
+    LaunchedEffect(Unit) {
+        if (accessToken != null) {
+            viewModel.goToMainScreen()
+        } else {
+            if (encryptedPrefs.isFirstLaunch()) {
+                viewModel.goToOnboarding()
+            } else {
+                viewModel.goToLogin()
+            }
         }
     }
 
