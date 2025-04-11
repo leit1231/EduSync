@@ -1,13 +1,18 @@
 package com.example.edusync.data.repository.institution
 
+import com.example.edusync.data.local.entities.InstituteDao
+import com.example.edusync.data.local.entities.InstituteEntity
+import com.example.edusync.data.local.entities.areListsEqual
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.InstituteResponse
 import com.example.edusync.domain.model.institution.Institute
 import com.example.edusync.domain.repository.institution.InstituteRepository
+import kotlinx.coroutines.flow.firstOrNull
 import retrofit2.Response
 
 class InstituteRepositoryImpl(
-    private val apiService: EduSyncApiService
+    private val apiService: EduSyncApiService,
+    private val instituteDao: InstituteDao
 ) : InstituteRepository {
 
     override suspend fun getInstituteById(id: Int): Result<Institute> {
@@ -20,12 +25,38 @@ class InstituteRepositoryImpl(
     }
 
     override suspend fun getAllInstitutes(): Result<List<Institute>> {
+        val localInstitutes = instituteDao.getAll()
+            .firstOrNull()
+            ?.map { it.mapToDomain() }
+            ?: emptyList()
+
+        if (localInstitutes.isNotEmpty()) {
+            return Result.success(localInstitutes)
+        }
+
         return try {
             val response = apiService.getAllInstitutions()
             handleResponse(response).map { it.mapToDomain() }
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun syncInstitutes() {
+        val serverInstitutes = apiService.getAllInstitutions().body()?.map { it.mapToEntity() } ?: emptyList()
+        val localInstitutes = instituteDao.getAll().firstOrNull() ?: emptyList()
+
+        if (!areListsEqual(serverInstitutes, localInstitutes)) {
+            instituteDao.deleteAll()
+            instituteDao.insertAll(serverInstitutes)
+        }
+    }
+
+    private fun InstituteResponse.mapToEntity(): InstituteEntity {
+        return InstituteEntity(
+            id = ID,
+            name = Name
+        )
     }
 
     override suspend fun getMaskedInstitutes(): Result<List<Institute>> {
@@ -43,6 +74,13 @@ class InstituteRepositoryImpl(
         } else {
             Result.failure(Exception("Server error: ${response.code()}"))
         }
+    }
+
+    private fun InstituteEntity.mapToDomain(): Institute {
+        return Institute(
+            id = id,
+            name = name
+        )
     }
 
     private fun InstituteResponse.mapToDomain(): Institute {

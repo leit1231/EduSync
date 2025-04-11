@@ -8,10 +8,12 @@ import com.example.edusync.domain.use_case.account.LoginUseCase
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.login.LoginState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LoginViewModel(
     private val navigator: Navigator,
@@ -30,7 +32,7 @@ class LoginViewModel(
     }
 
     fun onLoginClicked() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             loginUseCase(_uiState.value.email, _uiState.value.password).collect { resource ->
                 _uiState.update { it.copy(isLoading = resource is Resource.Loading) }
                 when (resource) {
@@ -86,8 +88,8 @@ class LoginViewModel(
         }
     }
 
-    private fun goToMainScreen(){
-        viewModelScope.launch {
+    private suspend fun goToMainScreen(){
+        withContext(Dispatchers.Main.immediate) {
             navigator.navigate(
                 destination = Destination.MainGraph,
                 navOptions = {

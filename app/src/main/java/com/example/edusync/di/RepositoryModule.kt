@@ -20,8 +20,12 @@ import org.koin.dsl.module
 
 val repositoryModule = module {
     single<UserRepository> { UserRepositoryImpl(get()) }
-    single<GroupRepository> { GroupRepositoryImpl(get()) }
-    single<InstituteRepository> { InstituteRepositoryImpl(get()) }
+    single<InstituteRepository> {
+        InstituteRepositoryImpl(get(), get())
+    }
+    single<GroupRepository> {
+        GroupRepositoryImpl(get(), get())
+    }
 
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }
