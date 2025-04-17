@@ -1,5 +1,6 @@
 package com.example.edusync.domain.use_case.account
 
+import android.util.Log
 import com.example.edusync.common.Resource
 import com.example.edusync.domain.model.account.User
 import com.example.edusync.domain.repository.account.UserRepository
@@ -15,6 +16,7 @@ class GetProfileUseCase(
         emit(Resource.Loading())
         try {
             val result = repository.getProfile()
+            Log.d("LoadUserData", "$result")
             emit(result.fold(
                 onSuccess = { Resource.Success(it) },
                 onFailure = { Resource.Error("Ошибка загрузки профиля", null) }

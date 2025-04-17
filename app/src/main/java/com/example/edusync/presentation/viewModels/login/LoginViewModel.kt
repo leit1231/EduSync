@@ -3,7 +3,7 @@ package com.example.edusync.presentation.viewModels.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.Resource
-import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.domain.use_case.account.GetProfileUseCase
 import com.example.edusync.domain.use_case.account.LoginUseCase
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
@@ -17,8 +17,8 @@ import kotlinx.coroutines.withContext
 
 class LoginViewModel(
     private val navigator: Navigator,
-    private val encryptedPrefs: EncryptedSharedPreference,
-    private val loginUseCase: LoginUseCase
+    private val loginUseCase: LoginUseCase,
+    private val getUserInfo: GetProfileUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginState())
     val uiState: StateFlow<LoginState> = _uiState
@@ -38,7 +38,15 @@ class LoginViewModel(
                 when (resource) {
                     is Resource.Success -> {
                         resource.data?.let {
-                            goToMainScreen()
+                            viewModelScope.launch {
+                                getUserInfo().collect { profileResource ->
+                                    if (profileResource is Resource.Success) {
+                                        goToMainScreen()
+                                    } else if (profileResource is Resource.Error) {
+                                        _uiState.update { it.copy(error = profileResource.message) }
+                                    }
+                                }
+                            }
                         }
                     }
                     is Resource.Error -> {

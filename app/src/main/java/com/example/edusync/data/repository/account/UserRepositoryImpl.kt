@@ -1,5 +1,6 @@
 package com.example.edusync.data.repository.account
 
+import android.util.Log
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.AuthResponse
@@ -27,7 +28,7 @@ class UserRepositoryImpl(private val api: EduSyncApiService, private val encrypt
         api.logout("Bearer $token")
     }.also { result ->
         if (result.isSuccess) {
-            encryptedSharedPreference.clearTokens()
+            encryptedSharedPreference.clearUserData()
         }
     }
 
@@ -42,11 +43,15 @@ class UserRepositoryImpl(private val api: EduSyncApiService, private val encrypt
         api.profile("Bearer $token")
     }.map { response ->
         User(
-            id = response.id,
+            id = response.user_id,
             email = response.email,
             fullName = response.full_name,
-            isTeacher = response.is_teacher
-        )
+            isTeacher = response.is_teacher,
+            institutionId = response.institution_id,
+            groupId = response.group_id
+        ).also {
+            encryptedSharedPreference.saveUser(it)
+        }
     }
 
     private inline fun <T> handleApiResponse(call: () -> Response<T>): Result<T> =
@@ -99,7 +104,7 @@ class UserRepositoryImpl(private val api: EduSyncApiService, private val encrypt
 
         val refreshResult = safeApiCall { api.refresh(RefreshRequest(refreshToken)) }
         if (refreshResult.isFailure) {
-            encryptedSharedPreference.clearTokens()
+            encryptedSharedPreference.clearUserData()
             return Result.failure(Exception("Token refresh failed"))
         }
 

@@ -41,8 +41,6 @@ import org.koin.androidx.compose.koinViewModel
 fun ProfileScreen() {
     val viewModel: ProfileScreenViewModel = koinViewModel()
     val uiState by viewModel.uiState
-    val expandedUniversity = viewModel.expandedUniversity
-    val universities = listOf("РКСИ", "ДГТУ", "РИНХ")
     val isTeacher = false
     val isLogoutDialogVisible by viewModel.isLogoutDialogVisible
 
@@ -103,10 +101,10 @@ fun ProfileScreen() {
 
         CustomDropdownMenu(
             label = "Выберите ваше учебное заведение",
-            options = universities,
+            options = uiState.availableUniversities,
             selectedOption = uiState.selectedUniversity,
             onOptionSelected = viewModel::onUniversitySelected,
-            expanded = expandedUniversity,
+            expanded = viewModel.expandedUniversity,
             onExpandedChange = { viewModel.expandedUniversity = it },
             isChanged = true
         )
@@ -116,23 +114,23 @@ fun ProfileScreen() {
         if (!isTeacher) {
             CustomDropdownMenu(
                 label = "Выберите вашу группу",
-                options = viewModel.availableGroups,
+                options = uiState.availableGroups,
                 selectedOption = uiState.selectedGroup,
                 onOptionSelected = viewModel::onGroupSelected,
                 expanded = viewModel.expandedGroup,
                 onExpandedChange = { viewModel.expandedGroup = it },
-                isChanged = true,
-                modifier = Modifier.fillMaxWidth()
+                isChanged = true
             )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { viewModel.saveChanges()},
             colors = ButtonDefaults.buttonColors(
-                containerColor = AppColors.Primary
+                containerColor = if (uiState.isSaveEnabled) AppColors.Primary else AppColors.SecondaryTransparent
             ),
+            enabled = uiState.isSaveEnabled,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(

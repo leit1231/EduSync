@@ -6,8 +6,11 @@ data class ProfileState(
     val patronymic: String = "",
     val selectedUniversity: String = "",
     val selectedGroup: String = "",
+    val availableUniversities: List<String> = emptyList(),
+    val availableGroups: List<String> = emptyList(),
+    val isDataChanged: Boolean = false
 ) {
     val isSaveEnabled: Boolean
-        get() = surname.isNotBlank() && name.isNotBlank() && patronymic.isNotBlank() &&
+        get() = isDataChanged && surname.isNotBlank() && name.isNotBlank() && patronymic.isNotBlank() &&
                 selectedUniversity.isNotBlank() && selectedGroup.isNotBlank()
 }

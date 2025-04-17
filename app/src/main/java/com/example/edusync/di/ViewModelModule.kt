@@ -35,7 +35,7 @@ val viewModelModule = module {
         )
     }
     viewModel { MainScreenViewModel(get()) }
-    viewModel { ProfileScreenViewModel(get(), get(), get()) }
+    viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { FavoritesViewModel(get()) }
     viewModel { MaterialsScreenViewModel(get()) }

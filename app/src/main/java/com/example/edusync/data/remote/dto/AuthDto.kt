@@ -24,8 +24,10 @@ data class AuthResponse(
 )
 
 data class UserProfileResponse(
-    val id: Int,
+    val user_id: Int,
     val email: String,
     val full_name: String,
-    val is_teacher: Boolean
+    val is_teacher: Boolean,
+    val institution_id: Int,
+    val group_id: Int
 )

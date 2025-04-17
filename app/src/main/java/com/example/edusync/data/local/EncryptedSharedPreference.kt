@@ -3,6 +3,8 @@ package com.example.edusync.data.local
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.edusync.domain.model.account.User
+import com.google.gson.Gson
 
 class EncryptedSharedPreference(context: Context) {
 
@@ -55,11 +57,22 @@ class EncryptedSharedPreference(context: Context) {
         return sharedPreferences.getString("refresh_token", null)
     }
 
-    fun clearTokens() {
+    fun clearUserData() {
         sharedPreferences.edit().apply {
             remove("access_token")
             remove("refresh_token")
+            remove("user_data")
             apply()
         }
+    }
+
+    fun saveUser(user: User) {
+        val json = Gson().toJson(user)
+        sharedPreferences.edit().putString("user_data", json).apply()
+    }
+
+    fun getUser(): User? {
+        val json = sharedPreferences.getString("user_data", null)
+        return json?.let { Gson().fromJson(it, User::class.java) }
     }
 }

@@ -3,6 +3,7 @@ accompanistPager = "0.33.3-alpha"
 agp = "8.8.2"
 converterGson = "2.11.0"
 coreSplashscreenVersion = "1.0.1"
+gson = "2.10.1"
 kotlin = "2.0.0"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -32,6 +33,7 @@ firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ndk" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serializationJson" }
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
