@@ -10,10 +10,18 @@ class AppInitializer(
     private val groupRepository: GroupRepository
 ) {
     suspend fun initialize() {
-        (instituteRepository as InstituteRepositoryImpl).syncInstitutes()
-        val institutes = instituteRepository.getAllInstitutes().getOrNull() ?: emptyList()
-        institutes.forEach {
-            (groupRepository as GroupRepositoryImpl).syncGroups(it.id)
+        try {
+            (instituteRepository as InstituteRepositoryImpl).syncInstitutes()
+            val institutes = instituteRepository.getAllInstitutes().getOrNull() ?: emptyList()
+            institutes.forEach {
+                try {
+                    (groupRepository as GroupRepositoryImpl).syncGroups(it.id)
+                } catch (e: Exception) {
+                    println("Failed to sync groups for institute ${it.id}: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            println("Failed to initialize app: ${e.message}")
         }
     }
 }

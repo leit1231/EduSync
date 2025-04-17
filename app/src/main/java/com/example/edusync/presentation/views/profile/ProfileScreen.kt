@@ -21,8 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,7 +44,7 @@ fun ProfileScreen() {
     val expandedUniversity = viewModel.expandedUniversity
     val universities = listOf("РКСИ", "ДГТУ", "РИНХ")
     val isTeacher = false
-    val isLogoutDialogVisible = remember { mutableStateOf(false) }
+    val isLogoutDialogVisible by viewModel.isLogoutDialogVisible
 
     Column(
         modifier = Modifier
@@ -146,7 +144,7 @@ fun ProfileScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { isLogoutDialogVisible.value = true },
+            onClick = { viewModel.showLogoutDialog() },
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = Color.Transparent
             ),
@@ -168,16 +166,16 @@ fun ProfileScreen() {
     }
 
 
-    if (isLogoutDialogVisible.value) {
+    if (isLogoutDialogVisible) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable { isLogoutDialogVisible.value = false }
+                .clickable { viewModel.hideLogoutDialog()}
         ) {
             LogoutWindow(
-                onClick = { viewModel.goToLogin() },
-                onDismiss = { isLogoutDialogVisible.value = false },
+                onClick = { viewModel.performLogout() },
+                onDismiss = { viewModel.hideLogoutDialog() },
                 modifier = Modifier.align(Alignment.Center)
             )
         }

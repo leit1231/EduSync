@@ -7,7 +7,7 @@ import com.example.edusync.domain.model.account.User
 interface UserRepository {
     suspend fun register(request: RegisterRequest): Result<Unit>
     suspend fun login(email: String, password: String): Result<AuthResponse>
-    suspend fun logout(token: String): Result<Unit>
+    suspend fun logout(): Result<Unit>
     suspend fun refresh(refreshToken: String): Result<AuthResponse>
-    suspend fun getProfile(token: String): Result<User>
+    suspend fun getProfile(): Result<User>
 }

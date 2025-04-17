@@ -78,8 +78,7 @@ fun LogoutWindow(onClick: () -> Unit, onDismiss: () -> Unit, modifier: Modifier 
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { onClick
-                    onDismiss()},
+                Button(onClick = { onClick() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     border = BorderStroke(1.dp, color = AppColors.Error)

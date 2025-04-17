@@ -5,11 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
-import com.example.edusync.presentation.views.main.shedule.Day
+import com.example.edusync.domain.model.schedule.Day
 import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
-import com.example.edusync.presentation.views.main.shedule.PairInfo
-import com.example.edusync.presentation.views.main.shedule.PairItem
-import com.example.edusync.presentation.views.main.shedule.Schedule
+import com.example.edusync.domain.model.schedule.PairInfo
+import com.example.edusync.domain.model.schedule.PairItem
+import com.example.edusync.domain.model.schedule.Schedule
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow

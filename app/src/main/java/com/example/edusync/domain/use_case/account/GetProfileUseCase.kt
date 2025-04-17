@@ -11,20 +11,14 @@ import kotlinx.coroutines.flow.flowOn
 class GetProfileUseCase(
     private val repository: UserRepository
 ) {
-    operator fun invoke(
-        token: String
-    ): Flow<Resource<User>> = flow {
+    operator fun invoke(): Flow<Resource<User>> = flow {
         emit(Resource.Loading())
-
         try {
-            val result = repository.getProfile(token)
-
-            if (result.isSuccess) {
-                val user = result.getOrNull()
-                emit(Resource.Success(user!!))
-            } else {
-                emit(Resource.Error("Ошибка загрузки профиля", null))
-            }
+            val result = repository.getProfile()
+            emit(result.fold(
+                onSuccess = { Resource.Success(it) },
+                onFailure = { Resource.Error("Ошибка загрузки профиля", null) }
+            ))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))
         }

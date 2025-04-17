@@ -10,21 +10,16 @@ import kotlinx.coroutines.flow.flowOn
 class LogoutUseCase(
     private val repository: UserRepository
 ) {
-    operator fun invoke(
-        token: String
-    ): Flow<Resource<Unit>> = flow {
+    operator fun invoke(): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading())
-
         try {
-            val result = repository.logout(token)
-
-            if (result.isSuccess){
-                emit(Resource.Success(Unit))
-            }else{
-                emit(Resource.Error("Ошибка выхода", null))
-            }
-        }catch (e: Exception){
-            emit(Resource.Error(e.message?: "Неизвестная ошибка", null))
+            val result = repository.logout()
+            emit(result.fold(
+                onSuccess = { Resource.Success(Unit) },
+                onFailure = { Resource.Error("Ошибка выхода", null) }
+            ))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))
         }
     }.flowOn(Dispatchers.IO)
 }

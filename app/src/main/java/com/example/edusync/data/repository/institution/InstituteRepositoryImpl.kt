@@ -38,7 +38,7 @@ class InstituteRepositoryImpl(
             val response = apiService.getAllInstitutions()
             handleResponse(response).map { it.mapToDomain() }
         } catch (e: Exception) {
-            Result.failure(e)
+            return Result.success(localInstitutes)
         }
     }
 

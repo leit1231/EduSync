@@ -29,7 +29,7 @@ class GroupRepositoryImpl(
             val response = apiService.getGroupsByInstitution(institutionId)
             handleResponse(response).map { it.mapToDomain() }
         } catch (e: Exception) {
-            Result.failure(e)
+            return Result.success(localGroups)
         }
     }
 

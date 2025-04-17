@@ -31,8 +31,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.shedule.PairInfo
-import com.example.edusync.presentation.views.main.shedule.PairItem
+import com.example.edusync.domain.model.schedule.PairInfo
+import com.example.edusync.domain.model.schedule.PairItem
 
 @Composable
 fun CreateEditPairDialog(

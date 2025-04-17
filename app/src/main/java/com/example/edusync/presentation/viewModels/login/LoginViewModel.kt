@@ -37,8 +37,7 @@ class LoginViewModel(
                 _uiState.update { it.copy(isLoading = resource is Resource.Loading) }
                 when (resource) {
                     is Resource.Success -> {
-                        resource.data?.let { authResponse ->
-                            encryptedPrefs.saveAccessToken(authResponse.access_token)
+                        resource.data?.let {
                             goToMainScreen()
                         }
                     }

@@ -27,7 +27,7 @@ import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import com.example.edusync.presentation.views.main.component.dateItem.toDayOfWeek
 import com.example.edusync.presentation.views.main.component.dateItem.toFullMonth
-import com.example.edusync.presentation.views.main.shedule.Schedule
+import com.example.edusync.domain.model.schedule.Schedule
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)

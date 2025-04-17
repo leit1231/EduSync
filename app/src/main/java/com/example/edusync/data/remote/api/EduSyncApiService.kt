@@ -6,6 +6,7 @@ import com.example.edusync.data.remote.dto.InstituteResponse
 import com.example.edusync.data.remote.dto.LoginRequest
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
+import com.example.edusync.data.remote.dto.ScheduleResponse
 import com.example.edusync.data.remote.dto.UserProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -13,6 +14,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface EduSyncApiService {
 
@@ -52,4 +54,10 @@ interface EduSyncApiService {
 
     @GET("api/institutions/masked")
     suspend fun getMaskedInstitutions(): Response<List<InstituteResponse>>
+
+    // Получение расписания
+    @GET("/api/schedule")
+    suspend fun getScheduleByGroup(
+        @Query("group_id") groupId: Int
+    ): Response<ScheduleResponse>
 }

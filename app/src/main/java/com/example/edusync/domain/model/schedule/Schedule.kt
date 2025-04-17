@@ -1,4 +1,4 @@
-package com.example.edusync.presentation.views.main.shedule
+package com.example.edusync.domain.model.schedule
 
 data class Schedule(
     val days: List<Day>,

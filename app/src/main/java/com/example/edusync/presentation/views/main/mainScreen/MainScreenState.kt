@@ -1,7 +1,7 @@
 package com.example.edusync.presentation.views.main.mainScreen
 
 import com.example.edusync.common.LoadingState
-import com.example.edusync.presentation.views.main.shedule.Schedule
+import com.example.edusync.domain.model.schedule.Schedule
 
 data class MainScreenState(
     val selectedGroup: String? = null,

@@ -38,8 +38,8 @@ import com.example.edusync.R
 import com.example.edusync.presentation.components.modal_window.CreateEditPairDialog
 import com.example.edusync.presentation.components.modal_window.CreateReminder
 import com.example.edusync.presentation.viewModels.mainScreen.MainScreenViewModel
-import com.example.edusync.presentation.views.main.shedule.PairItem
-import com.example.edusync.presentation.views.main.shedule.Schedule
+import com.example.edusync.domain.model.schedule.PairItem
+import com.example.edusync.domain.model.schedule.Schedule
 import com.example.edusync.presentation.views.main.component.dateItem.DateItem
 import com.example.edusync.presentation.views.main.component.pair.PairItem
 import kotlinx.coroutines.delay

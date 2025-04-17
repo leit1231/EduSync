@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.shedule.Day
+import com.example.edusync.domain.model.schedule.Day
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import com.example.edusync.presentation.views.main.component.dateItem.toDayOfWeek
 import com.example.edusync.presentation.views.main.component.dateItem.toFullMonth

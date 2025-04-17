@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.example.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.shedule.Day
+import com.example.edusync.domain.model.schedule.Day
 import java.util.Calendar
 
 @Composable

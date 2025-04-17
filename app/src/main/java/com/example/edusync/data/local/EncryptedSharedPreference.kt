@@ -47,7 +47,19 @@ class EncryptedSharedPreference(context: Context) {
         return sharedPreferences.getString("access_token", null)
     }
 
+    fun saveRefreshToken(token: String) {
+        sharedPreferences.edit().putString("refresh_token", token).apply()
+    }
+
+    fun getRefreshToken(): String? {
+        return sharedPreferences.getString("refresh_token", null)
+    }
+
     fun clearTokens() {
-        sharedPreferences.edit().remove("access_token").apply()
+        sharedPreferences.edit().apply {
+            remove("access_token")
+            remove("refresh_token")
+            apply()
+        }
     }
 }

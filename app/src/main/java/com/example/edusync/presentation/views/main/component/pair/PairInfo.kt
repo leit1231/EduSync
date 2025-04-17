@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
-import com.example.edusync.presentation.views.main.shedule.PairInfo
+import com.example.edusync.domain.model.schedule.PairInfo
 
 @Composable
 fun PairInfo(pair: PairInfo) {

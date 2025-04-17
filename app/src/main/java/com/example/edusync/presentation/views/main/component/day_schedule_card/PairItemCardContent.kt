@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
-import com.example.edusync.presentation.views.main.shedule.PairItem
+import com.example.edusync.domain.model.schedule.PairItem
 
 @Composable
 fun PairItemCardContent(pair: PairItem, number: Int) {
