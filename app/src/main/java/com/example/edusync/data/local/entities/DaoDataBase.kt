@@ -21,7 +21,10 @@ interface InstituteDao {
 @Dao
 interface GroupDao {
     @Query("SELECT * FROM groups WHERE institutionId = :institutionId")
-    fun getGroupsByInstitutionId(institutionId: Int): Flow<List<GroupEntity>>
+    fun getGroupsByInstitutionIdAsFlow(institutionId: Int): Flow<List<GroupEntity>>
+
+    @Query("SELECT * FROM groups WHERE institutionId = :institutionId")
+    fun getGroupsByInstitutionId(institutionId: Int): List<GroupEntity>?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(groups: List<GroupEntity>)

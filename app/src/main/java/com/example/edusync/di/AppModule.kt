@@ -18,10 +18,11 @@ val appModule = module {
     single { EncryptedSharedPreference(androidContext()) }
     single {
         Room.databaseBuilder(
-            androidContext(),
-            AppDatabase::class.java,
-            "edusync.db"
-        ).build()
+                androidContext(),
+                AppDatabase::class.java,
+                "edusync.db"
+            ).fallbackToDestructiveMigration(true)
+            .build()
     }
     single { get<AppDatabase>().instituteDao() }
     single { get<AppDatabase>().groupDao() }

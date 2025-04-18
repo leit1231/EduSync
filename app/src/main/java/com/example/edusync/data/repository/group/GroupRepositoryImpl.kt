@@ -1,5 +1,6 @@
 package com.example.edusync.data.repository.group
 
+import android.util.Log
 import com.example.edusync.data.local.entities.GroupDao
 import com.example.edusync.data.local.entities.GroupEntity
 import com.example.edusync.data.local.entities.areListsEqual
@@ -7,7 +8,6 @@ import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.GroupResponse
 import com.example.edusync.domain.model.group.Group
 import com.example.edusync.domain.repository.group.GroupRepository
-import kotlinx.coroutines.flow.firstOrNull
 import retrofit2.Response
 
 class GroupRepositoryImpl(
@@ -17,9 +17,10 @@ class GroupRepositoryImpl(
 
     override suspend fun getGroupsByInstitution(institutionId: Int): Result<List<Group>> {
         val localGroups = groupDao.getGroupsByInstitutionId(institutionId)
-            .firstOrNull()
             ?.map { it.mapToDomain() }
             ?: emptyList()
+
+        Log.d("SearchScreen","$localGroups")
 
         if (localGroups.isNotEmpty()) {
             return Result.success(localGroups)
@@ -68,9 +69,7 @@ class GroupRepositoryImpl(
             ?.map { it.mapToEntity() }
             ?: emptyList()
 
-        val localGroups = groupDao.getGroupsByInstitutionId(institutionId)
-            .firstOrNull()
-            ?: emptyList()
+        val localGroups = groupDao.getGroupsByInstitutionId(institutionId)?: emptyList()
 
         if (!areListsEqual(serverGroups, localGroups)) {
             groupDao.deleteAll()

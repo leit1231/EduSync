@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.sp
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomDropdownMenu(
     label: String,

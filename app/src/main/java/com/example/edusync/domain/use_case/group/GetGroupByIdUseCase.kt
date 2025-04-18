@@ -11,21 +11,16 @@ import kotlinx.coroutines.flow.flowOn
 class GetGroupByIdUseCase(
     private val repository: GroupRepository
 ) {
-    operator fun invoke(
-        groupId: Int
-    ): Flow<Resource<Group>> = flow {
+    operator fun invoke(groupId: Int): Flow<Resource<Group>> = flow {
         emit(Resource.Loading())
-
         try {
             val result = repository.getGroupById(groupId)
-
-            if (result.isSuccess){
-                val group = result.getOrNull()
-                emit(Resource.Success(group))
-            }else{
+            if (result.isSuccess) {
+                emit(Resource.Success(result.getOrNull()))
+            } else {
                 emit(Resource.Error("Ошибка получения группы", null))
             }
-        }catch (e: Exception){
+        } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))
         }
     }.flowOn(Dispatchers.IO)

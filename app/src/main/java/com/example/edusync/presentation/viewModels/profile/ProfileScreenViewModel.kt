@@ -15,6 +15,10 @@ import com.example.edusync.domain.use_case.institution.GetAllInstitutesUseCase
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.profile.ProfileState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ProfileScreenViewModel(
@@ -30,10 +34,17 @@ class ProfileScreenViewModel(
     private var institutionIdMap = emptyMap<Int, String>()
     private var groupIdMap = emptyMap<Int, String>()
 
+    private val _isTeacher = MutableStateFlow(false)
+    val isTeacher: StateFlow<Boolean> = _isTeacher.asStateFlow()
+
     private val _isLogoutDialogVisible = mutableStateOf(false)
     val isLogoutDialogVisible: State<Boolean> = _isLogoutDialogVisible
 
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = encryptedSharedPreference.getUser()
+            _isTeacher.value = user?.isTeacher ?: false
+        }
         loadUserData()
     }
 

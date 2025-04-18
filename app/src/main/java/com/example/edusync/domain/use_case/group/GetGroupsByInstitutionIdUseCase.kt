@@ -26,6 +26,7 @@ class GetGroupsByInstitutionIdUseCase(
                 emit(Resource.Error("Ошибка загрузки групп", null))
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))
         }
     }.flowOn(Dispatchers.IO)

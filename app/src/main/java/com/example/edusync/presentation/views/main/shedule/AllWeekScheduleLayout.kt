@@ -35,5 +35,4 @@ fun AllWeekScheduleLayout() {
             }
         }
     }
-
 }

@@ -20,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,7 +42,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ProfileScreen() {
     val viewModel: ProfileScreenViewModel = koinViewModel()
     val uiState by viewModel.uiState
-    val isTeacher = false
+    val isTeacher by viewModel.isTeacher.collectAsState()
     val isLogoutDialogVisible by viewModel.isLogoutDialogVisible
 
     Column(

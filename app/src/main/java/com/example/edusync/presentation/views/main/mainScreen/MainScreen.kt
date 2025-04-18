@@ -38,6 +38,7 @@ fun MainScreen() {
     val viewModel: MainScreenViewModel = koinViewModel()
     val state = viewModel.state.collectAsState()
     val isAllScheduleVisible by viewModel.isAllScheduleVisible.collectAsState()
+    val isTeacher by viewModel.isTeacher.collectAsState()
 
     Column(
         Modifier
@@ -74,8 +75,10 @@ fun MainScreen() {
 
         SelectGroupTopBar(
             selectedGroup = state.value.selectedGroup ?: "Выбрать",
-            onGroupClick = { viewModel.goToSearch() },
-            isTeacher = true
+            onGroupClick = { isTeacherMode ->
+                viewModel.goToSearch(isTeacherMode)
+            },
+            isTeacher = isTeacher
         )
 
         val scheduleDays = state.value.schedule?.days ?: emptyList()
@@ -85,7 +88,7 @@ fun MainScreen() {
         val periodText = if (startDate != null && endDate != null) {
             "${startDate.get(Calendar.DAY_OF_MONTH)} ${startDate.toFullMonth()} - " +
                     "${endDate.get(Calendar.DAY_OF_MONTH)} ${endDate.toFullMonth()}"
-        } else "Нет данных"
+        } else ""
 
         Text(
             text = if (isAllScheduleVisible) periodText else "Пары на неделю",

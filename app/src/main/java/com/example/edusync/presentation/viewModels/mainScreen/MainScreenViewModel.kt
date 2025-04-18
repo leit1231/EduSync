@@ -1,8 +1,11 @@
 package com.example.edusync.presentation.viewModels.mainScreen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
+import com.example.edusync.common.Resource
+import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.domain.model.schedule.Day
@@ -10,18 +13,24 @@ import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
 import com.example.edusync.domain.model.schedule.PairInfo
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.domain.model.schedule.Schedule
+import com.example.edusync.domain.use_case.group.GetGroupByIdUseCase
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-class MainScreenViewModel(private val navigator: Navigator): ViewModel() {
+class MainScreenViewModel(
+    private val navigator: Navigator,
+    private val encryptedSharedPreference: EncryptedSharedPreference,
+    private val getGroupById: GetGroupByIdUseCase
+): ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
     val isAllScheduleVisible: StateFlow<Boolean> = _isAllScheduleVisible.asStateFlow()
@@ -35,23 +44,49 @@ class MainScreenViewModel(private val navigator: Navigator): ViewModel() {
     private val _state = MutableStateFlow(MainScreenState())
     val state = _state.asStateFlow()
 
+    private val _isTeacher = MutableStateFlow(false)
+    val isTeacher: StateFlow<Boolean> = _isTeacher.asStateFlow()
+
+    private val _institutionId = MutableStateFlow<Int?>(null)
+    val institutionId: StateFlow<Int?> = _institutionId
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
+            val user = encryptedSharedPreference.getUser()
+            _isTeacher.value = user?.isTeacher ?: false
+            _institutionId.value = user?.institutionId
+
             _state.update {
                 it.copy(
-                    selectedGroup = "ИС-11",
                     schedule = generateTestSchedule(),
                     scheduleLoading = LoadingState.Success
                 )
             }
+
+            user?.groupId?.let { groupId ->
+                getGroupById(groupId).collect { groupResult ->
+                    when (groupResult) {
+                        is Resource.Success -> {
+                            _state.update {
+                                it.copy(selectedGroup = groupResult.data?.name ?: "Группа не найдена")
+                            }
+                        }
+                        is Resource.Error -> {
+                            Log.e("MainScreen", "Ошибка загрузки группы: ${groupResult.message}")
+                            _state.update { it.copy(selectedGroup = "Ошибка загрузки") }
+                        }
+                        is Resource.Loading -> {
+                        }
+                    }
+                }
+            }
         }
     }
 
-    fun goToSearch(){
+    fun goToSearch(isTeacherMode: Boolean) {
         viewModelScope.launch {
-            navigator.navigate(
-                destination = Destination.SearchScreen
-            )
+            val institutionId = _institutionId.value ?: return@launch
+            navigator.navigate(Destination.SearchScreen(isTeacherMode, institutionId))
         }
     }
 

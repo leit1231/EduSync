@@ -30,7 +30,7 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 fun SelectGroupTopBar(
     selectedGroup: String,
     isTeacher: Boolean,
-    onGroupClick: () -> Unit,
+    onGroupClick: (Boolean) -> Unit,
 ) {
     val isLeftSelected = remember { mutableStateOf(true) }
 
@@ -56,7 +56,7 @@ fun SelectGroupTopBar(
                     shape = RoundedCornerShape(20.dp)
                 )
                 .clickable { isLeftSelected.value = true
-                    onGroupClick()},
+                    onGroupClick(false)},
             contentAlignment = Alignment.Center
         ) {
             Row {
@@ -97,7 +97,7 @@ fun SelectGroupTopBar(
                 )
                 .clickable {
                     isLeftSelected.value = false
-                    onGroupClick()
+                    onGroupClick(true)
                 },
             contentAlignment = Alignment.Center
         ) {

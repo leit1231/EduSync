@@ -20,6 +20,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewModel
+import com.example.edusync.presentation.viewModels.search.SearchViewModel
 import com.example.edusync.presentation.views.changePasswordAfterForgot.ChangePasswordAfterForgotScreen
 import com.example.edusync.presentation.views.confirmEmail.ConfirmEmailScreen
 import com.example.edusync.presentation.views.enterCode.EnterCodeScreen
@@ -160,7 +161,13 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                         GroupScreen(groupName)
                     }
                     composable<Destination.SearchScreen> {
-                        SearchScreen()
+                        val (isTeacherSearch, institutionId) = it.toRoute<Destination.SearchScreen>()
+                        val viewModel: SearchViewModel = koinViewModel()
+                        viewModel.setInitialData(isTeacherSearch, institutionId)
+                        SearchScreen(viewModel,
+                            onGroupSelected = { groupName ->
+                                navController.previousBackStackEntry?.savedStateHandle?.set("selected_group", groupName)
+                            })
                     }
                     composable<Destination.AllScheduleLayout> {
                         AllWeekScheduleLayout()
