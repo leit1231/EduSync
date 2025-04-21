@@ -51,7 +51,8 @@ fun ScheduleLayout(
     data: Schedule,
     viewModel: MainScreenViewModel,
     onEditClick: (PairItem) -> Unit,
-    onDeleteClick: (PairItem) -> Unit
+    onDeleteClick: (PairItem) -> Unit,
+    isTeacher: Boolean
 ) {
     val visible = remember { MutableTransitionState(false) }
     val pagerState = rememberPagerState { data.days.size }
@@ -96,18 +97,20 @@ fun ScheduleLayout(
                                 modifier = Modifier.align(Alignment.Center)
                             )
 
-                            Icon(
-                                painter = painterResource(
-                                    id = if (isEditMode) R.drawable.ic_edit_off else R.drawable.ic_change
-                                ),
-                                contentDescription = "Toggle edit mode",
-                                tint = AppColors.Secondary,
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .size(30.dp)
-                                    .clickable { viewModel.toggleEditMode() }
-                                    .padding(top = 4.dp, end = 4.dp)
-                            )
+                            if (isTeacher) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (isEditMode) R.drawable.ic_edit_off else R.drawable.ic_change
+                                    ),
+                                    contentDescription = "Toggle edit mode",
+                                    tint = AppColors.Secondary,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .size(30.dp)
+                                        .clickable { viewModel.toggleEditMode() }
+                                        .padding(top = 4.dp, end = 4.dp)
+                                )
+                            }
 
                             if (selectedPair != null && !isEditMode) {
                                 CreateEditPairDialog(

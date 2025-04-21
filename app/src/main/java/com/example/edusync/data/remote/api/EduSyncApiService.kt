@@ -7,11 +7,15 @@ import com.example.edusync.data.remote.dto.LoginRequest
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
 import com.example.edusync.data.remote.dto.ScheduleResponse
+import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
+import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.UserProfileResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -55,9 +59,35 @@ interface EduSyncApiService {
     @GET("api/institutions/masked")
     suspend fun getMaskedInstitutions(): Response<List<InstituteResponse>>
 
-    // Получение расписания
+    //Расписание
     @GET("/api/schedule")
     suspend fun getScheduleByGroup(
         @Query("group_id") groupId: Int
+    ): Response<ScheduleResponse>
+
+    @PATCH("/api/schedule/{id}")
+    suspend fun updateSchedule(
+        @Header("Authorization") token: String,
+        @Path("id") scheduleId: Int,
+        @Body body: ScheduleUpdateRequest
+    ): Response<Unit>
+
+    @DELETE("/api/schedule/{id}")
+    suspend fun deleteSchedule(
+        @Header("Authorization") token: String,
+        @Path("id") scheduleId: Int
+    ): Response<Unit>
+
+    //Получение списка преподавателей
+    @GET("/api/schedule/initials")
+    suspend fun getTeacherInitials(
+        @Header("Authorization") token: String
+    ): Response<List<TeacherInitialsResponse>>
+
+    // 2. Получение расписания по преподавателю
+    @GET("/api/schedule/teacher_initials/{initials_id}")
+    suspend fun getScheduleByTeacher(
+        @Header("Authorization") token: String,
+        @Path("initials_id") initialsId: Int
     ): Response<ScheduleResponse>
 }

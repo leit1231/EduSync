@@ -1,6 +1,5 @@
 package com.example.edusync.presentation.viewModels.mainScreen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
@@ -13,13 +12,12 @@ import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
 import com.example.edusync.domain.model.schedule.PairInfo
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.domain.model.schedule.Schedule
-import com.example.edusync.domain.use_case.group.GetGroupByIdUseCase
+import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -29,7 +27,7 @@ import java.util.Locale
 class MainScreenViewModel(
     private val navigator: Navigator,
     private val encryptedSharedPreference: EncryptedSharedPreference,
-    private val getGroupById: GetGroupByIdUseCase
+    private val getGroupsByInstitutionId: GetGroupsByInstitutionIdUseCase
 ): ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
@@ -56,29 +54,29 @@ class MainScreenViewModel(
             _isTeacher.value = user?.isTeacher ?: false
             _institutionId.value = user?.institutionId
 
+            val institutionId = user?.institutionId
+            val groupId = user?.groupId
+
+            if (institutionId != null && groupId != null) {
+                getGroupsByInstitutionId(institutionId).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            val group = resource.data?.find { it.id == groupId }
+                            _state.update { it.copy(selectedGroup = group?.name ?: "Группа не найдена") }
+                        }
+                        is Resource.Error -> {
+                            _state.update { it.copy(selectedGroup = "Ошибка загрузки") }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+
             _state.update {
                 it.copy(
                     schedule = generateTestSchedule(),
                     scheduleLoading = LoadingState.Success
                 )
-            }
-
-            user?.groupId?.let { groupId ->
-                getGroupById(groupId).collect { groupResult ->
-                    when (groupResult) {
-                        is Resource.Success -> {
-                            _state.update {
-                                it.copy(selectedGroup = groupResult.data?.name ?: "Группа не найдена")
-                            }
-                        }
-                        is Resource.Error -> {
-                            Log.e("MainScreen", "Ошибка загрузки группы: ${groupResult.message}")
-                            _state.update { it.copy(selectedGroup = "Ошибка загрузки") }
-                        }
-                        is Resource.Loading -> {
-                        }
-                    }
-                }
             }
         }
     }

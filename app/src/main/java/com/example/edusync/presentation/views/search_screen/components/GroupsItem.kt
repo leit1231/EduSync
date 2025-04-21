@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.search_screen.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,14 +17,17 @@ import androidx.compose.ui.unit.sp
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
-
 @Composable
 fun SearchResultItem(name: String, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AppColors.Primary.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(
+            containerColor = AppColors.Background,
+            contentColor = AppColors.Primary
+        ),
+        border = BorderStroke(2.dp, AppColors.Primary),
         modifier = Modifier
-            .padding(8.dp)
+            .padding(4.dp)
             .clickable(onClick = onClick)
     ) {
         Box(
@@ -34,8 +38,12 @@ fun SearchResultItem(name: String, onClick: () -> Unit) {
         ) {
             Text(
                 text = name,
-                style = AppTypography.body1.copy(fontSize = 14.sp),
-                color = AppColors.Secondary
+                style = AppColors.Secondary.let {
+                    AppTypography.body1.copy(
+                        fontSize = 14.sp,
+                        color = it
+                    )
+                }
             )
         }
     }

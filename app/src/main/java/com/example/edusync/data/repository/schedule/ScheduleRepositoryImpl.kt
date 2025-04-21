@@ -4,17 +4,42 @@ import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.ScheduleResponse
+import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
+import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
 import retrofit2.Response
 
 class ScheduleRepositoryImpl(
     private val api: EduSyncApiService,
-    private val encryptedPrefs: EncryptedSharedPreference
+    private val encryptedPrefs: EncryptedSharedPreference,
 ) : ScheduleRepository {
 
     override suspend fun getGroupSchedule(groupId: Int): Result<ScheduleResponse> =
         executeWithToken {
             api.getScheduleByGroup(groupId)
+        }
+
+    override suspend fun getTeacherInitials(): Result<List<TeacherInitialsResponse>> =
+        executeWithToken { token ->
+            api.getTeacherInitials(token)
+        }
+
+    override suspend fun getScheduleByTeacher(initialsId: Int): Result<ScheduleResponse> =
+        executeWithToken { token ->
+            api.getScheduleByTeacher(token, initialsId)
+        }
+
+    override suspend fun updateSchedule(
+        scheduleId: Int,
+        request: ScheduleUpdateRequest
+    ): Result<Unit> =
+        executeWithToken { token ->
+            api.updateSchedule(token, scheduleId, request)
+        }
+
+    override suspend fun deleteSchedule(scheduleId: Int): Result<Unit> =
+        executeWithToken { token ->
+            api.deleteSchedule(token, scheduleId)
         }
 
     private suspend fun <T> executeWithToken(apiCall: suspend (String) -> Response<T>): Result<T> {

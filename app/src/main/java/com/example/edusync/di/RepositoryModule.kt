@@ -18,7 +18,11 @@ import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
 import com.example.edusync.domain.use_case.institution.GetAllInstitutesUseCase
 import com.example.edusync.domain.use_case.institution.GetInstituteByIdUseCase
 import com.example.edusync.domain.use_case.institution.GetMaskedInstitutesUseCase
+import com.example.edusync.domain.use_case.schedule.DeleteScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetGroupScheduleUseCase
+import com.example.edusync.domain.use_case.schedule.GetScheduleByTeacherUseCase
+import com.example.edusync.domain.use_case.schedule.UpdateScheduleUseCase
+import com.example.edusync.domain.use_case.teachers.GetTeacherInitialsUseCase
 import org.koin.dsl.module
 
 val repositoryModule = module {
@@ -45,4 +49,8 @@ val repositoryModule = module {
     factory { GetMaskedInstitutesUseCase(get()) }
 
     factory { GetGroupScheduleUseCase(get()) }
+    factory { GetTeacherInitialsUseCase(get()) }
+    factory { GetScheduleByTeacherUseCase(get()) }
+    factory { UpdateScheduleUseCase(get())}
+    factory { DeleteScheduleUseCase(get()) }
 }

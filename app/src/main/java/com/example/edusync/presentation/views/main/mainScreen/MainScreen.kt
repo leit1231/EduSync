@@ -114,7 +114,8 @@ fun MainScreen() {
                                 data = schedule,
                                 viewModel = viewModel,
                                 onEditClick = { viewModel.setSelectedPair(it) },
-                                onDeleteClick = { viewModel.deletePair(it) }
+                                onDeleteClick = { viewModel.deletePair(it) },
+                                isTeacher = isTeacher
                             )
                         }
                     } ?: EmptyScheduleScreen()
