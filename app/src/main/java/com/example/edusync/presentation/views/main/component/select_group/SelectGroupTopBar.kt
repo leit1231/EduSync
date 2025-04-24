@@ -3,6 +3,7 @@ package com.example.edusync.presentation.views.main.component.select_group
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,12 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.R
@@ -29,11 +28,10 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 @Composable
 fun SelectGroupTopBar(
     selectedGroup: String,
+    selectedTeacher: String?,
     isTeacher: Boolean,
     onGroupClick: (Boolean) -> Unit,
 ) {
-    val isLeftSelected = remember { mutableStateOf(true) }
-
     Row(
         modifier = Modifier
             .background(
@@ -47,37 +45,18 @@ fun SelectGroupTopBar(
                 .weight(1f)
                 .height(56.dp)
                 .background(
-                    color = if (isLeftSelected.value) AppColors.Primary else AppColors.Background,
+                    color = AppColors.Primary,
                     shape = RoundedCornerShape(20.dp)
                 )
-                .border(
-                    width = 1.dp,
-                    color = if (isLeftSelected.value) Color.Transparent else AppColors.Primary,
-                    shape = RoundedCornerShape(20.dp)
-                )
-                .clickable { isLeftSelected.value = true
-                    onGroupClick(false)},
+                .clickable { onGroupClick(isTeacher) },
             contentAlignment = Alignment.Center
         ) {
-            Row {
-                if (!isLeftSelected.value) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        painter = painterResource(id = R.drawable.ic_search),
-                        contentDescription = "Выбрать",
-                        tint = AppColors.Secondary
-                    )
-                }
-                Text(
-                    text = if (!isLeftSelected.value) {
-                        if (!isTeacher) "Группа" else "Преподаватель"
-                    } else {
-                        if (!isTeacher) selectedGroup else "Григорьева Л.Ф."
-                    },
-                    style = AppTypography.body1.copy(fontSize = 16.sp),
-                    color = if (!isLeftSelected.value) AppColors.Secondary else AppColors.Background
-                )
-            }
+            Text(
+                text = if (isTeacher) selectedTeacher ?: "Выбрать" else selectedGroup,
+                style = AppTypography.body1.copy(fontSize = 16.sp),
+                color = AppColors.Background,
+                textAlign = TextAlign.Center
+            )
         }
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -87,37 +66,33 @@ fun SelectGroupTopBar(
                 .weight(1f)
                 .height(56.dp)
                 .background(
-                    color = if (!isLeftSelected.value) AppColors.Primary else AppColors.Background,
+                    color = AppColors.Background,
                     shape = RoundedCornerShape(20.dp)
                 )
                 .border(
                     width = 1.dp,
-                    color = if (!isLeftSelected.value) Color.Transparent else AppColors.Primary,
+                    color = AppColors.Primary,
                     shape = RoundedCornerShape(20.dp)
                 )
-                .clickable {
-                    isLeftSelected.value = false
-                    onGroupClick(true)
-                },
+                .clickable { onGroupClick(!isTeacher) },
             contentAlignment = Alignment.Center
         ) {
-            Row {
-                if (isLeftSelected.value) {
-                    Icon(
-                        modifier = Modifier.size(20.dp),
-                        painter = painterResource(id = R.drawable.ic_search),
-                        contentDescription = "Выбрать",
-                        tint = AppColors.Secondary
-                    )
-                }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    modifier = Modifier.size(20.dp),
+                    painter = painterResource(id = R.drawable.ic_search),
+                    contentDescription = "Выбрать",
+                    tint = AppColors.Secondary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (!isLeftSelected.value) {
-                        if (!isTeacher) "Григорьева Л.Ф." else "ИС-11"
-                    } else {
-                        if (!isTeacher) "Преподаватель" else "Группа"
-                    },
+                    text = if (isTeacher) "Группа" else "Преподаватель",
                     style = AppTypography.body1.copy(fontSize = 16.sp),
-                    color = if (!isLeftSelected.value) AppColors.Background else AppColors.Secondary
+                    color = AppColors.Secondary,
+                    textAlign = TextAlign.Center
                 )
             }
         }

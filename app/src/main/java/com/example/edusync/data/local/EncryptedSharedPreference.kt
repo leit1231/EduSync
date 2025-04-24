@@ -75,4 +75,12 @@ class EncryptedSharedPreference(context: Context) {
         val json = sharedPreferences.getString("user_data", null)
         return json?.let { Gson().fromJson(it, User::class.java) }
     }
+
+    fun saveTeacherId(id: Int) =
+        sharedPreferences.edit().putInt("teacher_id", id).apply()
+
+    fun getTeacherId(): Int? {
+        val id = sharedPreferences.getInt("teacher_id", -1)
+        return if (id != -1) id else null
+    }
 }

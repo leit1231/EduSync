@@ -7,6 +7,7 @@ import com.example.edusync.di.repositoryModule
 import com.example.edusync.di.viewModelModule
 import com.example.edusync.domain.repository.group.GroupRepository
 import com.example.edusync.domain.repository.institution.InstituteRepository
+import com.example.edusync.domain.repository.schedule.ScheduleRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,7 +29,8 @@ class App: Application(){
         }
         val initializer = AppInitializer(
             get<InstituteRepository>(),
-            get<GroupRepository>()
+            get<GroupRepository>(),
+            get<ScheduleRepository>()
         )
         CoroutineScope(Dispatchers.IO).launch {
             initializer.initialize()

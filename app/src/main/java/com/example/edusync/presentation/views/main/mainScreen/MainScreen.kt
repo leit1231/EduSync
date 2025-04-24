@@ -75,10 +75,11 @@ fun MainScreen() {
 
         SelectGroupTopBar(
             selectedGroup = state.value.selectedGroup ?: "Выбрать",
+            selectedTeacher = state.value.selectedTeacher,
+            isTeacher = isTeacher,
             onGroupClick = { isTeacherMode ->
                 viewModel.goToSearch(isTeacherMode)
-            },
-            isTeacher = isTeacher
+            }
         )
 
         val scheduleDays = state.value.schedule?.days ?: emptyList()

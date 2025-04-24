@@ -1,10 +1,12 @@
 package com.example.edusync.presentation.viewModels.mainScreen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
 import com.example.edusync.common.Resource
 import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.domain.model.schedule.Day
@@ -13,6 +15,7 @@ import com.example.edusync.domain.model.schedule.PairInfo
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.domain.model.schedule.Schedule
 import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
+import com.example.edusync.domain.use_case.teachers.GetTeacherInitialsUseCase
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +30,8 @@ import java.util.Locale
 class MainScreenViewModel(
     private val navigator: Navigator,
     private val encryptedSharedPreference: EncryptedSharedPreference,
-    private val getGroupsByInstitutionId: GetGroupsByInstitutionIdUseCase
+    private val getGroupsByInstitutionId: GetGroupsByInstitutionIdUseCase,
+    private val getTeacherInitialsUseCase: GetTeacherInitialsUseCase
 ): ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
@@ -45,6 +49,8 @@ class MainScreenViewModel(
     private val _isTeacher = MutableStateFlow(false)
     val isTeacher: StateFlow<Boolean> = _isTeacher.asStateFlow()
 
+    private val _teacherId = MutableStateFlow<Int?>(null)
+
     private val _institutionId = MutableStateFlow<Int?>(null)
     val institutionId: StateFlow<Int?> = _institutionId
 
@@ -54,20 +60,52 @@ class MainScreenViewModel(
             _isTeacher.value = user?.isTeacher ?: false
             _institutionId.value = user?.institutionId
 
-            val institutionId = user?.institutionId
-            val groupId = user?.groupId
+            _teacherId.value = encryptedSharedPreference.getTeacherId()
 
-            if (institutionId != null && groupId != null) {
-                getGroupsByInstitutionId(institutionId).collect { resource ->
+            if (user?.isTeacher == true) {
+                val generatedInitials = generateTeacherInitials(user.fullName)
+                Log.d("TeacherSearch", "Generated: $generatedInitials")
+                getTeacherInitialsUseCase().collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
-                            val group = resource.data?.find { it.id == groupId }
-                            _state.update { it.copy(selectedGroup = group?.name ?: "Группа не найдена") }
+                            val teacher = resource.data?.firstOrNull { teacher ->
+                                normalizeInitials(teacher.initials) ==
+                                        normalizeInitials(generatedInitials)
+                            }
+                            teacher?.let {
+                                _teacherId.value = it.id
+                                _state.update { state ->
+                                    state.copy(
+                                        selectedGroup = it.initials,
+                                        selectedTeacher = it.initials
+                                    )
+                                }
+                                encryptedSharedPreference.saveTeacherId(it.id)
+                            } ?: run {
+                                _state.update { it.copy(selectedGroup = "Выбрать", selectedTeacher = null) }
+                            }
                         }
                         is Resource.Error -> {
                             _state.update { it.copy(selectedGroup = "Ошибка загрузки") }
                         }
                         else -> {}
+                    }
+                }
+            } else {
+                val institutionId = user?.institutionId
+                val groupId = user?.groupId
+                if (institutionId != null && groupId != null) {
+                    getGroupsByInstitutionId(institutionId).collect { resource ->
+                        when (resource) {
+                            is Resource.Success -> {
+                                val group = resource.data?.find { it.id == groupId }
+                                _state.update { it.copy(selectedGroup = group?.name ?: "Группа не найдена") }
+                            }
+                            is Resource.Error -> {
+                                _state.update { it.copy(selectedGroup = "Ошибка загрузки") }
+                            }
+                            else -> {}
+                        }
                     }
                 }
             }
@@ -81,11 +119,35 @@ class MainScreenViewModel(
         }
     }
 
+    fun setSelectedTeacher(teacher: TeacherInitialsResponse) {
+        viewModelScope.launch {
+            encryptedSharedPreference.saveTeacherId(teacher.id)
+            val updatedUser = encryptedSharedPreference.getUser()?.copy(fullName = teacher.initials)
+                ?: return@launch
+            encryptedSharedPreference.saveUser(updatedUser)
+            _state.update { it.copy(selectedGroup = teacher.initials) }
+            _teacherId.value = teacher.id
+        }
+    }
+
     fun goToSearch(isTeacherMode: Boolean) {
         viewModelScope.launch {
             val institutionId = _institutionId.value ?: return@launch
             navigator.navigate(Destination.SearchScreen(isTeacherMode, institutionId))
         }
+    }
+
+    private fun normalizeInitials(initials: String): String {
+        return initials.trim().replace(" +".toRegex(), " ")
+    }
+
+    private fun generateTeacherInitials(fullName: String): String {
+        val parts = fullName.split(" ").filter { it.isNotBlank() }
+        return when (parts.size) {
+            3 -> "${parts[0]} ${parts[1].firstOrNull()}.${parts[2].firstOrNull()}."
+            2 -> "${parts[0]} ${parts[1].firstOrNull()}."
+            else -> fullName
+        }.let(::normalizeInitials)
     }
 
     fun toggleEditMode() {
@@ -224,15 +286,15 @@ class MainScreenViewModel(
             isoDateEnd = "$date $currentTime:00",
             pairInfo = listOf(
                 PairInfo(
-                doctrine = "",
-                teacher = "",
-                auditoria = "",
-                corpus = "",
-                number = 0,
-                start = currentTime,
-                end = currentTime,
-                warn = ""
-            )
+                    doctrine = "",
+                    teacher = "",
+                    auditoria = "",
+                    corpus = "",
+                    number = 0,
+                    start = currentTime,
+                    end = currentTime,
+                    warn = ""
+                )
             )
         )
     }

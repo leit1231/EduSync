@@ -26,4 +26,5 @@ val appModule = module {
     }
     single { get<AppDatabase>().instituteDao() }
     single { get<AppDatabase>().groupDao() }
+    single { get<AppDatabase>().teacherInitialsDao() }
 }

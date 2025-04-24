@@ -33,7 +33,7 @@ val repositoryModule = module {
     single<GroupRepository> {
         GroupRepositoryImpl(get(), get())
     }
-    single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get()) }
+    single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get(), get()) }
 
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }

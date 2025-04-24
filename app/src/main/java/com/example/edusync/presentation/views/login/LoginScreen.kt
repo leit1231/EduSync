@@ -167,7 +167,7 @@ fun Login() {
                 withStyle(style = SpanStyle(color = Color.White, fontSize = 14.sp)) {
                     append("При регистрации и входе\nвы соглашаетесь с ")
 
-                    pushStringAnnotation(tag = "URL", annotation = "https://gitlab.serega-pirat.ru/")
+                    pushStringAnnotation(tag = "URL", annotation = "https://rksi.ru/mobile_schedule")
                     withStyle(style = SpanStyle(color = Color.Red)) {
                         append("политикой конфиденциальности")
                     }

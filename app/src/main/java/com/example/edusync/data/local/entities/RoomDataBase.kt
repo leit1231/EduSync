@@ -4,6 +4,12 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
+@Entity(tableName = "teacher_initials")
+data class TeacherInitialsEntity(
+    @PrimaryKey val id: Int,
+    val name: String
+)
+
 @Entity(tableName = "institutes")
 data class InstituteEntity(
     @PrimaryKey val id: Int,

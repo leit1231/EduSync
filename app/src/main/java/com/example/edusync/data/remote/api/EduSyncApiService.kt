@@ -84,7 +84,6 @@ interface EduSyncApiService {
         @Header("Authorization") token: String
     ): Response<List<TeacherInitialsResponse>>
 
-    // 2. Получение расписания по преподавателю
     @GET("/api/schedule/teacher_initials/{initials_id}")
     suspend fun getScheduleByTeacher(
         @Header("Authorization") token: String,

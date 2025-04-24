@@ -1,6 +1,8 @@
 package com.example.edusync.data.repository.schedule
 
 import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.data.local.entities.TeacherInitialsDao
+import com.example.edusync.data.local.entities.TeacherInitialsEntity
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.ScheduleResponse
@@ -12,6 +14,7 @@ import retrofit2.Response
 class ScheduleRepositoryImpl(
     private val api: EduSyncApiService,
     private val encryptedPrefs: EncryptedSharedPreference,
+    private val teacherDao: TeacherInitialsDao
 ) : ScheduleRepository {
 
     override suspend fun getGroupSchedule(groupId: Int): Result<ScheduleResponse> =
@@ -19,10 +22,17 @@ class ScheduleRepositoryImpl(
             api.getScheduleByGroup(groupId)
         }
 
-    override suspend fun getTeacherInitials(): Result<List<TeacherInitialsResponse>> =
-        executeWithToken { token ->
-            api.getTeacherInitials(token)
+    override suspend fun getTeacherInitials(): Result<List<TeacherInitialsResponse>> {
+        val localTeachers = teacherDao.getAll().map { it.toResponse() }
+        if (localTeachers.isNotEmpty()) return Result.success(localTeachers)
+
+        return executeWithToken { token ->
+            api.getTeacherInitials("Bearer $token")
+        }.mapCatching { teachers ->
+            teacherDao.insertAll(teachers.map { it.toEntity() })
+            teachers
         }
+    }
 
     override suspend fun getScheduleByTeacher(initialsId: Int): Result<ScheduleResponse> =
         executeWithToken { token ->
@@ -80,4 +90,16 @@ class ScheduleRepositoryImpl(
             Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
         }
     }
+
+    suspend fun syncTeacherInitials() {
+        val accessToken = encryptedPrefs.getAccessToken() ?: return
+        val response = api.getTeacherInitials("Bearer $accessToken")
+        if (response.isSuccessful) {
+            teacherDao.deleteAll()
+            teacherDao.insertAll(response.body()!!.map { it.toEntity() })
+        }
+    }
+
+    private fun TeacherInitialsResponse.toEntity() = TeacherInitialsEntity(id, initials)
+    private fun TeacherInitialsEntity.toResponse() = TeacherInitialsResponse(id, name)
 }

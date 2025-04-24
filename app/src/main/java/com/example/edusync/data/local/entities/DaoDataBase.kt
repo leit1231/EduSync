@@ -32,3 +32,15 @@ interface GroupDao {
     @Query("DELETE FROM groups")
     suspend fun deleteAll()
 }
+
+@Dao
+interface TeacherInitialsDao {
+    @Query("SELECT * FROM teacher_initials")
+    suspend fun getAll(): List<TeacherInitialsEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(teachers: List<TeacherInitialsEntity>)
+
+    @Query("DELETE FROM teacher_initials")
+    suspend fun deleteAll()
+}

@@ -160,14 +160,28 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                         val groupName = it.toRoute<Destination.GroupScreen>()
                         GroupScreen(groupName)
                     }
-                    composable<Destination.SearchScreen> {
-                        val (isTeacherSearch, institutionId) = it.toRoute<Destination.SearchScreen>()
+                    composable<Destination.SearchScreen> { backStackEntry ->
+                        val (isTeacherSearch, institutionId) = backStackEntry.toRoute<Destination.SearchScreen>()
                         val viewModel: SearchViewModel = koinViewModel()
                         viewModel.setInitialData(isTeacherSearch, institutionId)
-                        SearchScreen(viewModel,
-                            onGroupSelected = { groupName ->
-                                navController.previousBackStackEntry?.savedStateHandle?.set("selected_group", groupName)
-                            })
+
+                        SearchScreen(
+                            viewModel = viewModel,
+                            onGroupSelected = { group ->
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    key = "selected_group",
+                                    value = group
+                                )
+                                navController.navigateUp()
+                            },
+                            onTeacherSelected = { teacher ->
+                                navController.previousBackStackEntry?.savedStateHandle?.set(
+                                    key = "selected_teacher",
+                                    value = teacher
+                                )
+                                navController.navigateUp()
+                            }
+                        )
                     }
                     composable<Destination.AllScheduleLayout> {
                         AllWeekScheduleLayout()
