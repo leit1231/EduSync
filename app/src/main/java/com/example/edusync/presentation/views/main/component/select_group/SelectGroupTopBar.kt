@@ -27,10 +27,10 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
 fun SelectGroupTopBar(
-    selectedGroup: String,
+    selectedGroup: String?,
     selectedTeacher: String?,
-    isTeacher: Boolean,
-    onGroupClick: (Boolean) -> Unit,
+    onGroupClick: () -> Unit,
+    onTeacherClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -40,33 +40,14 @@ fun SelectGroupTopBar(
             )
             .padding(vertical = 16.dp, horizontal = 16.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(56.dp)
-                .background(
-                    color = AppColors.Primary,
-                    shape = RoundedCornerShape(20.dp)
-                )
-                .clickable { onGroupClick(isTeacher) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (isTeacher) selectedTeacher ?: "Выбрать" else selectedGroup,
-                style = AppTypography.body1.copy(fontSize = 16.sp),
-                color = AppColors.Background,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
+        val isGroupSelected = !selectedGroup.isNullOrBlank()
 
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(56.dp)
                 .background(
-                    color = AppColors.Background,
+                    color = if (isGroupSelected) AppColors.Primary else AppColors.Background,
                     shape = RoundedCornerShape(20.dp)
                 )
                 .border(
@@ -74,26 +55,84 @@ fun SelectGroupTopBar(
                     color = AppColors.Primary,
                     shape = RoundedCornerShape(20.dp)
                 )
-                .clickable { onGroupClick(!isTeacher) },
+                .clickable { onGroupClick() },
             contentAlignment = Alignment.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = "Выбрать",
-                    tint = AppColors.Secondary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            if (isGroupSelected) {
                 Text(
-                    text = if (isTeacher) "Группа" else "Преподаватель",
+                    text = selectedGroup ?: "",
                     style = AppTypography.body1.copy(fontSize = 16.sp),
-                    color = AppColors.Secondary,
+                    color = AppColors.Background,
                     textAlign = TextAlign.Center
                 )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_search),
+                        contentDescription = "Выбрать",
+                        tint = AppColors.Secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Группа",
+                        style = AppTypography.body1.copy(fontSize = 16.sp),
+                        color = AppColors.Secondary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        val isTeacherSelected = !selectedTeacher.isNullOrBlank()
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp)
+                .background(
+                    color = if (isTeacherSelected) AppColors.Primary else AppColors.Background,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = AppColors.Primary,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .clickable { onTeacherClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            if (isTeacherSelected) {
+                Text(
+                    text = selectedTeacher ?: "",
+                    style = AppTypography.body1.copy(fontSize = 16.sp),
+                    color = AppColors.Background,
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_search),
+                        contentDescription = "Выбрать",
+                        tint = AppColors.Secondary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Преподаватель",
+                        style = AppTypography.body1.copy(fontSize = 16.sp),
+                        color = AppColors.Secondary,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

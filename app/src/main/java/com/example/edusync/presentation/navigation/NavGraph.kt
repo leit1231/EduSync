@@ -1,6 +1,7 @@
 package com.example.edusync.presentation.navigation
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -72,11 +74,12 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
         bottomBar = {
 
             val listScreen = listOf(Destination.MainScreen::class.qualifiedName, Destination.MaterialsScreen::class.qualifiedName, Destination.FavoritiesScreen::class.qualifiedName, Destination.ProfileScreen::class.qualifiedName)
-
-            if (listScreen.contains(currentDestination.value?.destination?.route)) {
+            Log.d("MainScreen", "$listScreen , ${currentDestination.value?.destination?.route?.substringBefore("?")}")
+            val currentRoute = currentDestination.value?.destination?.route?.substringBefore("?")
+            if (listScreen.contains(currentRoute)) {
                 NavigationMenu(
                     navigator = navigator,
-                    currentRoute = currentDestination.value?.destination?.route
+                    currentRoute = currentRoute
                 )
             }else{
                 Box(
@@ -136,10 +139,11 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                 }
 
                 navigation<Destination.MainGraph>(
-                    startDestination = Destination.MainScreen
+                    startDestination = Destination.MainScreen()
                 ) {
                     composable<Destination.MainScreen> {
-                        MainScreen()
+                        val args = it.toRoute<Destination.MainScreen>()
+                        MainScreen(args.groupId, args.groupName, args.teacherId, args.teacherName)
                     }
                     composable<Destination.MaterialsScreen> {
                         MaterialsScreen()
@@ -163,23 +167,42 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                     composable<Destination.SearchScreen> { backStackEntry ->
                         val (isTeacherSearch, institutionId) = backStackEntry.toRoute<Destination.SearchScreen>()
                         val viewModel: SearchViewModel = koinViewModel()
+                        val currentBackStackEntry = navController.currentBackStackEntryAsState()
+                        val parentEntry = currentBackStackEntry.value?.let { entry ->
+                            if (entry.destination.route == Destination.MainScreen::class.qualifiedName) {
+                                entry
+                            } else {
+                                null
+                            }
+                        } ?: run {
+                            navController.getBackStackEntry(Destination.MainScreen::class.qualifiedName!!)
+                        }
                         viewModel.setInitialData(isTeacherSearch, institutionId)
 
                         SearchScreen(
                             viewModel = viewModel,
                             onGroupSelected = { group ->
-                                navController.previousBackStackEntry?.savedStateHandle?.set(
-                                    key = "selected_group",
-                                    value = group
-                                )
-                                navController.navigateUp()
+                                parentEntry.savedStateHandle["selected_group_id"] = group.id
+                                Log.d("MainScreen", "Selected group ID: ${group.id}")
+                                parentEntry.savedStateHandle["selected_group_name"] = group.name
+                                Log.d("MainScreen", "Selected group ID: ${group.name}")
+                                navController.navigate(Destination.MainScreen(groupId = group.id, groupName = group.name)){
+                                    popUpTo(0){
+                                        inclusive = true
+                                    }
+                                }
+
                             },
                             onTeacherSelected = { teacher ->
-                                navController.previousBackStackEntry?.savedStateHandle?.set(
-                                    key = "selected_teacher",
-                                    value = teacher
-                                )
-                                navController.navigateUp()
+                                parentEntry.savedStateHandle["selected_teacher_id"] = teacher.id
+                                Log.d("MainScreen", "Selected group ID: ${teacher.id}")
+                                parentEntry.savedStateHandle["selected_teacher_name"] = teacher.initials
+                                Log.d("MainScreen", "Selected group ID: ${teacher.initials}")
+                                navController.navigate(Destination.MainScreen(teacherId = teacher.id, teacherName = teacher.initials)){
+                                    popUpTo(0){
+                                        inclusive = true
+                                    }
+                                }
                             }
                         )
                     }

@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
 import com.example.edusync.common.Resource
 import com.example.edusync.data.local.EncryptedSharedPreference
-import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.domain.model.schedule.Day
@@ -54,6 +53,9 @@ class MainScreenViewModel(
     private val _institutionId = MutableStateFlow<Int?>(null)
     val institutionId: StateFlow<Int?> = _institutionId
 
+    private val _isTeacherMode = MutableStateFlow(false)
+    val isTeacherMode: StateFlow<Boolean> = _isTeacherMode.asStateFlow()
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val user = encryptedSharedPreference.getUser()
@@ -76,7 +78,7 @@ class MainScreenViewModel(
                                 _teacherId.value = it.id
                                 _state.update { state ->
                                     state.copy(
-                                        selectedGroup = it.initials,
+                                        selectedGroup = null,
                                         selectedTeacher = it.initials
                                     )
                                 }
@@ -94,12 +96,17 @@ class MainScreenViewModel(
             } else {
                 val institutionId = user?.institutionId
                 val groupId = user?.groupId
+                Log.d("TeacherSearch", "Generated: $groupId")
                 if (institutionId != null && groupId != null) {
                     getGroupsByInstitutionId(institutionId).collect { resource ->
                         when (resource) {
                             is Resource.Success -> {
                                 val group = resource.data?.find { it.id == groupId }
-                                _state.update { it.copy(selectedGroup = group?.name ?: "Группа не найдена") }
+                                _state.update {
+                                    if (it.selectedGroup == null)
+                                        it.copy(selectedGroup = group?.name ?: "Группа не найдена")
+                                    else it
+                                }
                             }
                             is Resource.Error -> {
                                 _state.update { it.copy(selectedGroup = "Ошибка загрузки") }
@@ -119,14 +126,17 @@ class MainScreenViewModel(
         }
     }
 
-    fun setSelectedTeacher(teacher: TeacherInitialsResponse) {
+    fun setSelectedGroup(id: Int, name: String) {
         viewModelScope.launch {
-            encryptedSharedPreference.saveTeacherId(teacher.id)
-            val updatedUser = encryptedSharedPreference.getUser()?.copy(fullName = teacher.initials)
-                ?: return@launch
-            encryptedSharedPreference.saveUser(updatedUser)
-            _state.update { it.copy(selectedGroup = teacher.initials) }
-            _teacherId.value = teacher.id
+            _state.update { it.copy(selectedGroup = name, selectedTeacher = null) }
+            _isTeacherMode.value = false
+        }
+    }
+
+    fun setSelectedTeacher(id: Int, initials: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(selectedTeacher = initials, selectedGroup = null) }
+            _isTeacherMode.value = true
         }
     }
 
@@ -134,6 +144,18 @@ class MainScreenViewModel(
         viewModelScope.launch {
             val institutionId = _institutionId.value ?: return@launch
             navigator.navigate(Destination.SearchScreen(isTeacherMode, institutionId))
+        }
+    }
+
+    fun clearGroup() {
+        viewModelScope.launch {
+            _state.update { it.copy(selectedGroup = null) }
+        }
+    }
+
+    fun clearTeacher() {
+        viewModelScope.launch {
+            _state.update { it.copy(selectedTeacher = null) }
         }
     }
 

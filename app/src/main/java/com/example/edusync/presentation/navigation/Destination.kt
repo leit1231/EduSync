@@ -2,6 +2,7 @@ package com.example.edusync.presentation.navigation
 
 import kotlinx.serialization.Serializable
 
+@Serializable
 sealed interface Destination {
 
     @Serializable
@@ -41,7 +42,7 @@ sealed interface Destination {
     data class InfoScreen(val email: String, val password: String, val role: Boolean): Destination
 
     @Serializable
-    data object MainScreen: Destination
+    data class MainScreen(val groupId: Int? = null, val groupName: String? = null, val teacherId: Int? = null, val teacherName: String? = null): Destination
 
     @Serializable
     data object MaterialsScreen: Destination

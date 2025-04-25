@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.navigation_menu
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,7 +30,7 @@ fun NavigationMenu(
     currentRoute: String? = null
 ) {
     val navItems = listOf(
-        Destination.MainScreen to Pair(R.drawable.ic_schedule, R.drawable.ic_schedule_bold),
+        Destination.MainScreen() to Pair(R.drawable.ic_schedule, R.drawable.ic_schedule_bold),
         Destination.MaterialsScreen to Pair(R.drawable.ic_materials, R.drawable.ic_materials_bold),
         Destination.FavoritiesScreen to Pair(R.drawable.ic_favorit_border, R.drawable.ic_favorit_bold),
         Destination.ProfileScreen to Pair(R.drawable.ic_person, R.drawable.ic_person_bold)
@@ -49,6 +50,7 @@ fun NavigationMenu(
         ) {
             navItems.forEach { (destination, icons) ->
                 val isSelected = currentRoute == destination::class.qualifiedName
+                Log.d("MainScreen", "$currentRoute")
 
                 NavigationBarItem(
                     selected = isSelected,

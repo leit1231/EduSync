@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.main.mainScreen
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,12 +35,24 @@ import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    groupId: Int? = null,
+    groupName: String? = null,
+    teacherId: Int? = null,
+    teacherName: String? = null
+) {
 
     val viewModel: MainScreenViewModel = koinViewModel()
-    val state = viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsState()
     val isAllScheduleVisible by viewModel.isAllScheduleVisible.collectAsState()
     val isTeacher by viewModel.isTeacher.collectAsState()
+
+    LaunchedEffect(state.selectedGroup, state.selectedTeacher) {
+        Log.d(
+            "MainScreen",
+            "Recomposing: group=${state.selectedGroup}, teacher=${state.selectedTeacher}"
+        )
+    }
 
     Column(
         Modifier
@@ -74,15 +88,21 @@ fun MainScreen() {
         }
 
         SelectGroupTopBar(
-            selectedGroup = state.value.selectedGroup ?: "Выбрать",
-            selectedTeacher = state.value.selectedTeacher,
-            isTeacher = isTeacher,
-            onGroupClick = { isTeacherMode ->
-                viewModel.goToSearch(isTeacherMode)
+            selectedGroup = state.selectedGroup,
+            selectedTeacher = state.selectedTeacher,
+            onGroupClick = {
+                viewModel.clearTeacher()
+                viewModel.goToSearch(false)
+            },
+            onTeacherClick = {
+                viewModel.clearGroup()
+                viewModel.goToSearch(true)
             }
         )
 
-        val scheduleDays = state.value.schedule?.days ?: emptyList()
+
+
+        val scheduleDays = state.schedule?.days ?: emptyList()
         val startDate = scheduleDays.firstOrNull()?.isoDateDay?.toCalendar()
         val endDate = scheduleDays.lastOrNull()?.isoDateDay?.toCalendar()
 
@@ -104,10 +124,10 @@ fun MainScreen() {
         if (isAllScheduleVisible) {
             AllWeekScheduleLayout()
         } else {
-            when (state.value.scheduleLoading) {
+            when (state.scheduleLoading) {
                 LoadingState.Loading -> EmptyMainScreen()
                 LoadingState.Success -> {
-                    state.value.schedule?.let { schedule ->
+                    state.schedule?.let { schedule ->
                         if (schedule.days.isEmpty()) {
                             EmptyScheduleScreen()
                         } else {
@@ -121,11 +141,20 @@ fun MainScreen() {
                         }
                     } ?: EmptyScheduleScreen()
                 }
-
                 LoadingState.Empty -> EmptyScheduleScreen()
                 is LoadingState.Error -> {
                 }
             }
         }
+    }
+
+    LaunchedEffect(groupId, groupName, teacherId, teacherName) {
+        if (groupId != null && groupName != null) {
+            viewModel.setSelectedGroup(groupId, groupName)
+        }
+        if (teacherId != null && teacherName != null) {
+            viewModel.setSelectedTeacher(teacherId, teacherName)
+        }
+
     }
 }
