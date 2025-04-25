@@ -1,6 +1,5 @@
 package com.example.edusync.presentation.views.main.mainScreen
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,13 +45,6 @@ fun MainScreen(
     val state by viewModel.state.collectAsState()
     val isAllScheduleVisible by viewModel.isAllScheduleVisible.collectAsState()
     val isTeacher by viewModel.isTeacher.collectAsState()
-
-    LaunchedEffect(state.selectedGroup, state.selectedTeacher) {
-        Log.d(
-            "MainScreen",
-            "Recomposing: group=${state.selectedGroup}, teacher=${state.selectedTeacher}"
-        )
-    }
 
     Column(
         Modifier

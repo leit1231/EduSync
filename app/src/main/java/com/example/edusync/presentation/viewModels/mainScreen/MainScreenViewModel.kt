@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
 import com.example.edusync.common.Resource
+import com.example.edusync.data.SelectedScheduleStorage
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
@@ -54,7 +55,6 @@ class MainScreenViewModel(
     val institutionId: StateFlow<Int?> = _institutionId
 
     private val _isTeacherMode = MutableStateFlow(false)
-    val isTeacherMode: StateFlow<Boolean> = _isTeacherMode.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -117,6 +117,16 @@ class MainScreenViewModel(
                 }
             }
 
+            SelectedScheduleStorage.selectedGroupId?.let { id ->
+                val name = SelectedScheduleStorage.selectedGroupName ?: return@let
+                setSelectedGroup(id, name)
+            }
+
+            SelectedScheduleStorage.selectedTeacherId?.let { id ->
+                val initials = SelectedScheduleStorage.selectedTeacherInitials ?: return@let
+                setSelectedTeacher(id, initials)
+            }
+
             _state.update {
                 it.copy(
                     schedule = generateTestSchedule(),
@@ -128,6 +138,7 @@ class MainScreenViewModel(
 
     fun setSelectedGroup(id: Int, name: String) {
         viewModelScope.launch {
+            SelectedScheduleStorage.setGroup(id, name)
             _state.update { it.copy(selectedGroup = name, selectedTeacher = null) }
             _isTeacherMode.value = false
         }
@@ -135,10 +146,12 @@ class MainScreenViewModel(
 
     fun setSelectedTeacher(id: Int, initials: String) {
         viewModelScope.launch {
+            SelectedScheduleStorage.setTeacher(id, initials)
             _state.update { it.copy(selectedTeacher = initials, selectedGroup = null) }
             _isTeacherMode.value = true
         }
     }
+
 
     fun goToSearch(isTeacherMode: Boolean) {
         viewModelScope.launch {
