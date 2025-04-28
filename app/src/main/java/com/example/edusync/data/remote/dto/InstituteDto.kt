@@ -1,6 +1,9 @@
 package com.example.edusync.data.remote.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class InstituteResponse(
-    val ID: Int,
-    val Name: String
+    val id: Int?,
+    val name: String?
 )
+

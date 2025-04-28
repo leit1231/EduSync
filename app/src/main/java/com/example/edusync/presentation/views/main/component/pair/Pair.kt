@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -20,10 +21,11 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.domain.model.schedule.PairItem
 
 @Composable
-fun Pair(pair: PairItem, scrollInProgress: Boolean, onReminderClick: () -> Unit) {
+fun Pair(pair: PairItem, scrollInProgress: Boolean, onReminderClick: () -> Unit, isTeacherSchedule: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 130.dp)
             .background(AppColors.Background, RoundedCornerShape(12.dp))
             .border(1.dp, AppColors.Primary, RoundedCornerShape(12.dp))
             .padding(12.dp)
@@ -44,8 +46,14 @@ fun Pair(pair: PairItem, scrollInProgress: Boolean, onReminderClick: () -> Unit)
             )
 
             Column(modifier = Modifier.padding(top = 8.dp)) {
-                pair.pairInfo.first().teacher.takeIf { it.isNotBlank() }?.let {
-                    InfoRow(icon = R.drawable.ic_teacher, text = it)
+                if (isTeacherSchedule) {
+                    pair.pairInfo.first().group.takeIf { it.isNotBlank() }?.let {
+                        InfoRow(icon = R.drawable.ic_groups, text = it)
+                    }
+                }else{
+                    pair.pairInfo.first().teacher.takeIf { it.isNotBlank() }?.let {
+                        InfoRow(icon = R.drawable.ic_teacher, text = it)
+                    }
                 }
                 pair.pairInfo.first().auditoria.takeIf { it.isNotBlank() }?.let {
                     InfoRow(icon = R.drawable.ic_key, text = it)

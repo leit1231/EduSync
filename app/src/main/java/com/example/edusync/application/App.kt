@@ -8,9 +8,7 @@ import com.example.edusync.di.viewModelModule
 import com.example.edusync.domain.repository.group.GroupRepository
 import com.example.edusync.domain.repository.institution.InstituteRepository
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
@@ -27,12 +25,12 @@ class App: Application(){
                 repositoryModule
             )
         }
-        val initializer = AppInitializer(
-            get<InstituteRepository>(),
-            get<GroupRepository>(),
-            get<ScheduleRepository>()
-        )
-        CoroutineScope(Dispatchers.IO).launch {
+        runBlocking {
+            val initializer = AppInitializer(
+                get<InstituteRepository>(),
+                get<GroupRepository>(),
+                get<ScheduleRepository>()
+            )
             initializer.initialize()
         }
     }

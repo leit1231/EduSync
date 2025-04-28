@@ -1,5 +1,6 @@
 package com.example.edusync.application
 
+import android.util.Log
 import com.example.edusync.data.repository.group.GroupRepositoryImpl
 import com.example.edusync.data.repository.institution.InstituteRepositoryImpl
 import com.example.edusync.data.repository.schedule.ScheduleRepositoryImpl
@@ -16,16 +17,17 @@ class AppInitializer(
         try {
             (instituteRepository as InstituteRepositoryImpl).syncInstitutes()
             val institutes = instituteRepository.getAllInstitutes().getOrNull() ?: emptyList()
+            Log.d("AppInitializer", "Institutes: $institutes")
             institutes.forEach {
                 try {
                     (groupRepository as GroupRepositoryImpl).syncGroups(it.id)
                 } catch (e: Exception) {
-                    println("Failed to sync groups for institute ${it.id}: ${e.message}")
+                    Log.e("AppInitializer","Failed to sync groups for institute ${it.id}: ${e.message}")
                 }
             }
             (teacherInitials as ScheduleRepositoryImpl).syncTeacherInitials()
         } catch (e: Exception) {
-            println("Failed to initialize app: ${e.message}")
+            Log.e("AppInitializer", "Failed to initialize app", e)
         }
     }
 }

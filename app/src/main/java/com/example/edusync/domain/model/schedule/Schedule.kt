@@ -21,6 +21,7 @@ data class PairItem(
 data class PairInfo(
     val doctrine: String,
     val teacher: String,
+    val group: String,
     val auditoria: String,
     val corpus: String,
     val number: Int,

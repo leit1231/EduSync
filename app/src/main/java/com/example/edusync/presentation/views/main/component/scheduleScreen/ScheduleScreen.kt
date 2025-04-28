@@ -52,7 +52,8 @@ fun ScheduleLayout(
     viewModel: MainScreenViewModel,
     onEditClick: (PairItem) -> Unit,
     onDeleteClick: (PairItem) -> Unit,
-    isTeacher: Boolean
+    isTeacher: Boolean,
+    isTeacherSchedule: Boolean
 ) {
     val visible = remember { MutableTransitionState(false) }
     val pagerState = rememberPagerState { data.days.size }
@@ -150,7 +151,8 @@ fun ScheduleLayout(
                         onEditClick = onEditClick,
                         onDeleteClick = onDeleteClick,
                         scrollInProgress = pagerState.isScrollInProgress,
-                        onReminderClick = { showReminder = true }
+                        onReminderClick = { showReminder = true },
+                        isTeacherSchedule = isTeacherSchedule
                     )
 
                     if (showReminder) {

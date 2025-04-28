@@ -1,25 +1,31 @@
 package com.example.edusync.data.repository.schedule
 
 import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.data.local.entities.AppDatabase
+import com.example.edusync.data.local.entities.ScheduleDao
+import com.example.edusync.data.local.entities.ScheduleEntity
 import com.example.edusync.data.local.entities.TeacherInitialsDao
 import com.example.edusync.data.local.entities.TeacherInitialsEntity
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.RefreshRequest
-import com.example.edusync.data.remote.dto.ScheduleResponse
+import com.example.edusync.data.remote.dto.ScheduleItem
 import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
+import kotlinx.serialization.json.Json
 import retrofit2.Response
 
 class ScheduleRepositoryImpl(
     private val api: EduSyncApiService,
     private val encryptedPrefs: EncryptedSharedPreference,
-    private val teacherDao: TeacherInitialsDao
+    private val teacherDao: TeacherInitialsDao,
+    private val scheduleDao: ScheduleDao,
+    private val database: AppDatabase
 ) : ScheduleRepository {
 
-    override suspend fun getGroupSchedule(groupId: Int): Result<ScheduleResponse> =
-        executeWithToken {
-            api.getScheduleByGroup(groupId)
+    override suspend fun getGroupSchedule(groupId: Int): Result<List<ScheduleItem>> =
+        executeWithToken { token ->
+            api.getScheduleByGroup(token, groupId)
         }
 
     override suspend fun getTeacherInitials(): Result<List<TeacherInitialsResponse>> {
@@ -27,14 +33,14 @@ class ScheduleRepositoryImpl(
         if (localTeachers.isNotEmpty()) return Result.success(localTeachers)
 
         return executeWithToken { token ->
-            api.getTeacherInitials("Bearer $token")
+            api.getTeacherInitials(token)
         }.mapCatching { teachers ->
             teacherDao.insertAll(teachers.map { it.toEntity() })
             teachers
         }
     }
 
-    override suspend fun getScheduleByTeacher(initialsId: Int): Result<ScheduleResponse> =
+    override suspend fun getScheduleByTeacher(initialsId: Int): Result<List<ScheduleItem>> =
         executeWithToken { token ->
             api.getScheduleByTeacher(token, initialsId)
         }
@@ -47,10 +53,74 @@ class ScheduleRepositoryImpl(
             api.updateSchedule(token, scheduleId, request)
         }
 
+    override suspend fun createSchedule(request: ScheduleUpdateRequest): Result<Unit> =
+        executeWithToken { token ->
+            api.createSchedule(token, request)
+        }
+
     override suspend fun deleteSchedule(scheduleId: Int): Result<Unit> =
         executeWithToken { token ->
             api.deleteSchedule(token, scheduleId)
         }
+
+    override suspend fun saveGroupSchedule(groupId: Int, schedule: List<ScheduleItem>) {
+        val validatedSchedule = schedule.map { item ->
+            item.copy(
+                teacher = item.teacher ?: "",
+                room = item.room ?: "",
+                building = item.building ?: "",
+                notice = item.notice ?: ""
+            )
+        }
+        val json = Json.encodeToString(validatedSchedule)
+        database.scheduleDao().insert(
+            ScheduleEntity(
+                id = 0,
+                groupId = groupId,
+                teacherId = null,
+                scheduleJson = json,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    override suspend fun saveTeacherSchedule(teacherId: Int, schedule: List<ScheduleItem>) {
+        val json = Json.encodeToString(schedule)
+        scheduleDao.insert(
+            ScheduleEntity(
+                id = 0,
+                groupId = null,
+                teacherId = teacherId,
+                scheduleJson = json,
+                updatedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    override suspend fun getCachedGroupSchedule(groupId: Int): List<ScheduleItem>? {
+        val entity = scheduleDao.getGroupSchedule(groupId)
+        return entity?.let { Json.decodeFromString(it.scheduleJson) }
+    }
+
+    override suspend fun getCachedTeacherSchedule(teacherId: Int): List<ScheduleItem>? {
+        val entity = scheduleDao.getTeacherSchedule(teacherId)
+        return entity?.let { Json.decodeFromString(it.scheduleJson) }
+    }
+
+    suspend fun syncSchedule(groupId: Int? = null, teacherId: Int? = null) {
+        if (groupId != null) {
+            val serverSchedule = getGroupSchedule(groupId).getOrNull()
+            serverSchedule?.let {
+                saveGroupSchedule(groupId, it)
+            }
+        }
+        if (teacherId != null) {
+            val serverSchedule = getScheduleByTeacher(teacherId).getOrNull()
+            serverSchedule?.let {
+                saveTeacherSchedule(teacherId, it)
+            }
+        }
+    }
 
     private suspend fun <T> executeWithToken(apiCall: suspend (String) -> Response<T>): Result<T> {
         val accessToken = encryptedPrefs.getAccessToken() ?: return Result.failure(Exception("No access token"))
@@ -93,7 +163,7 @@ class ScheduleRepositoryImpl(
 
     suspend fun syncTeacherInitials() {
         val accessToken = encryptedPrefs.getAccessToken() ?: return
-        val response = api.getTeacherInitials("Bearer $accessToken")
+        val response = api.getTeacherInitials(accessToken)
         if (response.isSuccessful) {
             teacherDao.deleteAll()
             teacherDao.insertAll(response.body()!!.map { it.toEntity() })

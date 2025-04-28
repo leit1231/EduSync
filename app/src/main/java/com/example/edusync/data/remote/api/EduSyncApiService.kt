@@ -6,7 +6,7 @@ import com.example.edusync.data.remote.dto.InstituteResponse
 import com.example.edusync.data.remote.dto.LoginRequest
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
-import com.example.edusync.data.remote.dto.ScheduleResponse
+import com.example.edusync.data.remote.dto.ScheduleItem
 import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.UserProfileResponse
@@ -62,14 +62,21 @@ interface EduSyncApiService {
     //Расписание
     @GET("/api/schedule")
     suspend fun getScheduleByGroup(
+        @Header("Authorization") token: String,
         @Query("group_id") groupId: Int
-    ): Response<ScheduleResponse>
+    ): Response<List<ScheduleItem>>
 
     @PATCH("/api/schedule/{id}")
     suspend fun updateSchedule(
         @Header("Authorization") token: String,
         @Path("id") scheduleId: Int,
         @Body body: ScheduleUpdateRequest
+    ): Response<Unit>
+
+    @POST("/api/schedule")
+    suspend fun createSchedule(
+        @Header("Authorization") token: String,
+        @Body request: ScheduleUpdateRequest
     ): Response<Unit>
 
     @DELETE("/api/schedule/{id}")
@@ -88,5 +95,5 @@ interface EduSyncApiService {
     suspend fun getScheduleByTeacher(
         @Header("Authorization") token: String,
         @Path("initials_id") initialsId: Int
-    ): Response<ScheduleResponse>
+    ): Response<List<ScheduleItem>>
 }

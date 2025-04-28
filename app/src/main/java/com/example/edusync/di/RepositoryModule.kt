@@ -18,6 +18,7 @@ import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
 import com.example.edusync.domain.use_case.institution.GetAllInstitutesUseCase
 import com.example.edusync.domain.use_case.institution.GetInstituteByIdUseCase
 import com.example.edusync.domain.use_case.institution.GetMaskedInstitutesUseCase
+import com.example.edusync.domain.use_case.schedule.CreateScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.DeleteScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetGroupScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetScheduleByTeacherUseCase
@@ -28,12 +29,12 @@ import org.koin.dsl.module
 val repositoryModule = module {
     single<UserRepository> { UserRepositoryImpl(get(), get()) }
     single<InstituteRepository> {
-        InstituteRepositoryImpl(get(), get())
+        InstituteRepositoryImpl(get(), get(), get())
     }
     single<GroupRepository> {
         GroupRepositoryImpl(get(), get())
     }
-    single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get(), get()) }
+    single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get(), get(), get(), get()) }
 
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }
@@ -53,4 +54,5 @@ val repositoryModule = module {
     factory { GetScheduleByTeacherUseCase(get()) }
     factory { UpdateScheduleUseCase(get())}
     factory { DeleteScheduleUseCase(get()) }
+    factory { CreateScheduleUseCase(get()) }
 }

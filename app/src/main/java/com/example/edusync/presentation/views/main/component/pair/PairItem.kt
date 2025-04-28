@@ -57,7 +57,8 @@ fun PairItem(
     onReminderClick: () -> Unit,
     isEditMode: Boolean,
     onEditClick: (PairItem) -> Unit,
-    onDeleteClick: (PairItem) -> Unit
+    onDeleteClick: (PairItem) -> Unit,
+    isTeacherSchedule: Boolean
 ) {
     var currentMillis = System.currentTimeMillis()
     val startMillis = pair.isoDateStart.toCalendar().timeInMillis
@@ -71,7 +72,8 @@ fun PairItem(
         }
     }
 
-    Box {
+    Box(modifier = Modifier)
+    {
         if (currentMillis in startMillis until endMillis) {
             val defaultDuration = (endMillis - startMillis).toFloat()
             val progress = ((currentMillis - startMillis) / defaultDuration).coerceIn(0f, 1f)
@@ -80,12 +82,14 @@ fun PairItem(
             Pair(
                 pair = pair,
                 scrollInProgress = scrollInProgress,
-                onReminderClick = onReminderClick
+                onReminderClick = onReminderClick,
+                isTeacherSchedule
             )
         }
 
         Box(
             modifier = Modifier
+                .height(130.dp)
                 .matchParentSize()
                 .padding(8.dp)
         ) {

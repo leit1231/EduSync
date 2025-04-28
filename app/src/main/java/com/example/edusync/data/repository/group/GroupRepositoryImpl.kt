@@ -3,7 +3,6 @@ package com.example.edusync.data.repository.group
 import android.util.Log
 import com.example.edusync.data.local.entities.GroupDao
 import com.example.edusync.data.local.entities.GroupEntity
-import com.example.edusync.data.local.entities.areListsEqual
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.GroupResponse
 import com.example.edusync.domain.model.group.Group
@@ -53,9 +52,9 @@ class GroupRepositoryImpl(
 
     private fun GroupResponse.mapToDomain(): Group {
         return Group(
-            id = ID,
-            name = Name,
-            institutionId = InstitutionID
+            id = id ?: 0,
+            name = name.orEmpty(),
+            institutionId = institution_id ?: 0
         )
     }
 
@@ -66,16 +65,19 @@ class GroupRepositoryImpl(
     suspend fun syncGroups(institutionId: Int) {
         val serverGroups = apiService.getGroupsByInstitution(institutionId)
             .body()
-            ?.map { it.mapToEntity() }
+            ?.mapNotNull { it.mapToEntity() }
             ?: emptyList()
 
-        val localGroups = groupDao.getGroupsByInstitutionId(institutionId)?: emptyList()
-
-        if (!areListsEqual(serverGroups, localGroups)) {
-            groupDao.deleteAll()
-            groupDao.insertAll(serverGroups)
+        if (serverGroups.isEmpty()) {
+            Log.w("GroupSync", "Warning: Empty groups list from server")
+            return
         }
+
+        groupDao.deleteAll()
+        groupDao.insertAll(serverGroups)
     }
+
+
 
     private fun GroupEntity.mapToDomain(): Group {
         return Group(
@@ -85,11 +87,16 @@ class GroupRepositoryImpl(
         )
     }
 
-    private fun GroupResponse.mapToEntity(): GroupEntity {
+    private fun GroupResponse.mapToEntity(): GroupEntity? {
+        if (id == null || name == null || institution_id == null) {
+            Log.e("GroupMapping", "Invalid group: id=$id, name=$name, institution_id=$institution_id")
+            return null
+        }
         return GroupEntity(
-            id = ID,
-            name = Name,
-            institutionId = InstitutionID
+            id = id,
+            name = name,
+            institutionId = institution_id
         )
     }
+
 }

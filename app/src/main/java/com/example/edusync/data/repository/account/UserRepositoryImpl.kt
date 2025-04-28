@@ -1,6 +1,5 @@
 package com.example.edusync.data.repository.account
 
-import android.util.Log
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.AuthResponse
@@ -25,7 +24,7 @@ class UserRepositoryImpl(private val api: EduSyncApiService, private val encrypt
             }
 
     override suspend fun logout(): Result<Unit> = executeWithToken { token ->
-        api.logout("Bearer $token")
+        api.logout(token)
     }.also { result ->
         if (result.isSuccess) {
             encryptedSharedPreference.clearUserData()
@@ -40,7 +39,7 @@ class UserRepositoryImpl(private val api: EduSyncApiService, private val encrypt
             }
 
     override suspend fun getProfile(): Result<User> = executeWithToken { token ->
-        api.profile("Bearer $token")
+        api.profile(token)
     }.map { response ->
         User(
             id = response.user_id,

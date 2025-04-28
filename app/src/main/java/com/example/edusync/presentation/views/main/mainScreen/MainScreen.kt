@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.main.mainScreen
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.R
 import com.example.edusync.common.LoadingState
+import com.example.edusync.data.local.SelectedScheduleStorage
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.mainScreen.MainScreenViewModel
@@ -40,15 +43,79 @@ fun MainScreen(
     teacherId: Int? = null,
     teacherName: String? = null
 ) {
-
     val viewModel: MainScreenViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
     val isAllScheduleVisible by viewModel.isAllScheduleVisible.collectAsState()
     val isTeacher by viewModel.isTeacher.collectAsState()
+    val isTeacherSchedule by viewModel.isTeacherScheduleVisible.collectAsState()
+
+    LaunchedEffect(Unit) {
+        if (state.schedule == null && state.selectedGroup == null && state.selectedTeacher == null) {
+            if (groupId != null && groupName != null) {
+                viewModel.setSelectedGroup(groupId, groupName)
+            } else if (teacherId != null && teacherName != null) {
+                viewModel.setSelectedTeacher(teacherId, teacherName)
+            } else {
+                val selectedGroupId = SelectedScheduleStorage.selectedGroupId
+                val selectedGroupName = SelectedScheduleStorage.selectedGroupName
+                val selectedTeacherId = SelectedScheduleStorage.selectedTeacherId
+                val selectedTeacherName = SelectedScheduleStorage.selectedTeacherInitials
+
+                when {
+                    selectedGroupId != null && selectedGroupName != null -> {
+                        viewModel.setSelectedGroup(selectedGroupId, selectedGroupName)
+                    }
+
+                    selectedTeacherId != null && selectedTeacherName != null -> {
+                        viewModel.setSelectedTeacher(selectedTeacherId, selectedTeacherName)
+                    }
+
+                    else -> {
+                        val user = viewModel.getUser()
+                        if (user?.isTeacher == true) {
+                            val teacherId = viewModel.getTeacherId()
+
+                            val teacherInitialsList = viewModel.teacherInitialsList.value
+
+                            Log.d("MainScreen", "teacherInitialsList: $teacherInitialsList")
+
+                            val generated = viewModel.generateTeacherInitials(user.fullName)
+                                .replace("\\s+".toRegex(), " ")  // ← нормализуем
+                                .trim()
+
+                            teacherInitialsList.forEach {
+                                val original = it.initials
+                                val normalized = original.replace("\\s+".toRegex(), " ").trim()
+                                Log.d("MainScreen", "API: '$normalized' vs Generated: '$generated'")
+                            }
+
+                            val matched = teacherInitialsList.firstOrNull {
+                                it.initials.replace("\\s+".toRegex(), " ").trim() == generated
+                            }
+
+                            Log.d("MainScreen", "teacherId: $teacherId")
+
+                            if (teacherId != null && matched != null) {
+                                viewModel.setSelectedTeacher(matched.id, matched.initials)
+                            }
+                        } else {
+                            val groupId = user?.groupId
+
+                            val groupName = viewModel.getGroupNameById(groupId)
+
+                            if (groupId != null && groupName != null) {
+                                viewModel.setSelectedGroup(groupId, groupName)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Column(
         Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
     ) {
         Box(
             modifier = Modifier
@@ -92,12 +159,9 @@ fun MainScreen(
             }
         )
 
-
-
         val scheduleDays = state.schedule?.days ?: emptyList()
         val startDate = scheduleDays.firstOrNull()?.isoDateDay?.toCalendar()
         val endDate = scheduleDays.lastOrNull()?.isoDateDay?.toCalendar()
-
         val periodText = if (startDate != null && endDate != null) {
             "${startDate.get(Calendar.DAY_OF_MONTH)} ${startDate.toFullMonth()} - " +
                     "${endDate.get(Calendar.DAY_OF_MONTH)} ${endDate.toFullMonth()}"
@@ -110,14 +174,23 @@ fun MainScreen(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { if (!isAllScheduleVisible) viewModel.showAllSchedule() else viewModel.showSchedule() }
+                .clickable {
+                    if (!isAllScheduleVisible) viewModel.showAllSchedule()
+                    else viewModel.showSchedule()
+                }
         )
 
         if (isAllScheduleVisible) {
             AllWeekScheduleLayout()
         } else {
             when (state.scheduleLoading) {
-                LoadingState.Loading -> EmptyMainScreen()
+                LoadingState.Loading -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+
                 LoadingState.Success -> {
                     state.schedule?.let { schedule ->
                         if (schedule.days.isEmpty()) {
@@ -128,25 +201,18 @@ fun MainScreen(
                                 viewModel = viewModel,
                                 onEditClick = { viewModel.setSelectedPair(it) },
                                 onDeleteClick = { viewModel.deletePair(it) },
-                                isTeacher = isTeacher
+                                isTeacher = isTeacher,
+                                isTeacherSchedule = isTeacherSchedule
                             )
                         }
                     } ?: EmptyScheduleScreen()
                 }
+
                 LoadingState.Empty -> EmptyScheduleScreen()
                 is LoadingState.Error -> {
+                    EmptyScheduleScreen()
                 }
             }
         }
-    }
-
-    LaunchedEffect(groupId, groupName, teacherId, teacherName) {
-        if (groupId != null && groupName != null) {
-            viewModel.setSelectedGroup(groupId, groupName)
-        }
-        if (teacherId != null && teacherName != null) {
-            viewModel.setSelectedTeacher(teacherId, teacherName)
-        }
-
     }
 }

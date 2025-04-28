@@ -43,6 +43,7 @@ fun CreateEditPairDialog(
 ) {
     var doctrine by remember { mutableStateOf(pair?.pairInfo?.firstOrNull()?.doctrine ?: "") }
     var teacher by remember { mutableStateOf(pair?.pairInfo?.firstOrNull()?.teacher ?: "") }
+    var group by remember { mutableStateOf(pair?.pairInfo?.firstOrNull()?.teacher ?: "") }
     var auditoria by remember { mutableStateOf(pair?.pairInfo?.firstOrNull()?.auditoria ?: "") }
     var timeStart by remember { mutableStateOf(pair?.pairInfo?.firstOrNull()?.start ?: "") }
     var timeEnd by remember { mutableStateOf(pair?.pairInfo?.firstOrNull()?.end ?: "") }
@@ -135,6 +136,7 @@ fun CreateEditPairDialog(
                                 val newPairInfo = PairInfo(
                                     doctrine = doctrine,
                                     teacher = teacher,
+                                    group = group,
                                     auditoria = auditoria,
                                     corpus = "Главный корпус",
                                     number = 1,

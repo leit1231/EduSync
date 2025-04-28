@@ -21,10 +21,12 @@ val appModule = module {
                 androidContext(),
                 AppDatabase::class.java,
                 "edusync.db"
-            ).fallbackToDestructiveMigration(true)
+            )
+            .fallbackToDestructiveMigration(true)
             .build()
     }
     single { get<AppDatabase>().instituteDao() }
     single { get<AppDatabase>().groupDao() }
     single { get<AppDatabase>().teacherInitialsDao() }
+    single { get<AppDatabase>().scheduleDao() }
 }

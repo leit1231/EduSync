@@ -4,51 +4,74 @@ import com.example.edusync.domain.model.schedule.Day
 import com.example.edusync.domain.model.schedule.PairInfo
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.domain.model.schedule.Schedule
+import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.Serializable
 
-data class ScheduleResponse(
-    val schedule: List<ScheduleItem>,
-    val group_name: String
-)
-
+@Serializable
 data class ScheduleItem(
     val id: Int,
-    val subject: String,
-    val teacher: String,
-    val start_time: String,
-    val end_time: String,
-    val room: String,
-    val building: String,
+    @SerializedName("group_id")
+    val groupId: Int?,
+    @SerializedName("subject")
+    val subject: String?,
+    @SerializedName("teacher_initials")
+    val teacher: String?,
+    @SerializedName("start_time")
+    val startTime: String,
+    @SerializedName("end_time")
+    val endTime: String,
+    @SerializedName("classroom")
+    val room: String?,
+    val building: String? = null,
     val date: String,
-    val day_of_week: String,
-    val pair_number: Int,
-    val notice: String?
+    @SerializedName("day_of_week")
+    val dayOfWeek: String? = "",
+    @SerializedName("pair_number")
+    val pairNumber: Int,
+    val notice: String? = null
 )
 
-fun ScheduleResponse.toDomain() = Schedule(
-    name = group_name,
-    days = schedule.groupBy { it.date }.map { (date, items) ->
+fun List<ScheduleItem>.toDomain(name: String = "") = Schedule(
+    name = name,
+    days = this.groupBy { it.date.split("T")[0] }.map { (date, items) ->
         Day(
             isoDateDay = date,
-            day = items.first().day_of_week,
-            pairs = items.map {
-                PairItem(
-                    time = "${it.start_time} - ${it.end_time}",
-                    isoDateStart = "$date ${it.start_time}:00",
-                    isoDateEnd = "$date ${it.end_time}:00",
-                    pairInfo = listOf(
-                        PairInfo(
-                            doctrine = it.subject,
-                            teacher = it.teacher,
-                            auditoria = it.room,
-                            corpus = it.building,
-                            number = it.pair_number,
-                            start = it.start_time,
-                            end = it.end_time,
-                            warn = it.notice ?: ""
+            day = items.firstOrNull()?.dayOfWeek ?: "",
+            pairs = items
+                .sortedBy { it.startTime }
+                .map {
+                    val (auditoria, corpus) = parseRoom(it.room ?: "")
+                    PairItem(
+                        time = "${it.startTime.split("T")[1].substring(0..4)} - ${it.endTime.split("T")[1].substring(0..4)}",
+                        isoDateStart = "${date}T${it.startTime.split("T")[1]}",
+                        isoDateEnd = "${date}T${it.endTime.split("T")[1]}",
+                        pairInfo = listOf(
+                            PairInfo(
+                                doctrine = it.subject?: "",
+                                teacher = it.teacher ?: "",
+                                group = it.groupId.toString(),
+                                auditoria = auditoria.replace("ауд. ", "").trim(),
+                                corpus = corpus,
+                                number = it.pairNumber,
+                                start = it.startTime.split("T")[1].substring(0..4),
+                                end = it.endTime.split("T")[1].substring(0..4),
+                                warn = it.notice ?: ""
+                            )
                         )
                     )
-                )
-            }.sortedBy { it.isoDateStart }
+                }
         )
     }
 )
+
+
+private fun parseRoom(room: String): Pair<String, String> {
+    val parts = room.split("/").map { it.trim() }
+    return if (parts.size > 1) {
+        val auditoria = parts.dropLast(1).joinToString("/")
+        val corpus = parts.last()
+        auditoria to corpus
+    } else {
+        room to ""
+    }
+}

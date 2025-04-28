@@ -1,18 +1,21 @@
 package com.example.edusync.data.repository.institution
 
+import android.util.Log
+import androidx.room.Transaction
+import androidx.room.withTransaction
+import com.example.edusync.data.local.entities.AppDatabase
 import com.example.edusync.data.local.entities.InstituteDao
 import com.example.edusync.data.local.entities.InstituteEntity
-import com.example.edusync.data.local.entities.areListsEqual
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.InstituteResponse
 import com.example.edusync.domain.model.institution.Institute
 import com.example.edusync.domain.repository.institution.InstituteRepository
-import kotlinx.coroutines.flow.firstOrNull
 import retrofit2.Response
 
 class InstituteRepositoryImpl(
     private val apiService: EduSyncApiService,
-    private val instituteDao: InstituteDao
+    private val instituteDao: InstituteDao,
+    private val db: AppDatabase
 ) : InstituteRepository {
 
     override suspend fun getInstituteById(id: Int): Result<Institute> {
@@ -25,10 +28,7 @@ class InstituteRepositoryImpl(
     }
 
     override suspend fun getAllInstitutes(): Result<List<Institute>> {
-        val localInstitutes = instituteDao.getAll()
-            .firstOrNull()
-            ?.map { it.mapToDomain() }
-            ?: emptyList()
+        val localInstitutes = instituteDao.getAllSuspend().map { it.mapToDomain() }
 
         if (localInstitutes.isNotEmpty()) {
             return Result.success(localInstitutes)
@@ -38,26 +38,36 @@ class InstituteRepositoryImpl(
             val response = apiService.getAllInstitutions()
             handleResponse(response).map { it.mapToDomain() }
         } catch (e: Exception) {
-            return Result.success(localInstitutes)
+            Result.success(localInstitutes)
         }
     }
 
     suspend fun syncInstitutes() {
-        val serverInstitutes = apiService.getAllInstitutions().body()?.map { it.mapToEntity() } ?: emptyList()
-        val localInstitutes = instituteDao.getAll().firstOrNull() ?: emptyList()
+        val serverInstitutes = apiService.getAllInstitutions().body()
+            ?.mapNotNull { it.mapToEntity() } // <-- Заменил на mapNotNull
+            ?: emptyList()
 
-        if (!areListsEqual(serverInstitutes, localInstitutes)) {
-            instituteDao.deleteAll()
-            instituteDao.insertAll(serverInstitutes)
+        if (serverInstitutes.isEmpty()) {
+            println("Warning: Empty institute list from server")
+            return
         }
+
+        instituteDao.deleteAll()
+        instituteDao.insertAll(serverInstitutes)
     }
 
-    private fun InstituteResponse.mapToEntity(): InstituteEntity {
+    private fun InstituteResponse.mapToEntity(): InstituteEntity? {
+        if (id == null || name == null) {
+            Log.e("InstituteMapping", "Invalid institute: id=$id, name=$name")
+            return null
+        }
         return InstituteEntity(
-            id = ID,
-            name = Name
+            id = id,
+            name = name
         )
     }
+
+
 
     override suspend fun getMaskedInstitutes(): Result<List<Institute>> {
         return try {
@@ -84,11 +94,14 @@ class InstituteRepositoryImpl(
     }
 
     private fun InstituteResponse.mapToDomain(): Institute {
+        requireNotNull(id) { "InstituteResponse.id is null" }
+        requireNotNull(name) { "InstituteResponse.name is null" }
         return Institute(
-            id = ID,
-            name = Name
+            id = id,
+            name = name
         )
     }
+
 
     private fun List<InstituteResponse>.mapToDomain(): List<Institute> {
         return map { it.mapToDomain() }

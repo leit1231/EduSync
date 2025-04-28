@@ -1,4 +1,4 @@
-package com.example.edusync.data
+package com.example.edusync.data.local
 
 object SelectedScheduleStorage {
     var selectedGroupId: Int? = null
@@ -23,13 +23,13 @@ object SelectedScheduleStorage {
         selectedGroupName = null
     }
 
-    fun clearGroup() {
-        selectedGroupId = null
-        selectedGroupName = null
-    }
-
     fun clearTeacher() {
         selectedTeacherId = null
         selectedTeacherInitials = null
+    }
+
+    fun clearGroup() {
+        selectedGroupId = null
+        selectedGroupName = null
     }
 }

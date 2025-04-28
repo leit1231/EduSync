@@ -16,6 +16,15 @@ data class InstituteEntity(
     val name: String
 )
 
+@Entity(tableName = "schedule")
+data class ScheduleEntity(
+    @PrimaryKey val id: Int,
+    val groupId: Int?,
+    val teacherId: Int?,
+    val scheduleJson: String,
+    val updatedAt: Long
+)
+
 @Entity(
     tableName = "groups",
     foreignKeys = [
