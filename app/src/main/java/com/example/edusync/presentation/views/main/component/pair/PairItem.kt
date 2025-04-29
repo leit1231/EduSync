@@ -53,6 +53,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun PairItem(
     pair: PairItem,
+    isOwner: Boolean,
     scrollInProgress: Boolean,
     onReminderClick: () -> Unit,
     isEditMode: Boolean,
@@ -72,8 +73,7 @@ fun PairItem(
         }
     }
 
-    Box(modifier = Modifier)
-    {
+    Box(modifier = Modifier) {
         if (currentMillis in startMillis until endMillis) {
             val defaultDuration = (endMillis - startMillis).toFloat()
             val progress = ((currentMillis - startMillis) / defaultDuration).coerceIn(0f, 1f)
@@ -83,7 +83,7 @@ fun PairItem(
                 pair = pair,
                 scrollInProgress = scrollInProgress,
                 onReminderClick = onReminderClick,
-                isTeacherSchedule
+                isTeacherSchedule = isTeacherSchedule
             )
         }
 
@@ -115,15 +115,12 @@ fun PairItem(
 
         if (isEditMode) {
             Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                IconButton(
-                    onClick = { expanded = true }
-                ) {
+                IconButton(onClick = { expanded = true }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_more),
                         contentDescription = "Опции",
                         tint = AppColors.Primary,
-                        modifier = Modifier
-                            .size(30.dp)
+                        modifier = Modifier.size(30.dp)
                     )
                 }
                 DropdownMenu(
@@ -147,7 +144,7 @@ fun PairItem(
                     )
                 }
             }
-        } else {
+        } else if (isOwner) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_edit),
                 contentDescription = "Set reminder",

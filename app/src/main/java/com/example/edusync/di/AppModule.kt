@@ -29,4 +29,5 @@ val appModule = module {
     single { get<AppDatabase>().groupDao() }
     single { get<AppDatabase>().teacherInitialsDao() }
     single { get<AppDatabase>().scheduleDao() }
+    single { get<AppDatabase>().reminderDao() }
 }

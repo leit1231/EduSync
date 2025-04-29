@@ -38,10 +38,12 @@ import com.example.edusync.domain.model.schedule.PairItem
 @Composable
 fun CreateReminder(
     pair: PairItem,
+    initialText: String = "",
     onDismiss: () -> Unit,
     onSave: (PairItem, String) -> Unit
 ) {
-    var reminderText by remember { mutableStateOf("") }
+    var reminderText by remember { mutableStateOf(initialText) }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -60,14 +62,8 @@ fun CreateReminder(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .background(
-                        color = AppColors.Background,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .border(
-                        border = BorderStroke(1.dp, AppColors.Primary),
-                        shape = RoundedCornerShape(16.dp)
-                    )
+                    .background(AppColors.Background, RoundedCornerShape(16.dp))
+                    .border(BorderStroke(1.dp, AppColors.Primary), RoundedCornerShape(16.dp))
                     .align(Alignment.Center)
                     .pointerInput(Unit) {}
             ) {
@@ -87,7 +83,7 @@ fun CreateReminder(
                     Spacer(modifier = Modifier.height(32.dp))
                     GenericTextField(
                         value = reminderText,
-                        onValueChange = { newValue -> reminderText = newValue },
+                        onValueChange = { reminderText = it },
                         label = "Напоминание",
                         isError = false,
                         errorMessage = "",
@@ -99,15 +95,10 @@ fun CreateReminder(
                             onSave(pair, reminderText)
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.Primary
-                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Сохранить",
-                            style = AppTypography.body1.copy(fontSize = 14.sp)
-                        )
+                        Text("Сохранить", style = AppTypography.body1.copy(fontSize = 14.sp))
                     }
                 }
             }

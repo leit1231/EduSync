@@ -16,6 +16,15 @@ data class InstituteEntity(
     val name: String
 )
 
+@Entity(tableName = "reminders")
+data class ReminderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val groupId: Int? = null,
+    val teacherId: Int? = null,
+    val isoDateTime: String,
+    val text: String
+)
+
 @Entity(tableName = "schedule")
 data class ScheduleEntity(
     @PrimaryKey val id: Int,

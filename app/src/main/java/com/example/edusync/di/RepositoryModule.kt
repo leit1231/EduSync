@@ -3,6 +3,7 @@ package com.example.edusync.di
 import com.example.edusync.data.repository.account.UserRepositoryImpl
 import com.example.edusync.data.repository.group.GroupRepositoryImpl
 import com.example.edusync.data.repository.institution.InstituteRepositoryImpl
+import com.example.edusync.data.repository.schedule.ReminderRepository
 import com.example.edusync.data.repository.schedule.ScheduleRepositoryImpl
 import com.example.edusync.domain.repository.account.UserRepository
 import com.example.edusync.domain.repository.group.GroupRepository
@@ -35,6 +36,8 @@ val repositoryModule = module {
         GroupRepositoryImpl(get(), get())
     }
     single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get(), get(), get(), get()) }
+
+    single { ReminderRepository(get()) }
 
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }

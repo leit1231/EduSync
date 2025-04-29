@@ -46,6 +46,21 @@ interface TeacherInitialsDao {
 }
 
 @Dao
+interface ReminderDao {
+    @Query("SELECT * FROM reminders WHERE groupId = :groupId")
+    suspend fun getByGroupId(groupId: Int): List<ReminderEntity>
+
+    @Query("SELECT * FROM reminders WHERE teacherId = :teacherId")
+    suspend fun getByTeacherId(teacherId: Int): List<ReminderEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(reminder: ReminderEntity)
+
+    @Query("DELETE FROM reminders WHERE groupId = :groupId OR teacherId = :teacherId")
+    suspend fun deleteForSchedule(groupId: Int?, teacherId: Int?)
+}
+
+@Dao
 interface ScheduleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(schedule: ScheduleEntity)

@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.main.shedule
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,14 +20,18 @@ import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
-fun EmptyScheduleScreen(){
+fun EmptyScheduleScreen(onRetry: (() -> Unit)? = null) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-
-        Icon(painter = painterResource(R.drawable.ic_no_schedule), contentDescription = null, tint = AppColors.Secondary, modifier = Modifier.size(160.dp))
+        Icon(
+            painter = painterResource(R.drawable.ic_no_schedule),
+            contentDescription = null,
+            tint = AppColors.Secondary,
+            modifier = Modifier.size(160.dp)
+        )
 
         Text(
             text = "Расписание отсутствует",
@@ -35,5 +40,16 @@ fun EmptyScheduleScreen(){
             color = AppColors.Secondary,
             textAlign = TextAlign.Center
         )
+
+        onRetry?.let {
+            Text(
+                text = "Обновить",
+                color = AppColors.Primary,
+                style = AppTypography.body1.copy(fontSize = 18.sp),
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .clickable { it() }
+            )
+        }
     }
 }

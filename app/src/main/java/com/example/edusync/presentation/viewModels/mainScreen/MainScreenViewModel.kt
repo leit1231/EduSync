@@ -1,19 +1,24 @@
 package com.example.edusync.presentation.viewModels.mainScreen
 
+import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.LoadingState
+import com.example.edusync.common.NetworkUtils
 import com.example.edusync.common.Resource
 import com.example.edusync.data.local.SelectedScheduleStorage
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.toDomain
+import com.example.edusync.data.repository.schedule.ReminderRepository
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.domain.model.schedule.Day
 import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
 import com.example.edusync.domain.model.schedule.PairInfo
 import com.example.edusync.domain.model.schedule.PairItem
+import com.example.edusync.domain.model.schedule.withReminders
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
 import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
 import com.example.edusync.domain.use_case.schedule.GetGroupScheduleUseCase
@@ -31,13 +36,15 @@ import java.util.Calendar
 import java.util.Locale
 
 class MainScreenViewModel(
+    private val context: Context,
     private val navigator: Navigator,
     private val encryptedSharedPreference: EncryptedSharedPreference,
     private val getGroupsByInstitutionId: GetGroupsByInstitutionIdUseCase,
     private val getTeacherInitialsUseCase: GetTeacherInitialsUseCase,
     private val getGroupScheduleUseCase: GetGroupScheduleUseCase,
     private val getTeacherScheduleUseCase: GetScheduleByTeacherUseCase,
-    private val scheduleRepository: ScheduleRepository
+    private val scheduleRepository: ScheduleRepository,
+    private val reminderRepository: ReminderRepository
 ) : ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
@@ -76,13 +83,28 @@ class MainScreenViewModel(
 
             if (user?.isTeacher == true) {
                 if (_teacherId.value == null) {
+                    // Если в SharedPreference нет teacherId, временно сохраняем user.id
                     encryptedSharedPreference.saveTeacherId(user.id)
                     _teacherId.value = user.id
                 }
 
                 getTeacherInitialsUseCase().collect { resource ->
                     if (resource is Resource.Success) {
-                        _teacherInitialsList.value = resource.data ?: emptyList()
+                        val initialsList = resource.data ?: emptyList()
+                        _teacherInitialsList.value = initialsList
+
+                        val generatedInitials = generateTeacherInitials(user.fullName)
+                        val matched = initialsList.firstOrNull {
+                            normalizeInitials(it.initials) == normalizeInitials(generatedInitials)
+                        }
+
+                        if (matched != null) {
+                            encryptedSharedPreference.saveTeacherId(matched.id)
+                            _teacherId.value = matched.id
+                            Log.d("TEACHER_ID", "Matched initials: ${matched.initials}, id=${matched.id}")
+                        } else {
+                            Log.w("TEACHER_ID", "No matching initials found for: $generatedInitials")
+                        }
                     }
                 }
             }
@@ -122,16 +144,35 @@ class MainScreenViewModel(
 
     private fun loadGroupSchedule(groupId: Int) {
         viewModelScope.launch {
+            val hasInternet = NetworkUtils.hasInternetConnection(context)
+            _state.update { it.copy(scheduleLoading = LoadingState.Loading) }
+
+            if (!hasInternet) {
+                val cached = scheduleRepository.getCachedGroupSchedule(groupId)
+                if (cached != null) {
+                    val reminders = reminderRepository.getReminders(groupId = groupId, teacherId = null)
+                    _state.update {
+                        it.copy(
+                            schedule = cached.toDomain("Кэш").withReminders(reminders),
+                            scheduleLoading = LoadingState.Success
+                        )
+                    }
+                } else {
+                    _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
+                }
+                return@launch
+            }
+
             try {
-                _state.update { it.copy(scheduleLoading = LoadingState.Loading) }
                 getGroupScheduleUseCase(groupId).collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
                             resource.data?.let { scheduleItems ->
                                 scheduleRepository.saveGroupSchedule(groupId, scheduleItems)
+                                val reminders = reminderRepository.getReminders(groupId, null)
                                 _state.update {
                                     it.copy(
-                                        schedule = scheduleItems.toDomain("Группа"),
+                                        schedule = scheduleItems.toDomain("Группа").withReminders(reminders),
                                         scheduleLoading = LoadingState.Success
                                     )
                                 }
@@ -139,46 +180,51 @@ class MainScreenViewModel(
                                 _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
                             }
                         }
-
-                        is Resource.Error -> {
-                            _state.update {
-                                it.copy(
-                                    scheduleLoading = LoadingState.Error(
-                                        resource.message ?: ""
-                                    )
-                                )
-                            }
+                        is Resource.Error -> _state.update {
+                            it.copy(scheduleLoading = LoadingState.Error(resource.message ?: ""))
                         }
-
-                        is Resource.Loading -> { /* no-op */
-                        }
+                        is Resource.Loading -> {}
                     }
                 }
             } catch (e: Exception) {
                 _state.update {
-                    it.copy(
-                        scheduleLoading = LoadingState.Error(
-                            e.message ?: "Ошибка загрузки"
-                        )
-                    )
+                    it.copy(scheduleLoading = LoadingState.Error(e.message ?: "Ошибка загрузки"))
                 }
             }
         }
     }
 
-
     private fun loadTeacherSchedule(teacherId: Int) {
         viewModelScope.launch {
+            val hasInternet = NetworkUtils.hasInternetConnection(context)
+            _state.update { it.copy(scheduleLoading = LoadingState.Loading) }
+
+            if (!hasInternet) {
+                val cached = scheduleRepository.getCachedTeacherSchedule(teacherId)
+                if (cached != null) {
+                    val reminders = reminderRepository.getReminders(groupId = null, teacherId = teacherId)
+                    _state.update {
+                        it.copy(
+                            schedule = cached.toDomain("Кэш").withReminders(reminders),
+                            scheduleLoading = LoadingState.Success
+                        )
+                    }
+                } else {
+                    _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
+                }
+                return@launch
+            }
+
             try {
-                _state.update { it.copy(scheduleLoading = LoadingState.Loading) }
                 getTeacherScheduleUseCase(teacherId).collect { resource ->
                     when (resource) {
                         is Resource.Success -> {
                             resource.data?.let { scheduleItems ->
                                 scheduleRepository.saveTeacherSchedule(teacherId, scheduleItems)
+                                val reminders = reminderRepository.getReminders(null, teacherId)
                                 _state.update {
                                     it.copy(
-                                        schedule = scheduleItems.toDomain("Преподаватель"),
+                                        schedule = scheduleItems.toDomain("Преподаватель").withReminders(reminders),
                                         scheduleLoading = LoadingState.Success
                                     )
                                 }
@@ -186,33 +232,19 @@ class MainScreenViewModel(
                                 _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
                             }
                         }
-
-                        is Resource.Error -> {
-                            _state.update {
-                                it.copy(
-                                    scheduleLoading = LoadingState.Error(
-                                        resource.message ?: ""
-                                    )
-                                )
-                            }
+                        is Resource.Error -> _state.update {
+                            it.copy(scheduleLoading = LoadingState.Error(resource.message ?: ""))
                         }
-
-                        is Resource.Loading -> { /* no-op */
-                        }
+                        is Resource.Loading -> {}
                     }
                 }
             } catch (e: Exception) {
                 _state.update {
-                    it.copy(
-                        scheduleLoading = LoadingState.Error(
-                            e.message ?: "Ошибка загрузки"
-                        )
-                    )
+                    it.copy(scheduleLoading = LoadingState.Error(e.message ?: "Ошибка загрузки"))
                 }
             }
         }
     }
-
 
     fun getUser() = encryptedSharedPreference.getUser()
 
@@ -367,28 +399,27 @@ class MainScreenViewModel(
 
     fun saveReminder(pair: PairItem, reminderText: String) {
         viewModelScope.launch {
-            val dayIndex = state.value.schedule?.days?.indexOfFirst {
-                it.isoDateDay == pair.isoDateStart.substring(0, 10)
-            } ?: return@launch
+            val groupId = SelectedScheduleStorage.selectedGroupId
+            val teacherId = SelectedScheduleStorage.selectedTeacherId
 
-            val pairIndex =
-                state.value.schedule?.days?.get(dayIndex)?.pairs?.indexOf(pair) ?: return@launch
+            reminderRepository.saveReminder(
+                isoDateTime = pair.isoDateStart,
+                groupId = groupId,
+                teacherId = teacherId,
+                text = reminderText
+            )
 
             val updatedPair = pair.copy(
-                pairInfo = pair.pairInfo.map {
-                    it.copy(warn = reminderText)
-                }
+                pairInfo = pair.pairInfo.map { it.copy(warn = reminderText) }
             )
 
             _state.update { currentState ->
                 currentState.copy(
                     schedule = currentState.schedule?.copy(
-                        days = currentState.schedule.days.mapIndexed { index, day ->
-                            if (index == dayIndex) {
-                                day.copy(pairs = day.pairs.mapIndexed { pIndex, p ->
-                                    if (pIndex == pairIndex) updatedPair else p
-                                })
-                            } else day
+                        days = currentState.schedule.days.map { day ->
+                            day.copy(pairs = day.pairs.map {
+                                if (it.isoDateStart == updatedPair.isoDateStart) updatedPair else it
+                            })
                         }
                     )
                 )

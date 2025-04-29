@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.main.component.scheduleScreen
 
+import android.util.Log
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -30,11 +31,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import com.example.edusync.R
+import com.example.edusync.data.local.SelectedScheduleStorage
 import com.example.edusync.presentation.components.modal_window.CreateEditPairDialog
 import com.example.edusync.presentation.components.modal_window.CreateReminder
 import com.example.edusync.presentation.viewModels.mainScreen.MainScreenViewModel
@@ -62,11 +65,34 @@ fun ScheduleLayout(
     val selectedPair = viewModel.selectedPair.collectAsState().value
     var showAddDialog by remember { mutableStateOf(false) }
 
+    val state by viewModel.state.collectAsState()
+    val user = viewModel.getUser()
+
+    val selectedGroup = state.selectedGroup?.trim()?.lowercase()
+    val selectedTeacherId = SelectedScheduleStorage.selectedTeacherId
+    val userTeacherId = viewModel.getTeacherId()
+    val myGroup = remember(user?.groupId) {
+        mutableStateOf<String?>(null)
+    }
+
+    Log.d("OWNER_CHECK", "User from EncryptedSharedPreference: ${user?.fullName}, id=${user?.id}")
+
+    LaunchedEffect(user?.groupId) {
+        myGroup.value = viewModel.getGroupNameById(user?.groupId)?.trim()?.lowercase()
+    }
+
+    val isOwner = when {
+        user?.isTeacher == true -> selectedTeacherId != null && selectedTeacherId == userTeacherId
+        user?.isTeacher == false -> selectedGroup != null && selectedGroup == myGroup.value
+        else -> false
+    }
+
+    LaunchedEffect(isOwner) {
+        Log.d("OWNER_CHECK", "user.isTeacher=${user?.isTeacher}, selectedGroup=$selectedGroup vs myGroup=${myGroup.value}, selectedTeacherId=$selectedTeacherId vs userTeacherId=$userTeacherId → isOwner=$isOwner")
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-        ) { page ->
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -81,11 +107,7 @@ fun ScheduleLayout(
                         }
                     ) {
                         val popUpExpanded = remember { mutableStateOf(false) }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        ) {
+                        Box(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                             DateItem(
                                 day = data.days[page],
                                 onClick = { popUpExpanded.value = true },
@@ -117,8 +139,8 @@ fun ScheduleLayout(
                                 CreateEditPairDialog(
                                     currentDate = selectedPair.isoDateStart.substring(0, 10),
                                     pair = selectedPair,
-                                    onSave = { updatedPair ->
-                                        viewModel.updatePair(updatedPair)
+                                    onSave = {
+                                        viewModel.updatePair(it)
                                         viewModel.setSelectedPair(null)
                                     },
                                     onDismiss = { viewModel.setSelectedPair(null) }
@@ -130,11 +152,11 @@ fun ScheduleLayout(
                             expanded = popUpExpanded.value,
                             onDismissRequest = { popUpExpanded.value = false },
                             list = data,
-                            onItemClick = { index ->
+                            onItemClick = {
                                 scope.launch {
                                     popUpExpanded.value = false
                                     delay(100)
-                                    pagerState.scrollToPage(index)
+                                    pagerState.scrollToPage(it)
                                 }
                             },
                             page,
@@ -143,21 +165,28 @@ fun ScheduleLayout(
                     }
                 }
 
-                items(items = data.days[page].pairs) { pair ->
+                items(data.days[page].pairs) { pair ->
                     var showReminder by remember { mutableStateOf(false) }
+                    var currentReminderText by remember { mutableStateOf("") }
+
                     PairItem(
                         pair = pair,
                         isEditMode = isEditMode,
+                        isOwner = isOwner,
+                        scrollInProgress = pagerState.isScrollInProgress,
                         onEditClick = onEditClick,
                         onDeleteClick = onDeleteClick,
-                        scrollInProgress = pagerState.isScrollInProgress,
-                        onReminderClick = { showReminder = true },
+                        onReminderClick = {
+                            currentReminderText = pair.pairInfo.firstOrNull()?.warn.orEmpty()
+                            showReminder = true
+                        },
                         isTeacherSchedule = isTeacherSchedule
                     )
 
                     if (showReminder) {
                         CreateReminder(
                             pair = pair,
+                            initialText = currentReminderText,
                             onDismiss = { showReminder = false },
                             onSave = { p, text -> viewModel.saveReminder(p, text) }
                         )
@@ -165,12 +194,13 @@ fun ScheduleLayout(
                 }
             }
         }
+
         if (selectedPair != null) {
             CreateEditPairDialog(
                 currentDate = selectedPair.isoDateStart.substring(0, 10),
                 pair = selectedPair,
-                onSave = { updatedPair ->
-                    viewModel.updatePair(updatedPair)
+                onSave = {
+                    viewModel.updatePair(it)
                     viewModel.setSelectedPair(null)
                 },
                 onDismiss = { viewModel.setSelectedPair(null) }
@@ -185,9 +215,7 @@ fun ScheduleLayout(
                     showAddDialog = true
                 },
                 containerColor = AppColors.Primary,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Добавить пару", tint = AppColors.Background)
             }
@@ -197,8 +225,8 @@ fun ScheduleLayout(
     if (showAddDialog) {
         CreateEditPairDialog(
             currentDate = data.days[pagerState.currentPage].isoDateDay,
-            onSave = { newPair ->
-                viewModel.addPair(newPair)
+            onSave = {
+                viewModel.addPair(it)
                 showAddDialog = false
             },
             onDismiss = { showAddDialog = false }

@@ -49,6 +49,18 @@ fun MainScreen(
     val isTeacher by viewModel.isTeacher.collectAsState()
     val isTeacherSchedule by viewModel.isTeacherScheduleVisible.collectAsState()
 
+    val retrySchedule = {
+        val groupIdRetry = SelectedScheduleStorage.selectedGroupId
+        val groupNameRetry = SelectedScheduleStorage.selectedGroupName
+        val teacherIdRetry = SelectedScheduleStorage.selectedTeacherId
+        val teacherInitialsRetry = SelectedScheduleStorage.selectedTeacherInitials
+
+        when {
+            groupIdRetry != null && groupNameRetry != null -> viewModel.setSelectedGroup(groupIdRetry, groupNameRetry)
+            teacherIdRetry != null && teacherInitialsRetry != null -> viewModel.setSelectedTeacher(teacherIdRetry, teacherInitialsRetry)
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (state.schedule == null && state.selectedGroup == null && state.selectedTeacher == null) {
             if (groupId != null && groupName != null) {
@@ -194,7 +206,7 @@ fun MainScreen(
                 LoadingState.Success -> {
                     state.schedule?.let { schedule ->
                         if (schedule.days.isEmpty()) {
-                            EmptyScheduleScreen()
+                            EmptyScheduleScreen(onRetry = retrySchedule)
                         } else {
                             ScheduleLayout(
                                 data = schedule,
@@ -205,12 +217,12 @@ fun MainScreen(
                                 isTeacherSchedule = isTeacherSchedule
                             )
                         }
-                    } ?: EmptyScheduleScreen()
+                    } ?: EmptyScheduleScreen(onRetry = retrySchedule)
                 }
 
-                LoadingState.Empty -> EmptyScheduleScreen()
+                LoadingState.Empty -> EmptyScheduleScreen(onRetry = retrySchedule)
                 is LoadingState.Error -> {
-                    EmptyScheduleScreen()
+                    EmptyScheduleScreen(onRetry = retrySchedule)
                 }
             }
         }

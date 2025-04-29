@@ -1,6 +1,5 @@
 package com.example.edusync.presentation.viewModels.register
 
-import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.presentation.navigation.Destination

@@ -29,3 +29,15 @@ data class PairInfo(
     val end: String,
     val warn: String,
 )
+
+fun Schedule.withReminders(reminders: Map<String, String>): Schedule {
+    return this.copy(
+        days = days.map { day ->
+            day.copy(pairs = day.pairs.map { pair ->
+                pair.copy(pairInfo = pair.pairInfo.map {
+                    it.copy(warn = reminders[pair.isoDateStart] ?: "")
+                })
+            })
+        }
+    )
+}
