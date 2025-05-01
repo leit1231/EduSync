@@ -16,7 +16,9 @@ data class PairItem(
     val pairInfo: List<PairInfo>,
     val isoDateStart: String,
     val isoDateEnd: String,
+    val scheduleId: Int? = null
 )
+
 
 data class PairInfo(
     val doctrine: String,

@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -78,7 +77,7 @@ fun CustomDropdownMenu(
         options
     }
 
-    val animatedBorderColor = animateColorAsState(
+    val animatedBorderColor by animateColorAsState(
         targetValue = when {
             isError -> errorBorderColor
             isFocused || expanded -> focusedBorderColor
@@ -93,49 +92,28 @@ fun CustomDropdownMenu(
         label = "rotationAnimation"
     )
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         val boxModifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .border(
-                width = 1.dp,
-                color = animatedBorderColor.value,
-                shape = shape
-            )
+            .border(1.dp, animatedBorderColor, shape)
             .clip(shape)
             .background(backgroundColor)
             .clickable {
-                if (!expanded) {
-                    onExpandedChange(true)
-                }
-                if (expanded && !isFirstClick) {
-                    focusRequester.requestFocus()
-                }
+                onExpandedChange(!expanded)
+                isFocused = !expanded
                 isFirstClick = false
-                isFocused = expanded
             }
 
-        Box(
-            modifier = boxModifier,
-            contentAlignment = Alignment.CenterStart
-        ) {
+        Box(modifier = boxModifier, contentAlignment = Alignment.CenterStart) {
             if (isChanged && expanded) {
                 TextField(
                     value = searchText,
                     onValueChange = { searchText = it },
                     placeholder = {
-                        Text(
-                            text = "Начните вводить",
-                            color = AppColors.Secondary,
-                            style = AppTypography.body1.copy(fontSize = 14.sp),
-                        )
+                        Text("Начните вводить", color = AppColors.Secondary, style = AppTypography.body1.copy(fontSize = 14.sp))
                     },
-                    textStyle = TextStyle(
-                        color = AppColors.Secondary
-                    ),
+                    textStyle = TextStyle(color = AppColors.Secondary),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         cursorColor = AppColors.Secondary,
@@ -153,19 +131,18 @@ fun CustomDropdownMenu(
                 )
             } else {
                 Text(
-                    text = selectedOption.ifEmpty { label },
-                    color = if (selectedOption.isEmpty()) AppColors.SecondaryTransparent else AppColors.Secondary,
+                    text = selectedOption.ifBlank {label},
+                    color = if (selectedOption.isBlank()) AppColors.SecondaryTransparent else AppColors.Secondary,
                     style = AppTypography.body1.copy(fontSize = 16.sp),
                     fontWeight = FontWeight.ExtraLight,
-                    modifier = Modifier
-                        .padding(start = 16.dp, end = 48.dp)
+                    modifier = Modifier.padding(start = 16.dp, end = 48.dp)
                 )
             }
 
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = "Expand dropdown",
-                tint = animatedBorderColor.value,
+                tint = animatedBorderColor,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = 16.dp)
@@ -188,12 +165,8 @@ fun CustomDropdownMenu(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-                    .shadow(elevation = 8.dp, shape = shape)
-                    .border(
-                        width = 2.dp,
-                        color = animatedBorderColor.value,
-                        shape = shape
-                    )
+                    .shadow(8.dp, shape)
+                    .border(2.dp, animatedBorderColor, shape)
                     .clip(shape)
                     .background(backgroundColor)
             ) {
@@ -220,9 +193,7 @@ fun CustomDropdownMenu(
                                 isFocused = false
                                 isFirstClick = true
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(backgroundColor)
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -230,8 +201,8 @@ fun CustomDropdownMenu(
         }
     }
 
-    LaunchedEffect(expanded) {
-        if (expanded && !isFirstClick) {
+    LaunchedEffect(expanded, isFirstClick) {
+        if (expanded && !isFirstClick && isChanged) {
             focusRequester.requestFocus()
         }
     }

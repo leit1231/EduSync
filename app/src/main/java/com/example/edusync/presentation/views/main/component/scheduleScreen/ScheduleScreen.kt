@@ -1,6 +1,7 @@
 package com.example.edusync.presentation.views.main.component.scheduleScreen
 
-import android.util.Log
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -48,12 +49,12 @@ import com.example.edusync.presentation.views.main.component.pair.PairItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScheduleLayout(
     data: Schedule,
     viewModel: MainScreenViewModel,
-    onEditClick: (PairItem) -> Unit,
     onDeleteClick: (PairItem) -> Unit,
     isTeacher: Boolean,
     isTeacherSchedule: Boolean
@@ -64,10 +65,19 @@ fun ScheduleLayout(
     val isEditMode by viewModel.isEditMode.collectAsState()
     val selectedPair = viewModel.selectedPair.collectAsState().value
     var showAddDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     val state by viewModel.state.collectAsState()
     val user = viewModel.getUser()
 
+    val subjectList by viewModel.subjectList.collectAsState()
+    val subjectNames = subjectList.map { it.name }
+
+    val groupNames = viewModel.allGroups.collectAsState().value.map { it.name }
+    val groupIdMap = viewModel.allGroups.collectAsState().value.associate { it.name to it.id }
+    val teacherIdMap =
+        viewModel.teacherInitialsList.collectAsState().value.associate { it.initials to it.id }
+    val teacherNames = teacherIdMap.keys.toList()
     val selectedGroup = state.selectedGroup?.trim()?.lowercase()
     val selectedTeacherId = SelectedScheduleStorage.selectedTeacherId
     val userTeacherId = viewModel.getTeacherId()
@@ -75,20 +85,14 @@ fun ScheduleLayout(
         mutableStateOf<String?>(null)
     }
 
-    Log.d("OWNER_CHECK", "User from EncryptedSharedPreference: ${user?.fullName}, id=${user?.id}")
-
     LaunchedEffect(user?.groupId) {
         myGroup.value = viewModel.getGroupNameById(user?.groupId)?.trim()?.lowercase()
     }
 
-    val isOwner = when {
-        user?.isTeacher == true -> selectedTeacherId != null && selectedTeacherId == userTeacherId
-        user?.isTeacher == false -> selectedGroup != null && selectedGroup == myGroup.value
+    val isOwner = when (user?.isTeacher) {
+        true -> selectedTeacherId != null && selectedTeacherId == userTeacherId
+        false -> selectedGroup != null && selectedGroup == myGroup.value
         else -> false
-    }
-
-    LaunchedEffect(isOwner) {
-        Log.d("OWNER_CHECK", "user.isTeacher=${user?.isTeacher}, selectedGroup=$selectedGroup vs myGroup=${myGroup.value}, selectedTeacherId=$selectedTeacherId vs userTeacherId=$userTeacherId → isOwner=$isOwner")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -107,7 +111,9 @@ fun ScheduleLayout(
                         }
                     ) {
                         val popUpExpanded = remember { mutableStateOf(false) }
-                        Box(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                        Box(modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)) {
                             DateItem(
                                 day = data.days[page],
                                 onClick = { popUpExpanded.value = true },
@@ -115,7 +121,9 @@ fun ScheduleLayout(
                                     if (page > 0) scope.launch { pagerState.scrollToPage(page - 1) }
                                 },
                                 onRightClick = {
-                                    if (page < data.days.size - 1) scope.launch { pagerState.scrollToPage(page + 1) }
+                                    if (page < data.days.size - 1) scope.launch {
+                                        pagerState.scrollToPage(page + 1)
+                                    }
                                 },
                                 modifier = Modifier.align(Alignment.Center)
                             )
@@ -132,18 +140,6 @@ fun ScheduleLayout(
                                         .size(30.dp)
                                         .clickable { viewModel.toggleEditMode() }
                                         .padding(top = 4.dp, end = 4.dp)
-                                )
-                            }
-
-                            if (selectedPair != null && !isEditMode) {
-                                CreateEditPairDialog(
-                                    currentDate = selectedPair.isoDateStart.substring(0, 10),
-                                    pair = selectedPair,
-                                    onSave = {
-                                        viewModel.updatePair(it)
-                                        viewModel.setSelectedPair(null)
-                                    },
-                                    onDismiss = { viewModel.setSelectedPair(null) }
                                 )
                             }
                         }
@@ -174,7 +170,10 @@ fun ScheduleLayout(
                         isEditMode = isEditMode,
                         isOwner = isOwner,
                         scrollInProgress = pagerState.isScrollInProgress,
-                        onEditClick = onEditClick,
+                        onEditClick = {
+                            viewModel.setSelectedPair(pair)
+                            showEditDialog = true
+                        },
                         onDeleteClick = onDeleteClick,
                         onReminderClick = {
                             currentReminderText = pair.pairInfo.firstOrNull()?.warn.orEmpty()
@@ -195,15 +194,39 @@ fun ScheduleLayout(
             }
         }
 
-        if (selectedPair != null) {
+        if (showAddDialog && selectedPair != null) {
             CreateEditPairDialog(
-                currentDate = selectedPair.isoDateStart.substring(0, 10),
                 pair = selectedPair,
-                onSave = {
-                    viewModel.updatePair(it)
-                    viewModel.setSelectedPair(null)
+                subjects = subjectNames,
+                teachers = teacherNames,
+                teacherIdMap = teacherIdMap,
+                groups = groupNames,
+                onGroupSelected = { groupName ->
+                    groupIdMap[groupName]?.let { viewModel.loadSubjects(it) }
                 },
-                onDismiss = { viewModel.setSelectedPair(null) }
+                onSave = viewModel::addPair,
+                onDismiss = {
+                    showAddDialog = false
+                    viewModel.setSelectedPair(null)
+                }
+            )
+        }
+
+        if (showEditDialog && selectedPair != null) {
+            CreateEditPairDialog(
+                pair = selectedPair,
+                subjects = subjectNames,
+                teachers = teacherNames,
+                teacherIdMap = teacherIdMap,
+                groups = groupNames,
+                onGroupSelected = { groupName ->
+                    groupIdMap[groupName]?.let { viewModel.loadSubjects(it) }
+                },
+                onSave = viewModel::updatePair,
+                onDismiss = {
+                    showEditDialog = false
+                    viewModel.setSelectedPair(null)
+                }
             )
         }
 
@@ -211,26 +234,22 @@ fun ScheduleLayout(
             FloatingActionButton(
                 onClick = {
                     val currentDate = data.days[pagerState.currentPage].isoDateDay
-                    viewModel.createNewPair(currentDate)
+                    val newPair = viewModel.createNewPair(currentDate)
+                    viewModel.setSelectedPair(newPair)
                     showAddDialog = true
                 },
                 containerColor = AppColors.Primary,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Добавить пару", tint = AppColors.Background)
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Добавить пару",
+                    tint = AppColors.Background
+                )
             }
         }
-    }
-
-    if (showAddDialog) {
-        CreateEditPairDialog(
-            currentDate = data.days[pagerState.currentPage].isoDateDay,
-            onSave = {
-                viewModel.addPair(it)
-                showAddDialog = false
-            },
-            onDismiss = { showAddDialog = false }
-        )
     }
 
     DisposableEffect(key1 = visible) {

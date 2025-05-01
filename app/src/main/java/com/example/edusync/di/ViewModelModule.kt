@@ -34,7 +34,7 @@ val viewModelModule = module {
         InfoStudentViewModel(get(), get(), get(), email = parameters.get(), password = parameters.get(), role = parameters.get(), get()
         )
     }
-    viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { FavoritesViewModel(get()) }

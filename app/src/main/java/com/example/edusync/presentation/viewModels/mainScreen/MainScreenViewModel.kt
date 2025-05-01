@@ -9,20 +9,26 @@ import com.example.edusync.common.NetworkUtils
 import com.example.edusync.common.Resource
 import com.example.edusync.data.local.SelectedScheduleStorage
 import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
+import com.example.edusync.data.remote.dto.SubjectResponse
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.toDomain
 import com.example.edusync.data.repository.schedule.ReminderRepository
+import com.example.edusync.domain.model.group.Group
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
-import com.example.edusync.domain.model.schedule.Day
 import com.example.edusync.presentation.views.main.mainScreen.MainScreenState
 import com.example.edusync.domain.model.schedule.PairInfo
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.domain.model.schedule.withReminders
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
 import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
+import com.example.edusync.domain.use_case.schedule.CreateScheduleUseCase
+import com.example.edusync.domain.use_case.schedule.DeleteScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetGroupScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetScheduleByTeacherUseCase
+import com.example.edusync.domain.use_case.schedule.UpdateScheduleUseCase
+import com.example.edusync.domain.use_case.subject.GetSubjectsByGroupUseCase
 import com.example.edusync.domain.use_case.teachers.GetTeacherInitialsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,19 +38,23 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class MainScreenViewModel(
     private val context: Context,
     private val navigator: Navigator,
+    private val scheduleRepository: ScheduleRepository,
     private val encryptedSharedPreference: EncryptedSharedPreference,
     private val getGroupsByInstitutionId: GetGroupsByInstitutionIdUseCase,
     private val getTeacherInitialsUseCase: GetTeacherInitialsUseCase,
     private val getGroupScheduleUseCase: GetGroupScheduleUseCase,
     private val getTeacherScheduleUseCase: GetScheduleByTeacherUseCase,
-    private val scheduleRepository: ScheduleRepository,
-    private val reminderRepository: ReminderRepository
+    private val reminderRepository: ReminderRepository,
+    private val createScheduleUseCase: CreateScheduleUseCase,
+    private val updateScheduleUseCase: UpdateScheduleUseCase,
+    private val deleteScheduleUseCase: DeleteScheduleUseCase,
+    private val getSubjectsByGroupUseCase: GetSubjectsByGroupUseCase
 ) : ViewModel() {
 
     private val _isAllScheduleVisible = MutableStateFlow(false)
@@ -73,9 +83,22 @@ class MainScreenViewModel(
     private val _institutionId = MutableStateFlow<Int?>(null)
     val institutionId: StateFlow<Int?> = _institutionId
 
+    private val _allGroups = MutableStateFlow<List<Group>>(emptyList())
+    val allGroups: StateFlow<List<Group>> = _allGroups
+
+    private val _subjectList = MutableStateFlow<List<SubjectResponse>>(emptyList())
+    val subjectList: StateFlow<List<SubjectResponse>> = _subjectList
+
+    private val _subjectNames = MutableStateFlow<List<String>>(emptyList())
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val user = encryptedSharedPreference.getUser()
+
+            user?.institutionId?.let { institutionId ->
+                loadGroupsFromDb(institutionId)
+                loadTeacherInitials()
+            }
 
             _isTeacher.value = user?.isTeacher ?: false
             _institutionId.value = user?.institutionId
@@ -83,7 +106,6 @@ class MainScreenViewModel(
 
             if (user?.isTeacher == true) {
                 if (_teacherId.value == null) {
-                    // Если в SharedPreference нет teacherId, временно сохраняем user.id
                     encryptedSharedPreference.saveTeacherId(user.id)
                     _teacherId.value = user.id
                 }
@@ -122,6 +144,7 @@ class MainScreenViewModel(
                     scheduleLoading = LoadingState.Loading
                 )
             }
+            loadSubjects(id)
             loadGroupSchedule(id)
             _isTeacherScheduleVisible.value = false
         }
@@ -246,6 +269,17 @@ class MainScreenViewModel(
         }
     }
 
+    private fun loadCurrentSchedule() {
+        val groupId = SelectedScheduleStorage.selectedGroupId
+        val teacherId = SelectedScheduleStorage.selectedTeacherId
+
+        when {
+            groupId != null -> loadGroupSchedule(groupId)
+            teacherId != null -> loadTeacherSchedule(teacherId)
+            else -> {}
+        }
+    }
+
     fun getUser() = encryptedSharedPreference.getUser()
 
     fun getTeacherId() = encryptedSharedPreference.getTeacherId()
@@ -266,12 +300,12 @@ class MainScreenViewModel(
 
     fun clearTeacher() {
         viewModelScope.launch {
-            SelectedScheduleStorage.clearTeacher() // Очистка локального сохранения
+            SelectedScheduleStorage.clearTeacher()
             _state.update {
                 it.copy(
                     selectedTeacher = null,
                     schedule = null,
-                    scheduleLoading = LoadingState.Loading // Можно показать индикатор загрузки
+                    scheduleLoading = LoadingState.Loading
                 )
             }
             _isTeacherScheduleVisible.value = false
@@ -280,7 +314,7 @@ class MainScreenViewModel(
 
     fun clearGroup() {
         viewModelScope.launch {
-            SelectedScheduleStorage.clearGroup() // Очистка локального сохранения
+            SelectedScheduleStorage.clearGroup()
             _state.update {
                 it.copy(
                     selectedGroup = null,
@@ -305,10 +339,6 @@ class MainScreenViewModel(
         }.let(::normalizeInitials)
     }
 
-    private fun sortPairs(day: Day): Day {
-        return day.copy(pairs = day.pairs.sortedBy { it.isoDateStart })
-    }
-
     fun toggleEditMode() {
         _isEditMode.value = !_isEditMode.value
         if (!_isEditMode.value) {
@@ -328,59 +358,135 @@ class MainScreenViewModel(
         _isAllScheduleVisible.value = false
     }
 
-    fun addPair(newPair: PairItem) {
+    private fun parseLocal(dateTime: String, onlyDate: Boolean = false): Date {
+        val pattern = if (onlyDate) {
+            if (dateTime.contains("T")) "yyyy-MM-dd'T'HH:mm:ss'Z'" else "yyyy-MM-dd HH:mm:ss"
+        } else {
+            if (dateTime.contains("T")) "yyyy-MM-dd'T'HH:mm:ss'Z'" else "yyyy-MM-dd HH:mm:ss"
+        }
+        return SimpleDateFormat(pattern, Locale.getDefault()).parse(dateTime)!!
+    }
+
+    fun loadSubjects(groupId: Int) {
         viewModelScope.launch {
-            _state.update { currentState ->
-                currentState.copy(
-                    schedule = currentState.schedule?.copy(
-                        days = currentState.schedule.days.map { day ->
-                            if (day.isoDateDay == newPair.isoDateStart.substring(0, 10)) {
-                                day.copy(pairs = day.pairs + newPair)
-                            } else day
-                        }.map { sortPairs(it) }
-                    )
-                )
+            getSubjectsByGroupUseCase(groupId).onSuccess { subjects ->
+                _subjectList.value = subjects
+                _subjectNames.value = subjects.map { it.name }
+            }.onFailure {
+                _subjectList.value = emptyList()
+                _subjectNames.value = emptyList()
             }
         }
     }
 
-    fun updatePair(updatedPair: PairItem) {
+    private fun loadGroupsFromDb(institutionId: Int) {
         viewModelScope.launch {
-            _state.update { currentState ->
-                currentState.copy(
-                    schedule = currentState.schedule?.copy(
-                        days = currentState.schedule.days.map { day ->
-                            day.copy(pairs = day.pairs.map {
-                                if (it.isoDateStart == updatedPair.isoDateStart) updatedPair else it
-                            })
-                        }.map { sortPairs(it) }
-                    )
-                )
+            getGroupsByInstitutionId(institutionId).collect { result ->
+                if (result is Resource.Success) {
+                    _allGroups.value = result.data ?: emptyList()
+                }
             }
+        }
+    }
+
+    private fun loadTeacherInitials() {
+        viewModelScope.launch {
+            getTeacherInitialsUseCase().collect { result ->
+                if (result is Resource.Success) {
+                    _teacherInitialsList.value = result.data ?: emptyList()
+                }
+            }
+        }
+    }
+
+    suspend fun addPair(pair: PairItem): Result<Unit> {
+        return try {
+            val info = pair.pairInfo.firstOrNull() ?: return Result.failure(Exception("Нет данных"))
+            val groupId = allGroups.value.firstOrNull { it.name.trim().equals(info.group.trim(), true) }?.id
+            val subjectId = subjectList.value.firstOrNull { it.name.trim().equals(info.doctrine.trim(), true) }?.id
+            val teacherId = if (info.teacher.isNotBlank()) {
+                teacherInitialsList.value.firstOrNull {
+                    normalizeInitials(it.initials) == normalizeInitials(info.teacher)
+                }?.id
+            } else null
+
+            if (groupId == null || subjectId == null || teacherId == null) {
+                Log.e("SCHEDULE", "Invalid data. Teacher: '${info.teacher}' | available: ${teacherInitialsList.value.joinToString { it.initials }}")
+                return Result.failure(Exception("Некорректные данные: группа/предмет/преподаватель"))
+            }
+
+            val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+            val request = ScheduleUpdateRequest(
+                group_id = groupId,
+                subject_id = subjectId,
+                teacher_initials_id = teacherId,
+                date = formatter.format(parseLocal(pair.isoDateStart, true)),
+                start_time = formatter.format(parseLocal(pair.isoDateStart)),
+                end_time = formatter.format(parseLocal(pair.isoDateEnd)),
+                classroom = "${info.auditoria}/1",
+                pair_number = info.number
+            )
+
+            val result = createScheduleUseCase(request)
+            if (result.isSuccess) loadCurrentSchedule()
+            result
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updatePair(pair: PairItem): Result<Unit> {
+        return try {
+            val scheduleId = pair.scheduleId ?: return Result.failure(Exception("Нет ID пары"))
+            val info = pair.pairInfo.firstOrNull() ?: return Result.failure(Exception("Нет информации"))
+            val groupId = allGroups.value.firstOrNull { it.name == info.group }?.id
+            val subjectId = subjectList.value.firstOrNull { it.name == info.doctrine }?.id
+            val teacherId = if (info.teacher.isNotBlank()) {
+                teacherInitialsList.value.firstOrNull {
+                    normalizeInitials(it.initials) == normalizeInitials(info.teacher)
+                }?.id
+            } else null
+
+            if (groupId == null || subjectId == null || teacherId == null) {
+                Log.e("SCHEDULE", "Invalid update. Teacher: '${info.teacher}' | available: ${teacherInitialsList.value.joinToString { it.initials }}")
+                return Result.failure(Exception("Некорректные данные для обновления"))
+            }
+
+            val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+            val request = ScheduleUpdateRequest(
+                group_id = groupId,
+                subject_id = subjectId,
+                teacher_initials_id = teacherId,
+                date = formatter.format(parseLocal(pair.isoDateStart, true)),
+                start_time = formatter.format(parseLocal(pair.isoDateStart)),
+                end_time = formatter.format(parseLocal(pair.isoDateEnd)),
+                classroom = "${info.auditoria}/1",
+                pair_number = info.number
+            )
+
+            val result = updateScheduleUseCase(scheduleId, request)
+            if (result.isSuccess) loadCurrentSchedule()
+            result
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
     fun deletePair(pair: PairItem) {
         viewModelScope.launch {
-            _state.update { currentState ->
-                currentState.copy(
-                    schedule = currentState.schedule?.copy(
-                        days = currentState.schedule.days.map { day ->
-                            day.copy(pairs = day.pairs.filter { it != pair })
-                        }
-                    )
-                )
+            val scheduleId = pair.scheduleId ?: return@launch
+            deleteScheduleUseCase(scheduleId).onSuccess {
+                loadCurrentSchedule()
             }
         }
     }
 
     fun createNewPair(date: String): PairItem {
-        val currentTime =
-            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Calendar.getInstance().time)
         return PairItem(
-            time = "$currentTime - $currentTime",
-            isoDateStart = "$date $currentTime:00",
-            isoDateEnd = "$date $currentTime:00",
+            time = "",
+            isoDateStart = "$date ",
+            isoDateEnd = "$date ",
+            scheduleId = null,
             pairInfo = listOf(
                 PairInfo(
                     doctrine = "",
@@ -389,13 +495,14 @@ class MainScreenViewModel(
                     auditoria = "",
                     corpus = "",
                     number = 0,
-                    start = currentTime,
-                    end = currentTime,
+                    start = "",
+                    end = "",
                     warn = ""
                 )
             )
         )
     }
+
 
     fun saveReminder(pair: PairItem, reminderText: String) {
         viewModelScope.launch {

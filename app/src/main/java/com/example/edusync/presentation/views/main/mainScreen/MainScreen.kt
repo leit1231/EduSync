@@ -1,6 +1,8 @@
 package com.example.edusync.presentation.views.main.mainScreen
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +38,7 @@ import com.example.edusync.presentation.views.main.component.select_group.Select
 import org.koin.androidx.compose.koinViewModel
 import java.util.Calendar
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MainScreen(
     groupId: Int? = null,
@@ -79,7 +82,7 @@ fun MainScreen(
                     }
 
                     selectedTeacherId != null && selectedTeacherName != null -> {
-                        viewModel.setSelectedTeacher(selectedTeacherId, selectedTeacherName)
+                        viewModel.setSelectedTeacher(selectedTeacherId,     selectedTeacherName)
                     }
 
                     else -> {
@@ -211,7 +214,6 @@ fun MainScreen(
                             ScheduleLayout(
                                 data = schedule,
                                 viewModel = viewModel,
-                                onEditClick = { viewModel.setSelectedPair(it) },
                                 onDeleteClick = { viewModel.deletePair(it) },
                                 isTeacher = isTeacher,
                                 isTeacherSchedule = isTeacherSchedule

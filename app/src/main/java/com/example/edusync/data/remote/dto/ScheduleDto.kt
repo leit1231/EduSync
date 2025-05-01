@@ -12,6 +12,8 @@ data class ScheduleItem(
     val id: Int,
     @SerializedName("group_id")
     val groupId: Int?,
+    @SerializedName("group_name")
+    val groupName: String?,
     @SerializedName("subject")
     val subject: String?,
     @SerializedName("teacher_initials")
@@ -45,11 +47,12 @@ fun List<ScheduleItem>.toDomain(name: String = "") = Schedule(
                         time = "${it.startTime.split("T")[1].substring(0..4)} - ${it.endTime.split("T")[1].substring(0..4)}",
                         isoDateStart = "${date}T${it.startTime.split("T")[1]}",
                         isoDateEnd = "${date}T${it.endTime.split("T")[1]}",
+                        scheduleId = it.id,
                         pairInfo = listOf(
                             PairInfo(
                                 doctrine = it.subject?: "",
                                 teacher = it.teacher ?: "",
-                                group = it.groupId.toString(),
+                                group = it.groupName?: "",
                                 auditoria = auditoria.replace("ауд. ", "").trim(),
                                 corpus = corpus,
                                 number = it.pairNumber,

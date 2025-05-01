@@ -107,21 +107,6 @@ class ScheduleRepositoryImpl(
         return entity?.let { Json.decodeFromString(it.scheduleJson) }
     }
 
-    suspend fun syncSchedule(groupId: Int? = null, teacherId: Int? = null) {
-        if (groupId != null) {
-            val serverSchedule = getGroupSchedule(groupId).getOrNull()
-            serverSchedule?.let {
-                saveGroupSchedule(groupId, it)
-            }
-        }
-        if (teacherId != null) {
-            val serverSchedule = getScheduleByTeacher(teacherId).getOrNull()
-            serverSchedule?.let {
-                saveTeacherSchedule(teacherId, it)
-            }
-        }
-    }
-
     private suspend fun <T> executeWithToken(apiCall: suspend (String) -> Response<T>): Result<T> {
         val accessToken = encryptedPrefs.getAccessToken() ?: return Result.failure(Exception("No access token"))
 
@@ -157,7 +142,22 @@ class ScheduleRepositoryImpl(
         return if (response.isSuccessful) {
             response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty response"))
         } else {
-            Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            val errorBody = response.errorBody()?.string()
+            val errorMessage = parseServerError(errorBody, response.code())
+            Result.failure(Exception(errorMessage))
+        }
+    }
+
+    private fun parseServerError(body: String?, code: Int): String {
+        return try {
+            val json = body?.let { org.json.JSONObject(it) }
+            when {
+                json?.has("error") == true -> json.getString("error")
+                json?.has("message") == true -> json.getString("message")
+                else -> "Ошибка $code"
+            }
+        } catch (e: Exception) {
+            "Ошибка $code"
         }
     }
 

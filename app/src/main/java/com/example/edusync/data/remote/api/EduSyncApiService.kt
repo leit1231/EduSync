@@ -8,6 +8,7 @@ import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
 import com.example.edusync.data.remote.dto.ScheduleItem
 import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
+import com.example.edusync.data.remote.dto.SubjectResponse
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.UserProfileResponse
 import retrofit2.Response
@@ -96,4 +97,12 @@ interface EduSyncApiService {
         @Header("Authorization") token: String,
         @Path("initials_id") initialsId: Int
     ): Response<List<ScheduleItem>>
+
+    // Получение списка предметов группы
+    @GET("/api/subject/group/{groupId}")
+    suspend fun getSubjectsByGroup(
+        @Header("Authorization") token: String,
+        @Path("groupId") groupId: Int
+    ): Response<List<SubjectResponse>>
+
 }

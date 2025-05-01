@@ -5,10 +5,12 @@ import com.example.edusync.data.repository.group.GroupRepositoryImpl
 import com.example.edusync.data.repository.institution.InstituteRepositoryImpl
 import com.example.edusync.data.repository.schedule.ReminderRepository
 import com.example.edusync.data.repository.schedule.ScheduleRepositoryImpl
+import com.example.edusync.data.repository.subject.SubjectRepositoryImpl
 import com.example.edusync.domain.repository.account.UserRepository
 import com.example.edusync.domain.repository.group.GroupRepository
 import com.example.edusync.domain.repository.institution.InstituteRepository
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
+import com.example.edusync.domain.repository.subject.SubjectRepository
 import com.example.edusync.domain.use_case.account.GetProfileUseCase
 import com.example.edusync.domain.use_case.account.LoginUseCase
 import com.example.edusync.domain.use_case.account.LogoutUseCase
@@ -24,6 +26,7 @@ import com.example.edusync.domain.use_case.schedule.DeleteScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetGroupScheduleUseCase
 import com.example.edusync.domain.use_case.schedule.GetScheduleByTeacherUseCase
 import com.example.edusync.domain.use_case.schedule.UpdateScheduleUseCase
+import com.example.edusync.domain.use_case.subject.GetSubjectsByGroupUseCase
 import com.example.edusync.domain.use_case.teachers.GetTeacherInitialsUseCase
 import org.koin.dsl.module
 
@@ -38,6 +41,7 @@ val repositoryModule = module {
     single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get(), get(), get(), get()) }
 
     single { ReminderRepository(get()) }
+    single<SubjectRepository> { SubjectRepositoryImpl(get(), get()) }
 
     factory { RegisterUseCase(get()) }
     factory { LoginUseCase(get()) }
@@ -58,4 +62,5 @@ val repositoryModule = module {
     factory { UpdateScheduleUseCase(get())}
     factory { DeleteScheduleUseCase(get()) }
     factory { CreateScheduleUseCase(get()) }
+    factory { GetSubjectsByGroupUseCase(get()) }
 }
