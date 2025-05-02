@@ -29,6 +29,11 @@ class SettingsViewModel(private val navigator: Navigator) : ViewModel() {
         }
     }
 
+    fun navigateToAboutAppScreen(){
+        viewModelScope.launch {
+            navigator.navigate(Destination.AboutAppScreen)
+        }
+    }
 
     fun goBack(){
         viewModelScope.launch {

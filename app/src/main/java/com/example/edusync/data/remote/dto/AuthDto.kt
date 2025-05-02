@@ -31,3 +31,9 @@ data class UserProfileResponse(
     val institution_id: Int,
     val group_id: Int
 )
+
+data class UpdateProfileRequest(
+    val full_name: String,
+    val institution_id: Int,
+    val group_id: Int
+)

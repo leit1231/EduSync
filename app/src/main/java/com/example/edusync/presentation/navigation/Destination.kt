@@ -57,6 +57,9 @@ sealed interface Destination {
     data object SettingsScreen: Destination
 
     @Serializable
+    data object AboutAppScreen: Destination
+
+    @Serializable
     data object CreateGroupScreen: Destination
 
     @Serializable

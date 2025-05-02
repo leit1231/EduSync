@@ -205,5 +205,9 @@ fun CustomDropdownMenu(
         if (expanded && !isFirstClick && isChanged) {
             focusRequester.requestFocus()
         }
+
+        if (!expanded && searchText.isNotEmpty()) {
+            searchText = ""
+        }
     }
 }

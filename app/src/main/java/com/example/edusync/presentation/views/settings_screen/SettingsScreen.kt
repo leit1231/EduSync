@@ -1,5 +1,9 @@
 package com.example.edusync.presentation.views.settings_screen
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -48,6 +53,7 @@ fun SettingsScreen() {
     val viewModel: SettingsViewModel = koinViewModel()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val isLogoutDialogVisible = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -94,13 +100,41 @@ fun SettingsScreen() {
                 onToggleChange = { viewModel.toggleNotifications(it) }
             )
             HorizontalDivider(thickness = 1.dp, color = Color.Green)
-            SettingsItem(title = "Расписание звонков")
+            SettingsItem(
+                title = "Планшетка",
+                onClick = {
+                    val url = "https://drive.google.com/drive/folders/1kUYiSAafghhYR0ARyXwPW1HZPpHcFIag?usp=sharing"
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    context.startActivity(intent)
+                }
+            )
             HorizontalDivider(thickness = 1.dp, color = Color.Green)
-            SettingsItem(title = "Планшетка")
+            SettingsItem(
+                title = "Обратная связь",
+                onClick = {
+                    val email = "edusync56@gmail.com"
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:$email")
+                        putExtra(Intent.EXTRA_SUBJECT, "Обратная связь по приложению EduSync")
+                    }
+
+                    try {
+                        context.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        Toast.makeText(
+                            context,
+                            "Не найдено приложение для отправки почты",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            )
             HorizontalDivider(thickness = 1.dp, color = Color.Green)
-            SettingsItem(title = "Обратная связь")
-            HorizontalDivider(thickness = 1.dp, color = Color.Green)
-            SettingsItem(title = "О приложении")
+            SettingsItem(title = "О приложении",
+                onClick = {
+                    viewModel.navigateToAboutAppScreen()
+                }
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))

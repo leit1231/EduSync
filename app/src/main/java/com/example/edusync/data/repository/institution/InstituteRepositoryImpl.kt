@@ -1,9 +1,6 @@
 package com.example.edusync.data.repository.institution
 
 import android.util.Log
-import androidx.room.Transaction
-import androidx.room.withTransaction
-import com.example.edusync.data.local.entities.AppDatabase
 import com.example.edusync.data.local.entities.InstituteDao
 import com.example.edusync.data.local.entities.InstituteEntity
 import com.example.edusync.data.remote.api.EduSyncApiService
@@ -14,8 +11,7 @@ import retrofit2.Response
 
 class InstituteRepositoryImpl(
     private val apiService: EduSyncApiService,
-    private val instituteDao: InstituteDao,
-    private val db: AppDatabase
+    private val instituteDao: InstituteDao
 ) : InstituteRepository {
 
     override suspend fun getInstituteById(id: Int): Result<Institute> {
@@ -44,7 +40,7 @@ class InstituteRepositoryImpl(
 
     suspend fun syncInstitutes() {
         val serverInstitutes = apiService.getAllInstitutions().body()
-            ?.mapNotNull { it.mapToEntity() } // <-- Заменил на mapNotNull
+            ?.mapNotNull { it.mapToEntity() }
             ?: emptyList()
 
         if (serverInstitutes.isEmpty()) {

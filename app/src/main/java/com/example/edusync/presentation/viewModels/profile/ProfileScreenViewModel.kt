@@ -9,7 +9,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.Resource
 import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.data.remote.dto.UpdateProfileRequest
 import com.example.edusync.domain.use_case.account.LogoutUseCase
+import com.example.edusync.domain.use_case.account.UpdateProfileUseCase
 import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
 import com.example.edusync.domain.use_case.institution.GetAllInstitutesUseCase
 import com.example.edusync.presentation.navigation.Destination
@@ -26,7 +28,8 @@ class ProfileScreenViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val encryptedSharedPreference: EncryptedSharedPreference,
     private val getInstitutesUseCase: GetAllInstitutesUseCase,
-    private val getGroupsUseCase: GetGroupsByInstitutionIdUseCase
+    private val getGroupsUseCase: GetGroupsByInstitutionIdUseCase,
+    private val updateProfileUseCase: UpdateProfileUseCase
 ) : ViewModel() {
     private val _uiState = mutableStateOf(ProfileState())
     val uiState: State<ProfileState> = _uiState
@@ -231,6 +234,40 @@ class ProfileScreenViewModel(
     }
 
     fun saveChanges() {
-        _uiState.value = _uiState.value.copy(isDataChanged = false)
+        viewModelScope.launch {
+            val user = encryptedSharedPreference.getUser() ?: return@launch
+
+            val fullName = "${_uiState.value.surname} ${_uiState.value.name} ${_uiState.value.patronymic}"
+            val institutionId = institutionIdMap.entries.find { it.value == _uiState.value.selectedUniversity }?.key ?: return@launch
+            val groupId = if (user.isTeacher) 0 else groupIdMap.entries.find { it.value == _uiState.value.selectedGroup }?.key ?: return@launch
+
+            updateProfileUseCase(
+                UpdateProfileRequest(
+                    full_name = fullName,
+                    institution_id = institutionId,
+                    group_id = groupId
+                )
+            ).collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        result.data ?: return@collect
+                        encryptedSharedPreference.saveUser(
+                            user.copy(
+                                fullName = fullName,
+                                institutionId = institutionId,
+                                groupId = groupId
+                            )
+                        )
+                        _uiState.value = _uiState.value.copy(isDataChanged = false)
+                    }
+
+                    is Resource.Error -> {
+                        Log.e("UpdateProfile", "Ошибка обновления: ${result.message}")
+                    }
+
+                    else -> Unit
+                }
+            }
+        }
     }
 }

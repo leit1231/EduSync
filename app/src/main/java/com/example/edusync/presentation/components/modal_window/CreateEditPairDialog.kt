@@ -146,7 +146,8 @@ fun CreateEditPairDialog(
                             onOptionSelected = {
                                 selectedGroup = it
                                 onGroupSelected(it)
-                            }
+                            },
+                            isChanged = true
                         )
                     }
 
@@ -157,7 +158,8 @@ fun CreateEditPairDialog(
                             selectedOption = selectedSubject,
                             expanded = expandedSubject,
                             onExpandedChange = { expandedSubject = it },
-                            onOptionSelected = { selectedSubject = it }
+                            onOptionSelected = { selectedSubject = it },
+                            isChanged = true
                         )
                     }
 
@@ -168,7 +170,8 @@ fun CreateEditPairDialog(
                             selectedOption = selectedTeacher,
                             expanded = expandedTeacher,
                             onExpandedChange = { expandedTeacher = it },
-                            onOptionSelected = { selectedTeacher = it }
+                            onOptionSelected = { selectedTeacher = it },
+                            isChanged = true
                         )
                     }
 

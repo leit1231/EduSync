@@ -27,12 +27,17 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsItem(title: String, toggleState: Boolean? = null, onToggleChange: ((Boolean) -> Unit)? = null) {
+fun SettingsItem(
+    title: String,
+    toggleState: Boolean? = null,
+    onToggleChange: ((Boolean) -> Unit)? = null,
+    onClick: (() -> Unit)? = null
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 20.dp, horizontal = 16.dp)
-            .clickable(enabled = onToggleChange == null) {},
+            .clickable(enabled = onClick != null && onToggleChange == null) { onClick?.invoke() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -41,6 +46,7 @@ fun SettingsItem(title: String, toggleState: Boolean? = null, onToggleChange: ((
             style = AppTypography.body1.copy(fontSize = 16.sp),
             color = AppColors.Secondary
         )
+
         if (toggleState != null && onToggleChange != null) {
             CompositionLocalProvider(
                 LocalMinimumInteractiveComponentEnforcement provides false
@@ -54,7 +60,9 @@ fun SettingsItem(title: String, toggleState: Boolean? = null, onToggleChange: ((
                         uncheckedThumbColor = AppColors.Secondary,
                         uncheckedTrackColor = AppColors.SecondaryTransparent
                     ),
-                    modifier = Modifier.size(34.dp, 20.dp).padding(end = 16.dp),
+                    modifier = Modifier
+                        .size(34.dp, 20.dp)
+                        .padding(end = 16.dp),
                     thumbContent = {
                         Box(
                             modifier = Modifier

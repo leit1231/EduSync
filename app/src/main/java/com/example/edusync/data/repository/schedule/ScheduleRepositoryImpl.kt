@@ -7,162 +7,80 @@ import com.example.edusync.data.local.entities.ScheduleEntity
 import com.example.edusync.data.local.entities.TeacherInitialsDao
 import com.example.edusync.data.local.entities.TeacherInitialsEntity
 import com.example.edusync.data.remote.api.EduSyncApiService
-import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.ScheduleItem
 import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
+import com.example.edusync.data.repository.TokenRequestExecutor
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
 import kotlinx.serialization.json.Json
-import retrofit2.Response
 
 class ScheduleRepositoryImpl(
     private val api: EduSyncApiService,
-    private val encryptedPrefs: EncryptedSharedPreference,
+    private val prefs: EncryptedSharedPreference,
     private val teacherDao: TeacherInitialsDao,
     private val scheduleDao: ScheduleDao,
     private val database: AppDatabase
 ) : ScheduleRepository {
 
+    private val executor = TokenRequestExecutor(prefs, api)
+
     override suspend fun getGroupSchedule(groupId: Int): Result<List<ScheduleItem>> =
-        executeWithToken { token ->
-            api.getScheduleByGroup(token, groupId)
-        }
+        executor.execute { api.getScheduleByGroup(it, groupId) }
 
     override suspend fun getTeacherInitials(): Result<List<TeacherInitialsResponse>> {
-        val localTeachers = teacherDao.getAll().map { it.toResponse() }
-        if (localTeachers.isNotEmpty()) return Result.success(localTeachers)
+        val local = teacherDao.getAll().map { it.toResponse() }
+        if (local.isNotEmpty()) return Result.success(local)
 
-        return executeWithToken { token ->
-            api.getTeacherInitials(token)
-        }.mapCatching { teachers ->
-            teacherDao.insertAll(teachers.map { it.toEntity() })
-            teachers
+        return executor.execute { api.getTeacherInitials(it) }.mapCatching { remote ->
+            teacherDao.insertAll(remote.map { it.toEntity() })
+            remote
         }
     }
 
     override suspend fun getScheduleByTeacher(initialsId: Int): Result<List<ScheduleItem>> =
-        executeWithToken { token ->
-            api.getScheduleByTeacher(token, initialsId)
-        }
+        executor.execute { api.getScheduleByTeacher(it, initialsId) }
 
-    override suspend fun updateSchedule(
-        scheduleId: Int,
-        request: ScheduleUpdateRequest
-    ): Result<Unit> =
-        executeWithToken { token ->
-            api.updateSchedule(token, scheduleId, request)
-        }
+    override suspend fun updateSchedule(scheduleId: Int, request: ScheduleUpdateRequest): Result<Unit> =
+        executor.execute { api.updateSchedule(it, scheduleId, request) }
 
     override suspend fun createSchedule(request: ScheduleUpdateRequest): Result<Unit> =
-        executeWithToken { token ->
-            api.createSchedule(token, request)
-        }
+        executor.execute { api.createSchedule(it, request) }
 
     override suspend fun deleteSchedule(scheduleId: Int): Result<Unit> =
-        executeWithToken { token ->
-            api.deleteSchedule(token, scheduleId)
-        }
+        executor.execute { api.deleteSchedule(it, scheduleId) }
 
     override suspend fun saveGroupSchedule(groupId: Int, schedule: List<ScheduleItem>) {
-        val validatedSchedule = schedule.map { item ->
-            item.copy(
-                teacher = item.teacher ?: "",
-                room = item.room ?: "",
-                building = item.building ?: "",
-                notice = item.notice ?: ""
+        val validated = schedule.map {
+            it.copy(
+                teacher = it.teacher ?: "",
+                room = it.room ?: "",
+                building = it.building ?: "",
+                notice = it.notice ?: ""
             )
         }
-        val json = Json.encodeToString(validatedSchedule)
+        val json = Json.encodeToString(validated)
         database.scheduleDao().insert(
-            ScheduleEntity(
-                id = 0,
-                groupId = groupId,
-                teacherId = null,
-                scheduleJson = json,
-                updatedAt = System.currentTimeMillis()
-            )
+            ScheduleEntity(0, groupId, null, json, System.currentTimeMillis())
         )
     }
 
     override suspend fun saveTeacherSchedule(teacherId: Int, schedule: List<ScheduleItem>) {
         val json = Json.encodeToString(schedule)
         scheduleDao.insert(
-            ScheduleEntity(
-                id = 0,
-                groupId = null,
-                teacherId = teacherId,
-                scheduleJson = json,
-                updatedAt = System.currentTimeMillis()
-            )
+            ScheduleEntity(0, null, teacherId, json, System.currentTimeMillis())
         )
     }
 
     override suspend fun getCachedGroupSchedule(groupId: Int): List<ScheduleItem>? {
-        val entity = scheduleDao.getGroupSchedule(groupId)
-        return entity?.let { Json.decodeFromString(it.scheduleJson) }
+        return scheduleDao.getGroupSchedule(groupId)?.let { Json.decodeFromString(it.scheduleJson) }
     }
 
     override suspend fun getCachedTeacherSchedule(teacherId: Int): List<ScheduleItem>? {
-        val entity = scheduleDao.getTeacherSchedule(teacherId)
-        return entity?.let { Json.decodeFromString(it.scheduleJson) }
-    }
-
-    private suspend fun <T> executeWithToken(apiCall: suspend (String) -> Response<T>): Result<T> {
-        val accessToken = encryptedPrefs.getAccessToken() ?: return Result.failure(Exception("No access token"))
-
-        val response = apiCall(accessToken)
-        if (response.code() != 401) return handleApiResponse(response)
-
-        val refreshToken = encryptedPrefs.getRefreshToken() ?: return Result.failure(Exception("No refresh token"))
-        val refreshResult = safeApiCall { api.refresh(RefreshRequest(refreshToken)) }
-
-        return if (refreshResult.isSuccess) {
-            val newToken = refreshResult.getOrNull()?.access_token ?: return Result.failure(Exception("Refresh failed"))
-            encryptedPrefs.saveAccessToken(newToken)
-            handleApiResponse(apiCall(newToken))
-        } else {
-            Result.failure(Exception("Token refresh failed"))
-        }
-    }
-
-    private inline fun <T> safeApiCall(call: () -> Response<T>): Result<T> =
-        try {
-            val response = call()
-            if (response.isSuccessful) {
-                response.body()?.let { Result.success(it) }
-                    ?: Result.failure(Throwable("Empty body"))
-            } else {
-                Result.failure(Throwable("HTTP ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-
-    private fun <T> handleApiResponse(response: Response<T>): Result<T> {
-        return if (response.isSuccessful) {
-            response.body()?.let { Result.success(it) } ?: Result.failure(Exception("Empty response"))
-        } else {
-            val errorBody = response.errorBody()?.string()
-            val errorMessage = parseServerError(errorBody, response.code())
-            Result.failure(Exception(errorMessage))
-        }
-    }
-
-    private fun parseServerError(body: String?, code: Int): String {
-        return try {
-            val json = body?.let { org.json.JSONObject(it) }
-            when {
-                json?.has("error") == true -> json.getString("error")
-                json?.has("message") == true -> json.getString("message")
-                else -> "Ошибка $code"
-            }
-        } catch (e: Exception) {
-            "Ошибка $code"
-        }
+        return scheduleDao.getTeacherSchedule(teacherId)?.let { Json.decodeFromString(it.scheduleJson) }
     }
 
     suspend fun syncTeacherInitials() {
-        val accessToken = encryptedPrefs.getAccessToken() ?: return
+        val accessToken = prefs.getAccessToken() ?: return
         val response = api.getTeacherInitials(accessToken)
         if (response.isSuccessful) {
             teacherDao.deleteAll()

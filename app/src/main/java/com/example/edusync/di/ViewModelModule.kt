@@ -1,5 +1,6 @@
 package com.example.edusync.di
 
+import com.example.edusync.presentation.viewModels.aboutApp.AboutAppScreenViewModel
 import com.example.edusync.presentation.viewModels.changePasswordAfterForgot.ChangePasswordAfterForgotViewModel
 import com.example.edusync.presentation.viewModels.confirmEmail.ConfirmEmailViewModel
 import com.example.edusync.presentation.viewModels.enterCode.EnterCodeViewModel
@@ -35,11 +36,12 @@ val viewModelModule = module {
         )
     }
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get()) }
+    viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { FavoritesViewModel(get()) }
     viewModel { MaterialsScreenViewModel(get()) }
     viewModel { CreateGroupViewModel(get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { GroupViewModel(get()) }
+    viewModel { AboutAppScreenViewModel(get(), get()) }
 }
