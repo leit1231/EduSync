@@ -39,8 +39,8 @@ val viewModelModule = module {
     viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { FavoritesViewModel(get()) }
-    viewModel { MaterialsScreenViewModel(get()) }
-    viewModel { CreateGroupViewModel(get()) }
+    viewModel { MaterialsScreenViewModel(get(), get(), get(), get(), get()) }
+    viewModel { CreateGroupViewModel(get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { GroupViewModel(get()) }
     viewModel { AboutAppScreenViewModel(get(), get()) }

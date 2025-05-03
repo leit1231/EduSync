@@ -20,16 +20,17 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.R
+import com.example.edusync.common.Constants
 import com.example.edusync.presentation.components.custom_text_field.dropdownMenu.CustomDropdownMenu
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.components.modal_window.LogoutWindow
@@ -42,7 +43,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ProfileScreen() {
     val viewModel: ProfileScreenViewModel = koinViewModel()
     val uiState by viewModel.uiState
-    val isTeacher by viewModel.isTeacher.collectAsState()
+    val isTeacher = Constants.getIsTeacher(LocalContext.current)
     val isLogoutDialogVisible by viewModel.isLogoutDialogVisible
 
     Column(

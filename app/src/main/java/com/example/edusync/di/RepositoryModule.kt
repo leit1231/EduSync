@@ -2,6 +2,13 @@ package com.example.edusync.di
 
 import com.example.edusync.data.repository.account.UserRepositoryImpl
 import com.example.edusync.data.repository.chat.ChatRepositoryImpl
+import com.example.edusync.domain.use_case.chat.CreateChatUseCase
+import com.example.edusync.domain.use_case.chat.DeleteChatUseCase
+import com.example.edusync.domain.use_case.chat.GetChatParticipantsUseCase
+import com.example.edusync.domain.use_case.chat.JoinChatByInviteUseCase
+import com.example.edusync.domain.use_case.chat.LeaveChatUseCase
+import com.example.edusync.domain.use_case.chat.RefreshInviteCodeUseCase
+import com.example.edusync.domain.use_case.chat.RemoveChatParticipantUseCase
 import com.example.edusync.data.repository.favorite.FavoriteRepositoryImpl
 import com.example.edusync.data.repository.file.FileRepositoryImpl
 import com.example.edusync.data.repository.group.GroupRepositoryImpl
@@ -27,16 +34,7 @@ import com.example.edusync.domain.use_case.account.LogoutUseCase
 import com.example.edusync.domain.use_case.account.RefreshTokenUseCase
 import com.example.edusync.domain.use_case.account.RegisterUseCase
 import com.example.edusync.domain.use_case.account.UpdateProfileUseCase
-import com.example.edusync.domain.use_case.chat.AddUserToChatUseCase
-import com.example.edusync.domain.use_case.chat.CreateChatUseCase
-import com.example.edusync.domain.use_case.chat.DeleteChatUseCase
-import com.example.edusync.domain.use_case.chat.GetChatParticipantsUseCase
 import com.example.edusync.domain.use_case.chat.GetChatsUseCase
-import com.example.edusync.domain.use_case.chat.InviteToChatUseCase
-import com.example.edusync.domain.use_case.chat.JoinChatByInviteUseCase
-import com.example.edusync.domain.use_case.chat.LeaveChatUseCase
-import com.example.edusync.domain.use_case.chat.RefreshInviteCodeUseCase
-import com.example.edusync.domain.use_case.chat.RemoveChatParticipantUseCase
 import com.example.edusync.domain.use_case.favorite.AddToFavoritesUseCase
 import com.example.edusync.domain.use_case.favorite.GetFavoritesUseCase
 import com.example.edusync.domain.use_case.favorite.RemoveFromFavoritesUseCase
@@ -108,12 +106,10 @@ val repositoryModule = module {
     factory { CreateScheduleUseCase(get()) }
     factory { GetSubjectsByGroupUseCase(get()) }
 
-    factory { AddUserToChatUseCase(get())}
-    factory { CreateChatUseCase(get())}
-    factory { DeleteChatUseCase(get())}
-    factory { GetChatParticipantsUseCase(get()) }
     factory { GetChatsUseCase(get()) }
-    factory { InviteToChatUseCase(get()) }
+    factory { CreateChatUseCase(get()) }
+    factory { DeleteChatUseCase(get()) }
+    factory { GetChatParticipantsUseCase(get()) }
     factory { JoinChatByInviteUseCase(get()) }
     factory { LeaveChatUseCase(get()) }
     factory { RefreshInviteCodeUseCase(get()) }

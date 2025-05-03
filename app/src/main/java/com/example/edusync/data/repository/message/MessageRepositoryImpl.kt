@@ -2,6 +2,7 @@ package com.example.edusync.data.repository.message
 
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.api.EduSyncApiService
+import com.example.edusync.data.remote.dto.MessageResponse
 import com.example.edusync.data.repository.TokenRequestExecutor
 import com.example.edusync.domain.repository.message.MessageRepository
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -17,7 +18,7 @@ class MessageRepositoryImpl(
 
     private val executor = TokenRequestExecutor(prefs, api)
 
-    override suspend fun sendMessage(chatId: Int, text: String, files: List<File>): Result<Unit> =
+    override suspend fun sendMessage(chatId: Int, text: String, files: List<File>): Result<MessageResponse> =
         executor.execute { token ->
             val textPart = text.toRequestBody("text/plain".toMediaTypeOrNull())
             val fileParts = files.map {

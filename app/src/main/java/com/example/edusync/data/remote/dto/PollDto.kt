@@ -16,6 +16,10 @@ data class PollDto(
     val voted_option_id: Int?
 )
 
+data class PollResponse(
+    val poll_id: Int
+)
+
 data class OptionDto(
     val id: Int,
     val text: String,

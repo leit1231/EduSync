@@ -69,9 +69,6 @@ class MainScreenViewModel(
     private val _state = MutableStateFlow(MainScreenState())
     val state = _state.asStateFlow()
 
-    private val _isTeacher = MutableStateFlow(false)
-    val isTeacher: StateFlow<Boolean> = _isTeacher.asStateFlow()
-
     private val _isTeacherScheduleVisible = MutableStateFlow(false)
     val isTeacherScheduleVisible: StateFlow<Boolean> = _isTeacherScheduleVisible.asStateFlow()
 
@@ -100,7 +97,6 @@ class MainScreenViewModel(
                 loadTeacherInitials()
             }
 
-            _isTeacher.value = user?.isTeacher ?: false
             _institutionId.value = user?.institutionId
             _teacherId.value = encryptedSharedPreference.getTeacherId()
 

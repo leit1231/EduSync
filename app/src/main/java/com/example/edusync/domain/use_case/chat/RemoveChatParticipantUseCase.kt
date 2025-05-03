@@ -12,10 +12,14 @@ class RemoveChatParticipantUseCase(
 ) {
     operator fun invoke(chatId: Int, userId: Int): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading())
-        val result = repository.removeParticipant(chatId, userId)
-        emit(result.fold(
-            onSuccess = { Resource.Success(Unit) },
-            onFailure = { Resource.Error("Ошибка удаления участника", null) }
-        ))
+        try {
+            val result = repository.removeParticipant(chatId, userId)
+            emit(result.fold(
+                onSuccess = { Resource.Success(it) },
+                onFailure = { Resource.Error("Ошибка удаления участника", null) }
+            ))
+        } catch (e: Exception) {
+            emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))
+        }
     }.flowOn(Dispatchers.IO)
 }

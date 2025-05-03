@@ -15,7 +15,7 @@ class LeaveChatUseCase(
         try {
             val result = repository.leaveChat(chatId)
             emit(result.fold(
-                onSuccess = { Resource.Success(Unit) },
+                onSuccess = { Resource.Success(it) },
                 onFailure = { Resource.Error("Ошибка выхода из чата", null) }
             ))
         } catch (e: Exception) {

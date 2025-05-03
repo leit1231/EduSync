@@ -16,9 +16,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -36,35 +33,24 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
 fun CreateGroupModalWindow(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    link: String,
+    onContinue: () -> Unit
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
-    val link by remember { mutableStateOf("https://fsaljkflhsaf") }
 
     Column(
         modifier = modifier
             .padding(16.dp)
             .fillMaxWidth()
-            .background(
-                color = AppColors.Background,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .border(
-                border = BorderStroke(1.dp, AppColors.Primary),
-                shape = RoundedCornerShape(16.dp)
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .background(AppColors.Background, RoundedCornerShape(16.dp))
+            .border(BorderStroke(1.dp, AppColors.Primary), RoundedCornerShape(16.dp)),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .background(
-                    color = AppColors.Background,
-                    shape = RoundedCornerShape(16.dp)
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Ссылка создана",
@@ -105,16 +91,20 @@ fun CreateGroupModalWindow(
                     val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
                     context.startActivity(shareIntent)
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Primary
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Поделиться",
-                    style = AppTypography.body1.copy(fontSize = 14.sp),
-                )
+                Text("Поделиться", style = AppTypography.body1.copy(fontSize = 14.sp))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onContinue,
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Продолжить", style = AppTypography.body1.copy(fontSize = 14.sp))
             }
         }
     }

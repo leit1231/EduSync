@@ -15,8 +15,8 @@ class JoinChatByInviteUseCase(
         try {
             val result = repository.joinByInvite(inviteCode)
             emit(result.fold(
-                onSuccess = { Resource.Success(Unit) },
-                onFailure = { Resource.Error("Ошибка входа по инвайту", null) }
+                onSuccess = { Resource.Success(it) },
+                onFailure = { Resource.Error("Ошибка вступления в чат", null) }
             ))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))

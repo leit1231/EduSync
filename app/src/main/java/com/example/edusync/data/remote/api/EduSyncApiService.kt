@@ -1,20 +1,21 @@
 package com.example.edusync.data.remote.api
 
-import com.example.edusync.data.remote.dto.AddUserToChatRequest
 import com.example.edusync.data.remote.dto.AuthResponse
 import com.example.edusync.data.remote.dto.ChatResponse
+import com.example.edusync.data.remote.dto.ChatUser
 import com.example.edusync.data.remote.dto.CreateChatRequest
+import com.example.edusync.data.remote.dto.CreateChatResponse
 import com.example.edusync.data.remote.dto.CreatePollRequest
 import com.example.edusync.data.remote.dto.FavoriteFileDto
 import com.example.edusync.data.remote.dto.FileDto
 import com.example.edusync.data.remote.dto.GroupResponse
 import com.example.edusync.data.remote.dto.InstituteResponse
-import com.example.edusync.data.remote.dto.InviteToChatRequest
 import com.example.edusync.data.remote.dto.JoinByInviteRequest
-import com.example.edusync.data.remote.dto.LeaveChatRequest
 import com.example.edusync.data.remote.dto.LoginRequest
 import com.example.edusync.data.remote.dto.MessageDto
+import com.example.edusync.data.remote.dto.MessageResponse
 import com.example.edusync.data.remote.dto.PollDto
+import com.example.edusync.data.remote.dto.PollResponse
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
 import com.example.edusync.data.remote.dto.ScheduleItem
@@ -24,7 +25,6 @@ import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.UpdateProfileRequest
 import com.example.edusync.data.remote.dto.UserProfileResponse
 import com.example.edusync.data.remote.dto.VoteRequest
-import com.example.edusync.domain.model.account.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -132,33 +132,29 @@ interface EduSyncApiService {
     ): Response<List<SubjectResponse>>
 
     //Чаты
-    @GET("/api/chat")
+    @GET("/api/chats")
     suspend fun getChats(@Header("Authorization") token: String): Response<List<ChatResponse>>
 
-    @POST("/api/chat")
-    suspend fun createChat(@Header("Authorization") token: String, @Body body: CreateChatRequest): Response<Unit>
-
-    @DELETE("/api/chat/{id}")
-    suspend fun deleteChat(@Header("Authorization") token: String, @Path("id") chatId: Int): Response<Unit>
-
-    @PATCH("/api/chat/{id}/add_user")
-    suspend fun addUserToChat(
+    @POST("/api/chats")
+    suspend fun createChat(
         @Header("Authorization") token: String,
-        @Path("id") chatId: Int,
-        @Body body: AddUserToChatRequest
-    ): Response<Unit>
+        @Body body: CreateChatRequest
+    ): Response<CreateChatResponse>
 
-    @POST("/api/chat/invite")
-    suspend fun inviteToChat(@Header("Authorization") token: String, @Body body: InviteToChatRequest): Response<Unit>
-
-    @POST("/api/chat/join")
-    suspend fun joinChatByInvite(@Header("Authorization") token: String, @Body body: JoinByInviteRequest): Response<Unit>
-
-    @POST("/api/chat/leave")
-    suspend fun leaveChat(@Header("Authorization") token: String, @Body body: LeaveChatRequest): Response<Unit>
+    @DELETE("/api/chats/{id}")
+    suspend fun deleteChat(@Header("Authorization") token: String, @Path("id") chatId: Int): Response<Unit>
 
     @PUT("/api/chats/{id}/invite")
     suspend fun refreshInviteCode(
+        @Header("Authorization") token: String,
+        @Path("id") chatId: Int
+    ): Response<CreateChatResponse>
+
+    @POST("/api/chats/join")
+    suspend fun joinChatByInvite(@Header("Authorization") token: String, @Body body: JoinByInviteRequest): Response<Unit>
+
+    @POST("/api/chats/{id}/leave")
+    suspend fun leaveChat(
         @Header("Authorization") token: String,
         @Path("id") chatId: Int
     ): Response<Unit>
@@ -167,7 +163,7 @@ interface EduSyncApiService {
     suspend fun getChatParticipants(
         @Header("Authorization") token: String,
         @Path("id") chatId: Int
-    ): Response<List<User>>
+    ): Response<List<ChatUser>>
 
     @DELETE("/api/chats/{id}/participants/{userId}")
     suspend fun removeChatParticipant(
@@ -175,42 +171,41 @@ interface EduSyncApiService {
         @Path("id") chatId: Int,
         @Path("userId") userId: Int
     ): Response<Unit>
-
     //Сообщения
     @Multipart
-    @POST("/api/chats/{chatId}/messages")
+    @POST("/api/chats/{id}/messages")
     suspend fun sendMessage(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int,
+        @Path("id") chatId: Int,
         @Part("text") text: RequestBody,
         @Part files: List<MultipartBody.Part>
-    ): Response<Unit>
+    ): Response<MessageResponse>
 
-    @GET("/api/chats/{chatId}/messages")
+    @GET("/api/chats/{id}/messages")
     suspend fun getMessages(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int
+        @Path("id") chatId: Int
     ): Response<List<MessageDto>>
 
-    @POST("/api/chats/{chatId}/messages/{messageId}/reply")
+    @POST("/api/chats/{id}/messages/{messageID}/reply")
     suspend fun replyMessage(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int,
-        @Path("messageId") messageId: Int,
+        @Path("id") chatId: Int,
+        @Path("messageID") messageId: Int,
         @Body body: Map<String, String>
-    ): Response<Unit>
+    ): Response<MessageResponse>
 
-    @DELETE("/api/chats/{chatId}/messages/{messageId}")
+    @DELETE("/api/chats/{id}/messages/{messageID}")
     suspend fun deleteMessage(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int,
-        @Path("messageId") messageId: Int
-    ): Response<Unit>
+        @Path("id") chatId: Int,
+        @Path("messageID") messageId: Int
+    ): Response<MessageResponse>
 
-    @GET("/api/chats/{chatId}/messages/search")
+    @GET("/api/chats/{id}/messages/search")
     suspend fun searchMessages(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int,
+        @Path("id") chatId: Int,
         @Query("query") query: String,
         @Query("limit") limit: Int,
         @Query("offset") offset: Int
@@ -224,36 +219,36 @@ interface EduSyncApiService {
     ): Response<FileDto>
 
     //Избранное
-    @GET("/api/favorites")
+    @GET("/api/files/favorites")
     suspend fun getFavorites(
         @Header("Authorization") token: String
     ): Response<List<FavoriteFileDto>>
 
-    @POST("/api/favorites/{fileId}")
+    @POST("/api/files/{id}/favorites")
     suspend fun addToFavorites(
         @Header("Authorization") token: String,
-        @Path("fileId") fileId: Int
+        @Path("id") fileId: Int
     ): Response<Unit>
 
-    @DELETE("/api/favorites/{fileId}")
+    @DELETE("/api/files/{id}/favorites")
     suspend fun removeFromFavorites(
         @Header("Authorization") token: String,
-        @Path("fileId") fileId: Int
+        @Path("id") fileId: Int
     ): Response<Unit>
 
     //Опросы
-    @GET("/api/chats/{chatId}/polls")
+    @GET("/api/chats/{chat_Id}/polls")
     suspend fun getPolls(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int
+        @Path("chat_Id") chatId: Int
     ): Response<List<PollDto>>
 
-    @POST("/api/chats/{chatId}/polls")
+    @POST("/api/chats/{chat_Id}/polls")
     suspend fun createPoll(
         @Header("Authorization") token: String,
-        @Path("chatId") chatId: Int,
+        @Path("chat_Id") chatId: Int,
         @Body request: CreatePollRequest
-    ): Response<Unit>
+    ): Response<PollResponse>
 
     @POST("/api/chats/{chatId}/polls/{pollId}/vote")
     suspend fun votePollOption(
@@ -276,5 +271,4 @@ interface EduSyncApiService {
         @Path("chatId") chatId: Int,
         @Path("pollId") pollId: Int
     ): Response<Unit>
-
 }

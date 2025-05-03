@@ -19,11 +19,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.R
+import com.example.edusync.common.Constants
 import com.example.edusync.common.LoadingState
 import com.example.edusync.data.local.SelectedScheduleStorage
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -49,7 +51,7 @@ fun MainScreen(
     val viewModel: MainScreenViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
     val isAllScheduleVisible by viewModel.isAllScheduleVisible.collectAsState()
-    val isTeacher by viewModel.isTeacher.collectAsState()
+    val isTeacher = Constants.getIsTeacher(LocalContext.current)
     val isTeacherSchedule by viewModel.isTeacherScheduleVisible.collectAsState()
 
     val retrySchedule = {

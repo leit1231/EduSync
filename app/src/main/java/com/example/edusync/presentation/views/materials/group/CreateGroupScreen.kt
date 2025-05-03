@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.materials.group
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,9 +18,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,19 +32,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.dropdownMenu.CustomDropdownMenu
-import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.components.modal_window.CreateGroupModalWindow
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.materials.CreateGroupViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun CreateGroupScreen() {
-
     val viewModel: CreateGroupViewModel = koinViewModel()
-    val uiState by viewModel.uiState
+    val uiState by viewModel.uiState.collectAsState()
+    val groups by viewModel.groups.collectAsState()
+    val subjects = viewModel.subjectNames
     val isModalWindowVisible = remember { mutableStateOf(false) }
+    val modalLink = remember { mutableStateOf("") }
+    val expandedGroup by viewModel.expandedGroup.collectAsState()
+    val expandedSubject by viewModel.expandedSubject.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -55,9 +63,7 @@ fun CreateGroupScreen() {
                 painter = painterResource(id = R.drawable.ic_back),
                 contentDescription = "Back",
                 modifier = Modifier
-                    .clickable {
-                        viewModel.goBack()
-                    }
+                    .clickable { viewModel.goBack() }
                     .size(30.dp),
                 tint = AppColors.Primary
             )
@@ -77,41 +83,45 @@ fun CreateGroupScreen() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        GenericTextField(
-            value = uiState.titleLesson,
-            onValueChange = viewModel::onTitleLessonChange,
-            label = "Название дисциплины"
+        CustomDropdownMenu(
+            label = "Выберите группу",
+            options = groups.map { it.name },
+            selectedOption = uiState.selectedGroup,
+            onOptionSelected = viewModel::onGroupSelected,
+            expanded = expandedGroup,
+            onExpandedChange = { viewModel.expandedGroup.value = it },
+            modifier = Modifier.fillMaxWidth(),
+            isChanged = true
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CustomDropdownMenu(
-            label = "Выберите группу",
-            options = viewModel.availableGroups,
-            selectedOption = uiState.selectedGroup,
-            onOptionSelected = viewModel::onGroupSelected,
-            expanded = viewModel.expandedGroup,
-            onExpandedChange = { viewModel.expandedGroup = it },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        GenericTextField(
-            value = uiState.numberOfHours,
-            onValueChange = viewModel::onNumbersOfHoursChange,
-            label = "Введите количество часов дисциплины*"
+            label = "Выберите предмет",
+            options = subjects,
+            selectedOption = uiState.selectedSubject,
+            onOptionSelected = viewModel::onSubjectSelected,
+            expanded = expandedSubject,
+            onExpandedChange = { viewModel.expandedSubject.value = it },
+            modifier = Modifier.fillMaxWidth(),
+            isChanged = true
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = {
-                isModalWindowVisible.value = true
+                viewModel.createChat(
+                    onSuccess = {
+                        modalLink.value = it
+                        isModalWindowVisible.value = true
+                    },
+                    onError = {
+                        // TODO: show Snackbar or Toast
+                    }
+                )
             },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AppColors.Primary
-            ),
+            colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 32.dp)
@@ -122,15 +132,23 @@ fun CreateGroupScreen() {
             )
         }
     }
+
     if (isModalWindowVisible.value) {
+        BackHandler(enabled = true) {}
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable { isModalWindowVisible.value = false }
         ) {
             CreateGroupModalWindow(
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
+                link = modalLink.value,
+                onContinue = {
+                    isModalWindowVisible.value = false
+                    coroutineScope.launch {
+                        viewModel.goToMaterials()
+                    }
+                }
             )
         }
     }

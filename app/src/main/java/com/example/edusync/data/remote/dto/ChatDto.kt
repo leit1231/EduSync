@@ -2,30 +2,39 @@ package com.example.edusync.data.remote.dto
 
 data class ChatResponse(
     val id: Int,
-    val name: String,
-    val participants: List<Int>,
-    val createdAt: String
+    val group_id: Int,
+    val owner_id: Int,
+    val owner_full_name: String,
+    val subject_id: Int,
+    val subject_name: String
+)
+
+data class CreateUpdateChatResponse(
+    val id: Int,
+    val group_id: Int,
+    val owner_id: Int,
+    val subject_id: Int,
+    val join_code: String,
+    val invite_link: String,
+    val created_at: String
+)
+
+data class CreateChatResponse(
+    val chat_info: CreateUpdateChatResponse,
+    val message: String
+)
+
+data class ChatUser(
+    val user_id: Int,
+    val full_name: String,
+    val is_teacher: Boolean
 )
 
 data class CreateChatRequest(
-    val name: String,
-    val user_ids: List<Int>
-)
-
-data class AddUserToChatRequest(
-    val chat_id: Int,
-    val user_id: Int
-)
-
-data class InviteToChatRequest(
-    val chat_id: Int,
-    val email: String
+    val group_id: Int,
+    val subject_id: Int
 )
 
 data class JoinByInviteRequest(
-    val invite_code: String
-)
-
-data class LeaveChatRequest(
-    val chat_id: Int
+    val code: String
 )

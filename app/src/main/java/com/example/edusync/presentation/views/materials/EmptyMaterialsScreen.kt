@@ -30,10 +30,9 @@ import com.example.edusync.presentation.viewModels.materials.MaterialsScreenView
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun EmptyMaterialsScreen() {
+fun EmptyMaterialsScreen(isTeacher: Boolean) {
     val viewModel = koinViewModel<MaterialsScreenViewModel>()
     var isModalOpen by remember { mutableStateOf(false) }
-    val isTeacher = false
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -92,7 +91,14 @@ fun EmptyMaterialsScreen() {
         )
         {
             JoinGroupModalWindow(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                onJoin = { code ->
+                    viewModel.joinByInvite(
+                        inviteCode = code,
+                        onSuccess = { isModalOpen = false },
+                        onError = { /* TODO: показать Snackbar */ }
+                    )
+                }
             )
         }
     }

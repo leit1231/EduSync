@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.edusync.domain.model.account.User
+import com.example.edusync.domain.model.chats.ChatInfo
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class EncryptedSharedPreference(context: Context) {
 
@@ -62,6 +64,7 @@ class EncryptedSharedPreference(context: Context) {
             remove("access_token")
             remove("refresh_token")
             remove("user_data")
+            remove("teacher_id")
             apply()
         }
     }
@@ -69,6 +72,10 @@ class EncryptedSharedPreference(context: Context) {
     fun saveUser(user: User) {
         val json = Gson().toJson(user)
         sharedPreferences.edit().putString("user_data", json).apply()
+    }
+
+    fun isTeacher(): Boolean {
+        return getUser()?.isTeacher ?: false
     }
 
     fun getUser(): User? {
@@ -82,5 +89,18 @@ class EncryptedSharedPreference(context: Context) {
     fun getTeacherId(): Int? {
         val id = sharedPreferences.getInt("teacher_id", -1)
         return if (id != -1) id else null
+    }
+
+    fun saveChats(chats: List<ChatInfo>) {
+        val json = Gson().toJson(chats)
+        sharedPreferences.edit()
+            .putString("chats_list", json)
+            .apply()
+    }
+
+    fun getChats(): List<ChatInfo>? {
+        val json = sharedPreferences.getString("chats_list", null) ?: return null
+        val type = object : TypeToken<List<ChatInfo>>() {}.type
+        return Gson().fromJson(json, type)
     }
 }

@@ -29,7 +29,8 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
 fun JoinGroupModalWindow(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onJoin: (String) -> Unit
 ) {
     var code by remember { mutableStateOf("") }
 
@@ -79,9 +80,7 @@ fun JoinGroupModalWindow(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {
-
-                },
+                onClick = { onJoin(code) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AppColors.Primary
                 ),
