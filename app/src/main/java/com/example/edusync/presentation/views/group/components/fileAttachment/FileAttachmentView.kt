@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.edusync.R
+import com.example.edusync.domain.model.message.FileAttachment
 import com.example.edusync.presentation.theme.ui.AppColors
-import com.example.edusync.presentation.viewModels.group.FileAttachment
 
 @Composable
 fun FileAttachmentView(file: FileAttachment, onRemove: (() -> Unit)? = null) {

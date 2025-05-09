@@ -19,7 +19,9 @@ class PollRepositoryImpl(
     override suspend fun vote(chatId: Int, pollId: Int, optionId: Int) =
         executor.execute { api.votePollOption(it, chatId, pollId, VoteRequest(optionId)) }
 
-    override suspend fun unvote(chatId: Int, pollId: Int) = executor.execute { api.unvotePoll(it, chatId, pollId) }
+    override suspend fun unvote(chatId: Int, pollId: Int, optionId: Int) =
+        executor.execute { api.unvotePoll(it, chatId, pollId, VoteRequest(optionId)) }
+
     override suspend fun deletePoll(chatId: Int, pollId: Int) = executor.execute { api.deletePoll(it, chatId, pollId) }
 }
 

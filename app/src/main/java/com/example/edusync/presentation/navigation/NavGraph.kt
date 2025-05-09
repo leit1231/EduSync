@@ -166,7 +166,8 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                     }
                     composable<Destination.GroupScreen> {
                         val groupName = it.toRoute<Destination.GroupScreen>()
-                        GroupScreen(groupName)
+                        val groupId = it.toRoute<Destination.GroupScreen>()
+                        GroupScreen(groupId, groupName)
                     }
                     composable<Destination.SearchScreen> { backStackEntry ->
                         val (isTeacherSearch, institutionId) = backStackEntry.toRoute<Destination.SearchScreen>()

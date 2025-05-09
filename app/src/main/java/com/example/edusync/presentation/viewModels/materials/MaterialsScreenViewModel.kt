@@ -9,12 +9,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.Resource
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.dto.ChatResponse
+import com.example.edusync.data.remote.webSocket.WebSocketManager
+import com.example.edusync.domain.model.chats.toChatInfo
 import com.example.edusync.domain.model.group.Group
 import com.example.edusync.domain.use_case.chat.GetChatsUseCase
 import com.example.edusync.domain.use_case.chat.JoinChatByInviteUseCase
 import com.example.edusync.domain.use_case.group.GetGroupsByInstitutionIdUseCase
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MaterialsScreenViewModel(
@@ -38,10 +42,43 @@ class MaterialsScreenViewModel(
     private val _filteredChats = mutableStateOf<List<ChatResponse>>(emptyList())
     val filteredChats: State<List<ChatResponse>> get() = _filteredChats
 
+    private var disconnectJob: Job? = null
+    private val chatIds: MutableSet<Int> = mutableSetOf()
 
     init {
-        loadChats()
         loadGroups()
+        loadChats()
+    }
+
+    fun connectWebSocketIfNeeded() {
+        if (WebSocketManager.isConnected) return
+        val token = prefs.getAccessToken() ?: return
+        WebSocketManager.connect(token)
+        chatIds.forEach { WebSocketManager.subscribe(it) }
+    }
+
+    fun scheduleDisconnectIfIdle() {
+        disconnectJob?.cancel()
+        disconnectJob = viewModelScope.launch {
+            delay(3 * 60 * 1000)
+            WebSocketManager.disconnect()
+        }
+    }
+
+    fun disconnectWebSocket() {
+        disconnectJob?.cancel()
+        WebSocketManager.disconnect()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        disconnectWebSocket()
+    }
+
+    private fun onChatsLoaded(ids: List<Int>) {
+        chatIds.clear()
+        chatIds.addAll(ids)
+        ids.forEach { WebSocketManager.subscribe(it) }
     }
 
     fun getGroupNameById(groupId: Int): String {
@@ -61,6 +98,9 @@ class MaterialsScreenViewModel(
         }
     }
 
+    fun reloadChats() {
+        loadChats()
+    }
 
     private fun loadGroups() {
         viewModelScope.launch {
@@ -108,16 +148,16 @@ class MaterialsScreenViewModel(
                         val resultChats = result.data ?: emptyList()
                         _chats.clear()
                         _chats.addAll(resultChats)
+                        prefs.saveChats(resultChats.map { it.toChatInfo() })
                         filterChats()
+                        onChatsLoaded(resultChats.map { it.id })
                     }
-
                     is Resource.Error -> {}
                     else -> {}
                 }
             }
         }
     }
-
 
     private fun setGroups(groupList: List<Group>) {
         _groups.clear()
@@ -126,10 +166,10 @@ class MaterialsScreenViewModel(
         groupIdToName.putAll(groupList.associateBy({ it.id }, { it.name }))
     }
 
-    fun goToGroup(group: String) {
+    fun goToGroup(chatId: Int, group: String) {
         viewModelScope.launch {
             navigator.navigate(
-                destination = Destination.GroupScreen(group)
+                destination = Destination.GroupScreen(chatId, group)
             )
         }
     }

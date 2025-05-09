@@ -1,27 +1,22 @@
 package com.example.edusync.domain.use_case.message
 
 import com.example.edusync.common.Resource
-import com.example.edusync.data.remote.dto.MessageDto
+import com.example.edusync.data.remote.dto.EditMessageResponse
 import com.example.edusync.domain.repository.message.MessageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-class GetMessagesUseCase(
+class EditMessageUseCase(
     private val repository: MessageRepository
 ) {
-    operator fun invoke(
-        chatId: Int,
-        limit: Int,
-        offset: Int
-    ): Flow<Resource<List<MessageDto>>> = flow {
+    operator fun invoke(chatId: Int, messageId: Int, newText: String): Flow<Resource<EditMessageResponse>> = flow {
         emit(Resource.Loading())
-        val result = repository.getMessages(chatId, limit, offset)
+        val result = repository.editMessage(chatId, messageId, newText)
         emit(result.fold(
             onSuccess = { Resource.Success(it) },
-            onFailure = { Resource.Error("Ошибка загрузки сообщений", null) }
+            onFailure = { Resource.Error("Ошибка редактирования сообщения", null) }
         ))
     }.flowOn(Dispatchers.IO)
 }
-

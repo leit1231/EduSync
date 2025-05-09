@@ -5,14 +5,24 @@ data class MessageDto(
     val chat_id: Int,
     val user_id: Int,
     val message_group_id: Int,
-    val parent_message_id: Int,
+    val parent_message_id: Int?,
     val text: String,
     val created_at: String,
-    val files: List<Files>
+    val files: List<Files>? = emptyList(),
+    val poll: PollDto?
 )
+
 
 data class MessageResponse(
     val message_id: Int
+)
+
+data class EditMessageResponse(
+    val id: Int,
+    val chat_id: Int,
+    val user_id: Int,
+    val text: String,
+    val created_at: String
 )
 
 data class Files(

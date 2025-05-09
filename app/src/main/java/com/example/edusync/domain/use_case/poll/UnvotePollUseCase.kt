@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.flowOn
 class UnvotePollUseCase(
     private val repository: PollRepository
 ) {
-    operator fun invoke(chatId: Int, pollId: Int): Flow<Resource<Unit>> = flow {
+    operator fun invoke(chatId: Int, pollId: Int, optionId: Int): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading())
-        val result = repository.unvote(chatId, pollId)
+        val result = repository.unvote(chatId, pollId, optionId)
         emit(result.fold(
             onSuccess = { Resource.Success(Unit) },
             onFailure = { Resource.Error("Ошибка отмены голоса", null) }
         ))
     }.flowOn(Dispatchers.IO)
 }
+

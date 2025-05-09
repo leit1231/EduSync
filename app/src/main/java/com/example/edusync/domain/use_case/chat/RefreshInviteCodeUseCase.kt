@@ -2,6 +2,7 @@ package com.example.edusync.domain.use_case.chat
 
 import com.example.edusync.common.Resource
 import com.example.edusync.data.remote.dto.CreateChatResponse
+import com.example.edusync.data.remote.dto.RefreshInviteCodeResponse
 import com.example.edusync.domain.repository.chat.ChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.flowOn
 class RefreshInviteCodeUseCase(
     private val repository: ChatRepository
 ) {
-    operator fun invoke(chatId: Int): Flow<Resource<CreateChatResponse>> = flow {
+    operator fun invoke(chatId: Int): Flow<Resource<RefreshInviteCodeResponse>> = flow {
         emit(Resource.Loading())
         try {
             val result = repository.refreshInviteCode(chatId)

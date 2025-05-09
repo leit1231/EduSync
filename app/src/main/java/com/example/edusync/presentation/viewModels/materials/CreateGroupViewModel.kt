@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.viewModels.materials
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.Resource
@@ -97,7 +98,10 @@ class CreateGroupViewModel(
         viewModelScope.launch {
             createChatUseCase(request).collect { result ->
                 when (result) {
-                    is Resource.Success -> result.data?.chat_info?.invite_link?.let(onSuccess)
+                    is Resource.Success -> {
+                        Log.d("CreateChat", "Chat created: ${result.data}")
+                        result.data?.chat_info?.invite_link?.let(onSuccess)
+                    }
                     is Resource.Error -> onError(result.message ?: "Ошибка создания")
                     else -> {}
                 }

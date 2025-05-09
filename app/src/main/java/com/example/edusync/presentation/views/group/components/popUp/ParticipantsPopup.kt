@@ -20,7 +20,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,19 +29,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import com.example.edusync.R
+import com.example.edusync.domain.model.chats.ChatUser
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
 fun ParticipantsPopup(
     onDismiss: () -> Unit,
-    initialParticipants: List<String>,
-    title: String
+    participants: List<ChatUser>,
+    title: String,
+    onRemove: (Int) -> Unit,
+    isTeacher: Boolean,
+    currentUserId: Int
 ) {
-    val participants =
-        remember { mutableStateListOf<String>().apply { addAll(initialParticipants) } }
-    val isTeacher = true
-
     Popup(
         alignment = Alignment.TopStart,
         onDismissRequest = onDismiss
@@ -56,20 +55,12 @@ fun ParticipantsPopup(
             shape = RoundedCornerShape(12.dp),
             elevation = CardDefaults.cardElevation(8.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .background(AppColors.Background)
-            ) {
+            Column(Modifier.background(AppColors.Background)) {
                 Text(
                     text = title,
                     color = AppColors.Secondary,
                     style = AppTypography.body1.copy(fontSize = 16.sp),
-                    modifier = Modifier.padding(
-                        top = 20.dp,
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 4.dp
-                    )
+                    modifier = Modifier.padding(20.dp)
                 )
                 Text(
                     text = "Участников: ${participants.size}",
@@ -77,13 +68,11 @@ fun ParticipantsPopup(
                     style = AppTypography.body1.copy(fontSize = 14.sp),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    items(participants.toList()) { participant ->
+                Spacer(Modifier.height(8.dp))
+
+                LazyColumn(Modifier.fillMaxWidth()) {
+                    items(participants) { participant ->
                         Column {
                             Row(
                                 modifier = Modifier
@@ -92,27 +81,26 @@ fun ParticipantsPopup(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = participant,
+                                    text = participant.fullName,
                                     color = AppColors.Secondary,
                                     fontSize = 16.sp,
                                     modifier = Modifier.weight(1f)
                                 )
-                                if (isTeacher) {
+                                if (isTeacher && participant.id != currentUserId) {
                                     Icon(
                                         painter = painterResource(R.drawable.ic_remove_person),
                                         contentDescription = "Удалить участника",
                                         tint = AppColors.Error,
                                         modifier = Modifier.clickable(
-                                            indication = null,
-                                            interactionSource = remember { MutableInteractionSource() }
-                                        ) { participants.remove(participant) }
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { onRemove(participant.id) }
                                     )
                                 }
                             }
                             HorizontalDivider(
                                 color = AppColors.OnBackground,
-                                thickness = 4.dp,
-                                modifier = Modifier.fillMaxWidth()
+                                thickness = 4.dp
                             )
                         }
                     }

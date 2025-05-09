@@ -46,7 +46,7 @@ fun ChatItem(
             .padding(vertical = 8.dp)
             .background(AppColors.Background)
             .border(1.dp, AppColors.Primary, shape = RoundedCornerShape(10.dp))
-            .clickable { viewModel.goToGroup(chat.subject_name) },
+            .clickable { viewModel.goToGroup(chat.id, chat.subject_name) },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(10.dp)
     ) {

@@ -53,4 +53,28 @@ class TokenRequestExecutor(
             Result.failure(Exception(message))
         }
     }
+    suspend fun <T> executeRawResponse(block: suspend (String) -> Response<T>): Result<Response<T>> {
+        val accessToken = prefs.getAccessToken() ?: return Result.failure(Exception("No access token"))
+
+        var response = block(accessToken)
+        if (isTokenInvalid(response)) {
+            val rawRefreshToken = prefs.getRefreshToken() ?: return Result.failure(Exception("No refresh token"))
+
+            val refreshResponse = api.refresh(RefreshRequest(rawRefreshToken))
+            if (!refreshResponse.isSuccessful || refreshResponse.body() == null) {
+                prefs.clearUserData()
+                return Result.failure(Exception("Token refresh failed"))
+            }
+
+            val auth = refreshResponse.body()!!
+            prefs.saveAccessToken(auth.access_token)
+            prefs.saveRefreshToken(auth.refresh_token)
+
+            response = block(auth.access_token)
+        }
+
+        return if (response.isSuccessful) Result.success(response)
+        else Result.failure(Exception("HTTP ${response.code()}"))
+    }
+
 }

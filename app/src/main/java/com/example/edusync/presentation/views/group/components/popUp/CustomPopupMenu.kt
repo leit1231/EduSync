@@ -53,14 +53,14 @@ fun ShowGroupDropdownMenu(
                     onDismiss()
                 }
             ))
-            add(MenuItemData(
-                text = if (notificationsEnabled.value) "Выключить уведомления" else "Включить уведомления",
-                iconRes = if (notificationsEnabled.value) R.drawable.ic_off_notification else R.drawable.ic_notification,
-                onClick = {
-                    notificationsEnabled.value = !notificationsEnabled.value
-                    onToggleNotifications()
-                }
-            ))
+//            add(MenuItemData(
+//                text = if (notificationsEnabled.value) "Выключить уведомления" else "Включить уведомления",
+//                iconRes = if (notificationsEnabled.value) R.drawable.ic_off_notification else R.drawable.ic_notification,
+//                onClick = {
+//                    notificationsEnabled.value = !notificationsEnabled.value
+//                    onToggleNotifications()
+//                }
+//            ))
             if (isTeacher) {
                 add(MenuItemData(
                     text = "Добавить студента",
@@ -78,14 +78,14 @@ fun ShowGroupDropdownMenu(
                         onDismiss()
                     }
                 ))
-                add(MenuItemData(
-                    text = "Создать уведомление",
-                    iconRes = R.drawable.ic_add_notification,
-                    onClick = {
-                        onCreateNotificationClick()
-                        onDismiss()
-                    }
-                ))
+//                add(MenuItemData(
+//                    text = "Создать уведомление",
+//                    iconRes = R.drawable.ic_add_notification,
+//                    onClick = {
+//                        onCreateNotificationClick()
+//                        onDismiss()
+//                    }
+//                ))
                 add(MenuItemData(
                     text = "Удалить группу",
                     iconRes = R.drawable.ic_delete,

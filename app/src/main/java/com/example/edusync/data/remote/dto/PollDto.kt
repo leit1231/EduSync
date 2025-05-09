@@ -12,8 +12,14 @@ data class VoteRequest(
 data class PollDto(
     val id: Int,
     val question: String,
-    val options: List<OptionDto>,
-    val voted_option_id: Int?
+    val created_at: String,
+    val options: List<PollOptionDto>,
+)
+
+data class PollOptionDto(
+    val id: Int,
+    val text: String,
+    val votes: Int
 )
 
 data class PollResponse(

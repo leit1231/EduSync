@@ -133,7 +133,7 @@ fun CreateGroupScreen() {
         }
     }
 
-    if (isModalWindowVisible.value) {
+    if (isModalWindowVisible.value && modalLink.value.isNotBlank()) {
         BackHandler(enabled = true) {}
         Box(
             modifier = Modifier

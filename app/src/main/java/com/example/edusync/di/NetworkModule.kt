@@ -10,15 +10,19 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 val networkModule = module {
     single {
-        val client = OkHttpClient().newBuilder()
-            .addInterceptor(HttpLoggingInterceptor { message -> println("REQUEST: $message") }
-                .apply { setLevel(HttpLoggingInterceptor.Level.BODY) })
+        OkHttpClient.Builder()
+            .addInterceptor(
+                HttpLoggingInterceptor { message -> println("REQUEST: $message") }
+                    .apply { setLevel(HttpLoggingInterceptor.Level.BODY) }
+            )
             .build()
+    }
 
+    single {
         Retrofit.Builder()
             .baseUrl(Constants.BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
-            .client(client)
+            .client(get())
             .build()
             .create(EduSyncApiService::class.java)
     }

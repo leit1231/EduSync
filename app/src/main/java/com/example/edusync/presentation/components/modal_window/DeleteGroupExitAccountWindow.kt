@@ -29,13 +29,12 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
 fun DeleteGroupExitAccountWindow(
+    isTeacher: Boolean,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-    isTeacher: Boolean = true
+    onConfirmClick: () -> Unit
 ) {
-
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(AppColors.Background.copy(alpha = 0.9f))
             .clickable { onDismiss() }
@@ -92,7 +91,7 @@ fun DeleteGroupExitAccountWindow(
                     if (isTeacher) {
                         Button(
                             onClick = {
-                                onDismiss()
+                                onConfirmClick()
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -109,7 +108,7 @@ fun DeleteGroupExitAccountWindow(
                     } else {
                         Button(
                             onClick = {
-                                onDismiss()
+                                onConfirmClick()
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),

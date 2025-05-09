@@ -42,6 +42,6 @@ val viewModelModule = module {
     viewModel { MaterialsScreenViewModel(get(), get(), get(), get(), get()) }
     viewModel { CreateGroupViewModel(get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
-    viewModel { GroupViewModel(get()) }
+    viewModel { GroupViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { AboutAppScreenViewModel(get(), get()) }
 }

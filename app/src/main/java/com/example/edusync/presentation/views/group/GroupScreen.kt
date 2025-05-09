@@ -1,6 +1,5 @@
 package com.example.edusync.presentation.views.group
 
-import android.net.Uri
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +24,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -42,19 +43,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.edusync.R
+import com.example.edusync.common.Constants
+import com.example.edusync.data.local.EncryptedSharedPreference
+import com.example.edusync.data.remote.webSocket.WebSocketController
 import com.example.edusync.presentation.components.custom_text_field.search_field.SearchField
 import com.example.edusync.presentation.components.modal_window.CreateCodeToJoinGroupWindow
 import com.example.edusync.presentation.components.modal_window.CreateNotificationWindow
 import com.example.edusync.presentation.components.modal_window.DeleteGroupExitAccountWindow
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.theme.ui.AppColors
-import com.example.edusync.presentation.viewModels.group.FileAttachment
 import com.example.edusync.presentation.viewModels.group.GroupViewModel
 import com.example.edusync.presentation.views.group.components.survey.CreatePollDialog
 import com.example.edusync.presentation.views.group.components.popUp.ParticipantsPopup
 import com.example.edusync.presentation.views.group.components.topBar.SelectionTopBar
 import com.example.edusync.presentation.views.group.components.chatBubble.ChatBubble
+import com.example.edusync.presentation.views.group.components.chatBubble.ChatItem
 import com.example.edusync.presentation.views.group.components.messageInput.MessageInput
 import com.example.edusync.presentation.views.group.components.popUp.ShowGroupDropdownMenu
 import org.koin.androidx.compose.koinViewModel
@@ -62,11 +67,18 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupScreen(groupName: Destination.GroupScreen) {
+fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupScreen) {
 
     val viewModel: GroupViewModel = koinViewModel()
-    val messages by viewModel.messages.observeAsState(emptyList())
+    val pagingMessages = viewModel.messageFlow.collectAsLazyPagingItems()
+    val context = LocalContext.current
+    val isTeacher = Constants.getIsTeacher(context)
+    val currentUserId = EncryptedSharedPreference(context).getUser()?.id ?: -1
+
+    val chatId = groupId.id
     val subjectName = groupName.name
+    val participants by viewModel.participants.observeAsState(emptyList())
+    val inviteCode by viewModel.inviteCode.observeAsState()
 
     val swipeThreshold = 200f
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -81,7 +93,6 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
     val highlightedMessage by viewModel.highlightedMessage.observeAsState()
     var showParticipantsPopup by remember { mutableStateOf(false) }
     var showGroupPopup by remember { mutableStateOf(false) }
-    var showCreateCodeDialog by remember { mutableStateOf(false) }
     var showCreateNotificationDialog by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
     var isSearchActive by remember { mutableStateOf(false) }
@@ -89,32 +100,48 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
     var showDeleteExitDialog by remember { mutableStateOf(false) }
     val isInSelectionMode by viewModel.isInSelectionMode.observeAsState(false)
     var showCreatePollDialog by remember { mutableStateOf(false) }
+    val chatItems by viewModel.chatItems.collectAsState()
 
-    LaunchedEffect(messages.size) {
-        listState.animateScrollToItem(0)
+    LaunchedEffect(pagingMessages.itemCount) {
+        if (pagingMessages.itemCount > 0) {
+            listState.animateScrollToItem(index = 0)
+        }
+    }
+
+    LaunchedEffect(pagingMessages.itemSnapshotList.items) {
+        viewModel.updateVisibleMessages(pagingMessages.itemSnapshotList.items)
     }
 
     LaunchedEffect(highlightedMessage) {
-        highlightedMessage?.let { message ->
-            val index = messages.indexOfFirst { it.id == message.id }
+        highlightedMessage?.let { targetMessage ->
+            val snapshot = pagingMessages.itemSnapshotList.items
+            val index = snapshot.indexOfFirst { it.id == targetMessage.id }
             if (index != -1) {
                 listState.animateScrollToItem(index)
             }
         }
     }
 
+    LaunchedEffect(participants) {
+        if (participants.isNotEmpty()) {
+            viewModel.loadPagedMessages(chatId = chatId, context = context)
+        }
+    }
+
     LaunchedEffect(Unit) {
-        viewModel.receiveMessage(
-            text = "Тест тест тест тест тест тест тест тест тест тест тест тест тест тест тест тест тест",
-            sender = "Людмила Фёдоровна",
-            files = listOf(
-                FileAttachment(
-                    uri = Uri.parse("file://example.pdf"),
-                    fileName = "Документ.pdf",
-                    fileSize = "1.2 МБ"
-                )
-            )
-        )
+        viewModel.updateCurrentUserId(currentUserId)
+        viewModel.loadParticipants(chatId)
+        viewModel.loadPolls(chatId)
+
+        WebSocketController.register(chatId, viewModel)
+        WebSocketController.subscribeToChat(chatId)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            WebSocketController.unregister(chatId)
+            viewModel.clearRealtimeMessages()
+        }
     }
 
     Box(
@@ -160,13 +187,18 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
                             modifier = Modifier.clickable(
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { isSearchActive = false }
+                            ) {
+                                isSearchActive = false
+                                viewModel.exitSearchMode(chatId, context)
+                            }
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         SearchField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            onSearch = { /* Логика поиска */ },
+                            onSearch = {
+                                viewModel.searchMessages(chatId = chatId, query = searchQuery, context = context)
+                            },
                             imeAction = ImeAction.Search
                         )
                         Spacer(modifier = Modifier.weight(1f))
@@ -227,30 +259,46 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
                         modifier = Modifier.weight(1f),
                         reverseLayout = true
                     ) {
-                        items(messages) { message ->
+                        items(chatItems) { item ->
+                            val message = (item as ChatItem.MessageItem).message
                             ChatBubble(
                                 message = message,
-                                viewModel,
-                                context = LocalContext.current,
+                                viewModel = viewModel,
+                                context = context,
+                                chatId = chatId,
+                                allMessages = chatItems.mapNotNull { (it as? ChatItem.MessageItem)?.message },
+                                isTeacher
                             )
                         }
                     }
-                    MessageInput(viewModel)
+                    MessageInput(viewModel, chatId = chatId)
                 }
             })
         if (showParticipantsPopup) {
             ParticipantsPopup(
                 onDismiss = { showParticipantsPopup = false },
-                initialParticipants = List(30) { "Лютый Николай Денисович" },
-                title = subjectName
+                participants = participants,
+                title = subjectName,
+                onRemove = { userId -> viewModel.removeParticipant(chatId, userId) },
+                isTeacher = isTeacher,
+                currentUserId = currentUserId
             )
         }
         if (showGroupPopup) {
             ShowGroupDropdownMenu(
                 onDismiss = { showGroupPopup = false },
                 modifier = Modifier.width(200.dp),
-                isTeacher = true,
-                onAddStudentClick = { showCreateCodeDialog = true },
+                isTeacher = isTeacher,
+                onAddStudentClick = {
+                    viewModel.refreshInviteCode(
+                        chatId = chatId,
+                        onSuccess = {
+                            viewModel.setInviteCode(it)
+                        },
+                        onError = {
+                        }
+                    )
+                },
                 onToggleNotifications = { notificationsEnabled = !notificationsEnabled },
                 onSearchMaterialsClick = { isSearchActive = true },
                 onCreateNotificationClick = { showCreateNotificationDialog = true },
@@ -260,14 +308,28 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
         }
         if (showDeleteExitDialog) {
             DeleteGroupExitAccountWindow(
+                isTeacher = isTeacher,
                 onDismiss = { showDeleteExitDialog = false },
-                isTeacher = true
+                onConfirmClick = {
+                    if (isTeacher) {
+                        viewModel.deleteChat(chatId,
+                            onSuccess = { viewModel.goBack() },
+                            onError = { /* Показать ошибку */ }
+                        )
+                    } else {
+                        viewModel.leaveChat(chatId,
+                            onSuccess = { viewModel.goBack() },
+                            onError = { /* Показать ошибку */ }
+                        )
+                    }
+                }
             )
         }
-        if (showCreateCodeDialog) {
+
+        if (inviteCode != null) {
             CreateCodeToJoinGroupWindow(
-                onDismiss = { showCreateCodeDialog = false },
-                onParticipantAdded = { /* Логика добавления */ }
+                code = inviteCode!!,
+                onDismiss = { viewModel.clearInviteCode() }
             )
         }
 
@@ -278,8 +340,7 @@ fun GroupScreen(groupName: Destination.GroupScreen) {
             CreatePollDialog(
                 onDismiss = { showCreatePollDialog = false },
                 onPollCreated = { question, options ->
-                    viewModel.sendPoll(question, options)
-                    showCreatePollDialog = false
+                    viewModel.sendPoll(chatId, question, options)
                 }
             )
         }

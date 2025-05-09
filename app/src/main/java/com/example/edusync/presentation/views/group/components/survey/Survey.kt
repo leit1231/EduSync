@@ -61,12 +61,14 @@ fun Survey(
     }
 
     val checkBoxSize = calculateCheckboxSize(percentTextStyle)
-
     val maxValue = answers.maxOf { it.count }
+
     val fractionAnimator = animateFloatAsState(
         targetValue = if (selected != null) 1f else 0f,
-        animationSpec = tween(1000, easing = FastOutSlowInEasing)
+        animationSpec = tween(1000, easing = FastOutSlowInEasing),
+        label = "SurveyFractionAnimation"
     )
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -79,7 +81,9 @@ fun Survey(
             textAlign = TextAlign.Center,
             color = AppColors.Secondary
         )
+
         answers.forEach {
+            val isSelected = selected?.id == it.id
             Answer(
                 text = it.text,
                 textStyle = LocalTextStyle.current,
@@ -88,12 +92,14 @@ fun Survey(
                 lineBackgroundColor = lineBackgroundColor,
                 percent = it.calculatePercent(totalCount),
                 fraction = it.calculateFraction(maxValue) * fractionAnimator.value,
-                selected = selected?.id == it.id,
-                showResult = selected != null,
+                selected = isSelected,
+                showResult = true,
                 percentTextStyle = percentTextStyle,
                 checkBoxSize = checkBoxSize
             ) {
-                onClick(it)
+                if (selected == null || selected.id == it.id) {
+                    onClick(it)
+                }
             }
         }
     }

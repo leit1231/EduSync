@@ -35,16 +35,14 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
 fun CreateCodeToJoinGroupWindow(
-    modifier: Modifier = Modifier,
-    onDismiss: () -> Unit,
-    onParticipantAdded: (String) -> Unit
+    code: String,
+    onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
-    val link = "123456"
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(AppColors.Background.copy(alpha = 0.9f))
             .clickable { onDismiss() }
@@ -79,7 +77,7 @@ fun CreateCodeToJoinGroupWindow(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 ReadOnlyTextField(
-                    value = link,
+                    value = code,
                     label = "Код",
                     trailingIcon = {
                         Icon(
@@ -88,7 +86,7 @@ fun CreateCodeToJoinGroupWindow(
                             modifier = Modifier
                                 .padding(end = 16.dp)
                                 .clickable {
-                                    clipboardManager.setText(AnnotatedString(link))
+                                    clipboardManager.setText(AnnotatedString(code))
                                 },
                             tint = AppColors.Secondary
                         )
@@ -101,12 +99,11 @@ fun CreateCodeToJoinGroupWindow(
                     onClick = {
                         val sendIntent = Intent().apply {
                             action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, link)
+                            putExtra(Intent.EXTRA_TEXT, code)
                             type = "text/plain"
                         }
                         val shareIntent = Intent.createChooser(sendIntent, "Поделиться ссылкой")
                         context.startActivity(shareIntent)
-                        onParticipantAdded("Тест Тестович")
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppColors.Primary

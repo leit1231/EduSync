@@ -63,7 +63,7 @@ sealed interface Destination {
     data object CreateGroupScreen: Destination
 
     @Serializable
-    data class GroupScreen(val name: String): Destination
+    data class GroupScreen(val id: Int, val name: String): Destination
 
     @Serializable
     data class SearchScreen(val isTeacherSearch: Boolean, val institutionId: Int): Destination

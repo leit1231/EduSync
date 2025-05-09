@@ -1,6 +1,7 @@
 package com.example.edusync.presentation.views.group.components.chatBubble
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -17,12 +18,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,12 +41,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.edusync.R
+import com.example.edusync.domain.model.message.Message
 import com.example.edusync.presentation.components.modal_window.DeleteMessageWindow
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.group.GroupViewModel
-import com.example.edusync.presentation.viewModels.group.Message
 import com.example.edusync.presentation.views.group.components.fileAttachment.FileAttachmentItem
 import com.example.edusync.presentation.views.group.components.fileAttachment.isImage
 import com.example.edusync.presentation.views.group.components.survey.AnswerData
@@ -60,9 +57,11 @@ import kotlinx.coroutines.delay
 fun ChatBubble(
     message: Message,
     viewModel: GroupViewModel,
-    context: Context
+    context: Context,
+    chatId: Int,
+    allMessages: List<Message>,
+    isTeacher: Boolean
 ) {
-    val isTeacher = true
     var expanded by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val bubbleColor = if (message.isMe) AppColors.Background else AppColors.ChatColor
@@ -78,6 +77,10 @@ fun ChatBubble(
             Color.Transparent,
         animationSpec = tween(500)
     )
+
+    val repliedMessage = message.replyToMessageId?.let { id ->
+        allMessages.firstOrNull { it.id == id }
+    }
 
     var showDeleteMessageDialog by remember { mutableStateOf(false) }
     var messageToDelete by remember { mutableStateOf<Int?>(null) }
@@ -99,8 +102,8 @@ fun ChatBubble(
                     if (isInSelectionMode) {
                         message.files.forEach { viewModel.toggleFileSelection(it) }
                     } else {
-                        if (message.replyTo != null) {
-                            viewModel.scrollToMessage(message.replyTo)
+                        if (repliedMessage != null) {
+                            viewModel.scrollToMessage(repliedMessage)
                         } else {
                             expanded = true
                         }
@@ -126,15 +129,22 @@ fun ChatBubble(
                                 color = AppColors.Primary,
                                 shape = RoundedCornerShape(12.dp)
                             )
-                        } else {
-                            Modifier
-                        }
+                        } else Modifier
                     )
                     .padding(horizontal = 12.dp, vertical = 8.dp)
                     .widthIn(max = 250.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                message.replyTo?.let { repliedMessage ->
+                if (!message.isMe) {
+                    Text(
+                        text = message.sender,
+                        color = AppColors.Secondary,
+                        style = AppTypography.body1.copy(fontSize = 14.sp),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+
+                repliedMessage?.let {
                     Column(
                         modifier = Modifier
                             .background(
@@ -142,38 +152,36 @@ fun ChatBubble(
                                 RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 8.dp, vertical = 12.dp)
-                            .clickable { viewModel.scrollToMessage(repliedMessage) }
+                            .clickable { viewModel.scrollToMessage(it) }
                     ) {
                         Text(
-                            text = repliedMessage.sender,
+                            text = it.sender,
                             color = AppColors.Primary.copy(alpha = 0.7f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = AppTypography.title.copy(fontSize = 14.sp)
                         )
                         when {
-                            repliedMessage.text != null -> {
+                            it.text != null -> {
                                 Text(
-                                    text = repliedMessage.text,
+                                    text = it.text,
                                     color = AppColors.Secondary.copy(alpha = 0.7f),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     style = AppTypography.body1.copy(fontSize = 12.sp)
                                 )
                             }
-                            repliedMessage.files.isNotEmpty() -> {
-                                val imageCount = repliedMessage.files.count { it.isImage() }
-                                val hasImages = imageCount > 0
-                                if (hasImages) {
+                            it.files.isNotEmpty() -> {
+                                val imageCount = it.files.count { it.isImage() }
+                                if (imageCount > 0) {
                                     Text(
-                                        text = if (imageCount == 1) "Фотография"
-                                        else "Фотографии ($imageCount)",
+                                        text = if (imageCount == 1) "Фотография" else "Фотографии ($imageCount)",
                                         color = AppColors.Secondary.copy(alpha = 0.7f),
                                         style = AppTypography.body1.copy(fontSize = 12.sp)
                                     )
                                 } else {
                                     Text(
-                                        text = "Файл: ${repliedMessage.files.first().fileName}",
+                                        text = "Файл: ${it.files.first().fileName}",
                                         color = AppColors.Secondary.copy(alpha = 0.7f),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -185,30 +193,29 @@ fun ChatBubble(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-                if (message.pollData != null) {
-                    val poll = message.pollData
-                    val answers = poll.options.map { (text, count) ->
-                        AnswerData(text = text, count = count)
+
+                message.pollData?.let { poll ->
+                    val answers = poll.options.map {
+                        AnswerData(
+                            id = it.id,
+                            text = it.text,
+                            count = it.votes
+                        )
                     }
 
                     Survey(
                         question = poll.question,
                         totalCount = poll.totalVotes,
                         answers = answers,
-                        selected = answers.find { it.text == poll.selectedOption },
+                        selected = answers.find { it.id == poll.selectedOption },
                         onClick = { selectedAnswer ->
-                            viewModel.voteInPoll(message.id, selectedAnswer.text)
+                            if (poll.selectedOption == null) {
+                                viewModel.voteInPoll(chatId, poll.id, selectedAnswer.id)
+                            }
                         }
                     )
                 }
-                if (!message.isMe && message.showSenderName) {
-                    Text(
-                        text = message.sender,
-                        color = AppColors.Secondary,
-                        style = AppTypography.body1.copy(fontSize = 14.sp),
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                }
+
                 message.files.forEach { file ->
                     FileAttachmentItem(
                         file = file,
@@ -218,6 +225,7 @@ fun ChatBubble(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
+
                 message.text?.let {
                     Text(
                         text = it,
@@ -225,81 +233,102 @@ fun ChatBubble(
                         style = AppTypography.body1.copy(fontSize = 16.sp)
                     )
                 }
+
                 Row(
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (message.isEdited) {
-                        Text(
-                            text = " изменено",
-                            color = AppColors.Secondary.copy(alpha = 0.5f),
-                            style = AppTypography.lightText.copy(fontSize = 10.sp),
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
-                    }
                     Text(
                         text = message.timestamp,
                         color = AppColors.Secondary,
                         style = AppTypography.lightText.copy(fontSize = 12.sp),
                         modifier = Modifier.padding(end = 4.dp)
                     )
+                }
+            }
+
+            if (message.pollData != null) {
+
+                val hasVoted = message.pollData.selectedOption != null
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier
+                        .align(if (message.isMe) Alignment.TopEnd else Alignment.TopStart)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    if (hasVoted) {
+                        DropdownMenuItem(
+                            text = { Text("Отменить голос") },
+                            onClick = {
+                                expanded = false
+                                val selectedOption = message.pollData.selectedOption
+                                if (selectedOption != null) {
+                                    viewModel.unvotePoll(chatId, message.pollData.id, selectedOption)
+                                } else {
+                                    Log.e("ChatBubble", "Ошибка: selectedOption = null")
+                                }
+                            }
+                        )
+                    }
+                    if (isTeacher) {
+                        DropdownMenuItem(
+                            text = { Text("Удалить опрос") },
+                            onClick = {
+                                expanded = false
+                                viewModel.deletePoll(chatId, message.pollData.id)
+                            }
+                        )
+                    }
+                }
+            } else {
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier
+                        .align(if (message.isMe) Alignment.TopEnd else Alignment.TopStart)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Ответить") },
+                        onClick = {
+                            expanded = false
+                            viewModel.setReplyMessage(message)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Копировать", style = AppTypography.body1) },
+                        onClick = {
+                            expanded = false
+                            message.text?.let {
+                                clipboardManager.setText(AnnotatedString(it))
+                                Toast.makeText(context, "Текст скопирован", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
                     if (message.isMe) {
-                        Icon(
-                            painter = painterResource(
-                                if (message.isRead) R.drawable.ic_done_all
-                                else R.drawable.ic_done
-                            ),
-                            contentDescription = "Статус прочтения",
-                            tint = AppColors.Primary,
-                            modifier = Modifier.size(16.dp)
+                        DropdownMenuItem(
+                            text = { Text("Изменить", style = AppTypography.body1) },
+                            onClick = {
+                                expanded = false
+                                viewModel.startEditing(message.id, allMessages)
+                            }
+                        )
+                    }
+                    if (isTeacher || message.isMe) {
+                        DropdownMenuItem(
+                            text = { Text("Удалить", style = AppTypography.body1) },
+                            onClick = {
+                                expanded = false
+                                messageToDelete = message.id
+                                showDeleteMessageDialog = true
+                            }
                         )
                     }
                 }
             }
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier
-                    .align(if (message.isMe) Alignment.TopEnd else Alignment.TopStart)
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Ответить") },
-                    onClick = {
-                        expanded = false
-                        viewModel.setReplyMessage(message)
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Копировать", style = AppTypography.body1) },
-                    onClick = {
-                        expanded = false
-                        message.text?.let {
-                            clipboardManager.setText(AnnotatedString(it))
-                            Toast.makeText(context, "Текст скопирован", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
-                if (message.isMe) {
-                    DropdownMenuItem(
-                        text = { Text("Изменить", style = AppTypography.body1) },
-                        onClick = {
-                            expanded = false
-                            viewModel.startEditing(message.id)
-                        }
-                    )
-                }
-                if (isTeacher || message.isMe) {
-                    DropdownMenuItem(
-                        text = { Text("Удалить", style = AppTypography.body1) },
-                        onClick = {
-                            expanded = false
-                            messageToDelete = message.id
-                            showDeleteMessageDialog = true
-                        }
-                    )
-                }
-            }
+
             if (showDeleteMessageDialog) {
                 Dialog(
                     onDismissRequest = { showDeleteMessageDialog = false },
@@ -308,8 +337,17 @@ fun ChatBubble(
                     DeleteMessageWindow(
                         onDismiss = { showDeleteMessageDialog = false },
                         onDelete = {
-                            viewModel.deleteMessage(messageToDelete!!)
                             showDeleteMessageDialog = false
+                            viewModel.deleteMessageRemote(
+                                chatId = chatId,
+                                messageId = messageToDelete ?: return@DeleteMessageWindow,
+                                onSuccess = {
+                                    Toast.makeText(context, "Сообщение удалено", Toast.LENGTH_SHORT).show()
+                                },
+                                onError = {
+                                    Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                                }
+                            )
                         }
                     )
                 }

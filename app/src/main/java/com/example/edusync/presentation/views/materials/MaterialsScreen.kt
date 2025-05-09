@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +28,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.edusync.common.Constants
 import com.example.edusync.presentation.components.custom_text_field.search_field.SearchField
 import com.example.edusync.presentation.components.modal_window.JoinGroupModalWindow
@@ -40,11 +44,37 @@ import org.koin.androidx.compose.koinViewModel
 fun MaterialsScreen() {
 
     val viewModel: MaterialsScreenViewModel = koinViewModel()
+    val lifecycleOwner = LocalLifecycleOwner.current
     val chats by viewModel.filteredChats
     val searchQuery = viewModel.searchQuery
     val context = LocalContext.current
     val isTeacher = Constants.getIsTeacher(context)
     val isModalDialogVisible = remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        val lifecycle = lifecycleOwner.lifecycle
+
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.connectWebSocketIfNeeded()
+                    viewModel.reloadChats()
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.scheduleDisconnectIfIdle()
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    viewModel.disconnectWebSocket()
+                }
+                else -> {}
+            }
+        }
+
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
 
     Column(
         modifier = Modifier

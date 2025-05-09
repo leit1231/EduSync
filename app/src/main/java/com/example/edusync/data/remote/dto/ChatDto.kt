@@ -24,6 +24,11 @@ data class CreateChatResponse(
     val message: String
 )
 
+data class RefreshInviteCodeResponse(
+    val chat: CreateUpdateChatResponse,
+    val message: String
+)
+
 data class ChatUser(
     val user_id: Int,
     val full_name: String,

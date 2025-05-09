@@ -45,7 +45,9 @@ import com.example.edusync.domain.use_case.institution.GetAllInstitutesUseCase
 import com.example.edusync.domain.use_case.institution.GetInstituteByIdUseCase
 import com.example.edusync.domain.use_case.institution.GetMaskedInstitutesUseCase
 import com.example.edusync.domain.use_case.message.DeleteMessageUseCase
+import com.example.edusync.domain.use_case.message.EditMessageUseCase
 import com.example.edusync.domain.use_case.message.GetMessagesUseCase
+import com.example.edusync.domain.use_case.message.MessagePagingUseCase
 import com.example.edusync.domain.use_case.message.ReplyToMessageUseCase
 import com.example.edusync.domain.use_case.message.SearchMessagesUseCase
 import com.example.edusync.domain.use_case.message.SendMessageUseCase
@@ -120,6 +122,8 @@ val repositoryModule = module {
     factory { ReplyToMessageUseCase(get()) }
     factory { DeleteMessageUseCase(get()) }
     factory { SearchMessagesUseCase(get()) }
+    factory { EditMessageUseCase(get()) }
+    factory { MessagePagingUseCase(get()) }
 
     factory { GetFileByIdUseCase(get()) }
 

@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.edusync.presentation.viewModels.group.FileAttachment
+import com.example.edusync.domain.model.message.FileAttachment
 
 @Composable
 fun FileAttachmentList(
