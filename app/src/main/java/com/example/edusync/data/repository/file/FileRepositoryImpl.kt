@@ -15,7 +15,8 @@ class FileRepositoryImpl(
     private val executor = TokenRequestExecutor(prefs, api)
 
     override suspend fun downloadFileById(fileId: Int): Result<Response<ResponseBody>> {
-        return executor.executeRawResponse { api.downloadFileById(it, fileId) }
+        return executor.executeRawResponse { token ->
+            api.downloadFileById(token, fileId)
+        }
     }
-
 }

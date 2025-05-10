@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,12 +26,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -62,13 +64,13 @@ import com.example.edusync.presentation.views.group.components.chatBubble.ChatBu
 import com.example.edusync.presentation.views.group.components.chatBubble.ChatItem
 import com.example.edusync.presentation.views.group.components.messageInput.MessageInput
 import com.example.edusync.presentation.views.group.components.popUp.ShowGroupDropdownMenu
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupScreen) {
-
     val viewModel: GroupViewModel = koinViewModel()
     val pagingMessages = viewModel.messageFlow.collectAsLazyPagingItems()
     val context = LocalContext.current
@@ -79,6 +81,18 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
     val subjectName = groupName.name
     val participants by viewModel.participants.observeAsState(emptyList())
     val inviteCode by viewModel.inviteCode.observeAsState()
+    val isInSelectionMode by viewModel.isInSelectionMode.observeAsState(false)
+    val highlightedMessage by viewModel.highlightedMessage.observeAsState()
+    val chatItems by viewModel.chatItems.collectAsState()
+
+    var showParticipantsPopup by remember { mutableStateOf(false) }
+    var showGroupPopup by remember { mutableStateOf(false) }
+    var showCreateNotificationDialog by remember { mutableStateOf(false) }
+    var notificationsEnabled by remember { mutableStateOf(true) }
+    var isSearchActive by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var showDeleteExitDialog by remember { mutableStateOf(false) }
+    var showCreatePollDialog by remember { mutableStateOf(false) }
 
     val swipeThreshold = 200f
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -90,21 +104,13 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
     )
 
     val listState = rememberLazyListState()
-    val highlightedMessage by viewModel.highlightedMessage.observeAsState()
-    var showParticipantsPopup by remember { mutableStateOf(false) }
-    var showGroupPopup by remember { mutableStateOf(false) }
-    var showCreateNotificationDialog by remember { mutableStateOf(false) }
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var isSearchActive by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showDeleteExitDialog by remember { mutableStateOf(false) }
-    val isInSelectionMode by viewModel.isInSelectionMode.observeAsState(false)
-    var showCreatePollDialog by remember { mutableStateOf(false) }
-    val chatItems by viewModel.chatItems.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    var showScrollToBottom by remember { mutableStateOf(false) }
 
     LaunchedEffect(pagingMessages.itemCount) {
         if (pagingMessages.itemCount > 0) {
-            listState.animateScrollToItem(index = 0)
+            listState.scrollToItem(index = 0)
         }
     }
 
@@ -117,7 +123,9 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
             val snapshot = pagingMessages.itemSnapshotList.items
             val index = snapshot.indexOfFirst { it.id == targetMessage.id }
             if (index != -1) {
-                listState.animateScrollToItem(index)
+                coroutineScope.launch {
+                    listState.animateScrollToItem(index)
+                }
             }
         }
     }
@@ -132,7 +140,6 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
         viewModel.updateCurrentUserId(currentUserId)
         viewModel.loadParticipants(chatId)
         viewModel.loadPolls(chatId)
-
         WebSocketController.register(chatId, viewModel)
         WebSocketController.subscribeToChat(chatId)
     }
@@ -142,6 +149,13 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
             WebSocketController.unregister(chatId)
             viewModel.clearRealtimeMessages()
         }
+    }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect { index ->
+                showScrollToBottom = index > 2
+            }
     }
 
     Box(
@@ -171,109 +185,119 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
     ) {
         Scaffold(
             topBar = {
-                if (isInSelectionMode) {
-                    SelectionTopBar(viewModel)
-                } else if (isSearchActive) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 16.dp, top = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_back),
-                            contentDescription = "Назад",
-                            tint = AppColors.Primary,
-                            modifier = Modifier.clickable(
-                                indication = null,
-                                interactionSource = remember { MutableInteractionSource() }
-                            ) {
-                                isSearchActive = false
-                                viewModel.exitSearchMode(chatId, context)
-                            }
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                        SearchField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            onSearch = {
-                                viewModel.searchMessages(chatId = chatId, query = searchQuery, context = context)
-                            },
-                            imeAction = ImeAction.Search
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                } else {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = subjectName,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }) {
-                                        showParticipantsPopup = true
-                                    }
-                            )
-                        },
-                        navigationIcon = {
+                when {
+                    isInSelectionMode -> SelectionTopBar(viewModel)
+                    isSearchActive -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 16.dp, top = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_back),
                                 contentDescription = "Назад",
                                 tint = AppColors.Primary,
-                                modifier = Modifier.clickable(
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }
-                                ) { viewModel.goBack() }
+                                modifier = Modifier.clickable {
+                                    isSearchActive = false
+                                    viewModel.exitSearchMode(chatId, context)
+                                }
                             )
-                        },
-                        actions = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_more_vert),
-                                contentDescription = "Дополнительно",
-                                tint = AppColors.Primary,
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clickable(indication = null,
-                                        interactionSource = remember { MutableInteractionSource() }) {
-                                        showGroupPopup = true
-                                    }
+                            Spacer(modifier = Modifier.weight(1f))
+                            SearchField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                onSearch = {
+                                    viewModel.searchMessages(chatId, searchQuery, context)
+                                },
+                                imeAction = ImeAction.Search
                             )
+                            Spacer(modifier = Modifier.weight(1f))
                         }
-                    )
+                    }
+                    else -> {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = subjectName,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { showParticipantsPopup = true }
+                                )
+                            },
+                            navigationIcon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_back),
+                                    contentDescription = "Назад",
+                                    tint = AppColors.Primary,
+                                    modifier = Modifier.clickable { viewModel.goBack() }
+                                )
+                            },
+                            actions = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_more_vert),
+                                    contentDescription = "Меню",
+                                    tint = AppColors.Primary,
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clickable { showGroupPopup = true }
+                                )
+                            }
+                        )
+                    }
                 }
             },
             content = { paddingValues ->
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(AppColors.Background)
-                        .padding(paddingValues)
-                ) {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.weight(1f),
-                        reverseLayout = true
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(AppColors.Background)
                     ) {
-                        items(chatItems) { item ->
-                            val message = (item as ChatItem.MessageItem).message
-                            ChatBubble(
-                                message = message,
-                                viewModel = viewModel,
-                                context = context,
-                                chatId = chatId,
-                                allMessages = chatItems.mapNotNull { (it as? ChatItem.MessageItem)?.message },
-                                isTeacher
-                            )
+                        LazyColumn(
+                            state = listState,
+                            modifier = Modifier.weight(1f),
+                            reverseLayout = true
+                        ) {
+                            items(chatItems) { item ->
+                                val message = (item as ChatItem.MessageItem).message
+                                ChatBubble(
+                                    message = message,
+                                    viewModel = viewModel,
+                                    context = context,
+                                    chatId = chatId,
+                                    allMessages = chatItems.mapNotNull { (it as? ChatItem.MessageItem)?.message },
+                                    isTeacher = isTeacher
+                                )
+                            }
                         }
+                        MessageInput(viewModel, chatId = chatId)
                     }
-                    MessageInput(viewModel, chatId = chatId)
+
+                    if (showScrollToBottom) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_down),
+                            contentDescription = "Scroll to Bottom",
+                            tint = AppColors.Primary,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 16.dp, bottom = 80.dp)
+                                .size(40.dp)
+                                .clickable {
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(0)
+                                    }
+                                }
+                        )
+                    }
                 }
-            })
+            }
+        )
+
+        // Модальные окна — как раньше
         if (showParticipantsPopup) {
             ParticipantsPopup(
                 onDismiss = { showParticipantsPopup = false },
@@ -284,19 +308,16 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
                 currentUserId = currentUserId
             )
         }
+
         if (showGroupPopup) {
             ShowGroupDropdownMenu(
                 onDismiss = { showGroupPopup = false },
                 modifier = Modifier.width(200.dp),
                 isTeacher = isTeacher,
                 onAddStudentClick = {
-                    viewModel.refreshInviteCode(
-                        chatId = chatId,
-                        onSuccess = {
-                            viewModel.setInviteCode(it)
-                        },
-                        onError = {
-                        }
+                    viewModel.refreshInviteCode(chatId,
+                        onSuccess = { viewModel.setInviteCode(it) },
+                        onError = {}
                     )
                 },
                 onToggleNotifications = { notificationsEnabled = !notificationsEnabled },
@@ -306,42 +327,33 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
                 onCreatePollClick = { showCreatePollDialog = true }
             )
         }
+
         if (showDeleteExitDialog) {
             DeleteGroupExitAccountWindow(
                 isTeacher = isTeacher,
                 onDismiss = { showDeleteExitDialog = false },
                 onConfirmClick = {
                     if (isTeacher) {
-                        viewModel.deleteChat(chatId,
-                            onSuccess = { viewModel.goBack() },
-                            onError = { /* Показать ошибку */ }
-                        )
+                        viewModel.deleteChat(chatId, { viewModel.goBack() }, {})
                     } else {
-                        viewModel.leaveChat(chatId,
-                            onSuccess = { viewModel.goBack() },
-                            onError = { /* Показать ошибку */ }
-                        )
+                        viewModel.leaveChat(chatId, { viewModel.goBack() }, {})
                     }
                 }
             )
         }
 
-        if (inviteCode != null) {
-            CreateCodeToJoinGroupWindow(
-                code = inviteCode!!,
-                onDismiss = { viewModel.clearInviteCode() }
-            )
+        inviteCode?.let {
+            CreateCodeToJoinGroupWindow(it) { viewModel.clearInviteCode() }
         }
 
         if (showCreateNotificationDialog) {
-            CreateNotificationWindow(onDismiss = { showCreateNotificationDialog = false })
+            CreateNotificationWindow { showCreateNotificationDialog = false }
         }
+
         if (showCreatePollDialog) {
             CreatePollDialog(
                 onDismiss = { showCreatePollDialog = false },
-                onPollCreated = { question, options ->
-                    viewModel.sendPoll(chatId, question, options)
-                }
+                onPollCreated = { q, o -> viewModel.sendPoll(chatId, q, o) }
             )
         }
     }

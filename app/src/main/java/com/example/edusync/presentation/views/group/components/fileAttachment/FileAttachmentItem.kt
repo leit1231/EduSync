@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.views.group.components.fileAttachment
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -38,7 +40,8 @@ fun FileAttachmentItem(
     file: FileAttachment,
     viewModel: GroupViewModel,
     onFileClicked: (Uri) -> Unit,
-    isInSelectionMode: Boolean
+    isInSelectionMode: Boolean,
+    context: Context
 ) {
     val selectedFiles by viewModel.selectedFiles.collectAsStateWithLifecycle()
     val isSelected = selectedFiles.contains(file)
@@ -54,7 +57,7 @@ fun FileAttachmentItem(
                 indication = null
             ) {
                 if (isInSelectionMode) {
-                    viewModel.toggleFileSelection(file)
+                    viewModel.toggleFileSelection(file, context)
                 } else {
                     onFileClicked(file.uri)
                 }

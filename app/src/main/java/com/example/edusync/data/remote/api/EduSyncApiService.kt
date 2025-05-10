@@ -240,14 +240,14 @@ interface EduSyncApiService {
         @Header("Authorization") token: String
     ): Response<List<FavoriteFileDto>>
 
-    @POST("/api/files/{id}/favorites")
+    @POST("/api/files/{id}/favorite")
     suspend fun addToFavorites(
         @Header("Authorization") token: String,
         @Path("id") fileId: Int
     ): Response<Unit>
 
-    @DELETE("/api/files/{id}/favorites")
-    suspend fun removeFromFavorites(
+    @DELETE("/api/files/{id}/favorite")
+    suspend fun removeFavorite(
         @Header("Authorization") token: String,
         @Path("id") fileId: Int
     ): Response<Unit>

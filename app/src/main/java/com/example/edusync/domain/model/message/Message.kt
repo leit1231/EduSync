@@ -16,6 +16,7 @@ data class Message(
 )
 
 data class FileAttachment(
+    val id: Int?,
     val uri: Uri,
     val fileName: String,
     val fileSize: String

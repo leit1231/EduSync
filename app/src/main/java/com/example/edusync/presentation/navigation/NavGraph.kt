@@ -1,5 +1,6 @@
 package com.example.edusync.presentation.navigation
 
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -38,6 +39,7 @@ import com.example.edusync.presentation.views.materials.MaterialsScreen
 import com.example.edusync.presentation.views.materials.group.CreateGroupScreen
 import com.example.edusync.presentation.views.navigation_menu.NavigationMenu
 import com.example.edusync.presentation.views.onboarding.onboarding_navigation_pager.OnboardingPagerScreen
+import com.example.edusync.presentation.views.pdfScreen.PdfScreen
 import com.example.edusync.presentation.views.profile.ProfileScreen
 import com.example.edusync.presentation.views.register.RegisterScreen
 import com.example.edusync.presentation.views.search_screen.SearchScreen
@@ -151,6 +153,13 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                     }
                     composable<Destination.FavoritiesScreen> {
                         FavoritiesScreen()
+                    }
+                    composable<Destination.PdfScreenDestination> {
+                        val args = it.toRoute<Destination.PdfScreenDestination>()
+                        val uri = Uri.parse(args.uri)
+                        PdfScreen(uri = uri) {
+                            navController.popBackStack()
+                        }
                     }
                     composable<Destination.ProfileScreen> {
                         ProfileScreen()

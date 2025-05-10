@@ -13,7 +13,11 @@ class FavoriteRepositoryImpl(
     private val executor = TokenRequestExecutor(prefs, api)
 
     override suspend fun getFavorites() = executor.execute { api.getFavorites(it) }
-    override suspend fun addToFavorites(fileId: Int) = executor.execute { api.addToFavorites(it, fileId) }
-    override suspend fun removeFromFavorites(fileId: Int) = executor.execute { api.removeFromFavorites(it, fileId) }
+    override suspend fun addToFavorites(fileId: Int): Result<Unit> {
+        return executor.executeNoContent { token -> api.addToFavorites(token, fileId) }
+    }
+    override suspend fun removeFromFavorites(fileId: Int): Result<Unit> {
+        return executor.executeNoContent { token -> api.removeFavorite(token, fileId) }
+    }
 }
 

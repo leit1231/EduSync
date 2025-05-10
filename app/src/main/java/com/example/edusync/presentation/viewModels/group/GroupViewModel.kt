@@ -28,6 +28,9 @@ import com.example.edusync.domain.use_case.chat.GetChatParticipantsUseCase
 import com.example.edusync.domain.use_case.chat.LeaveChatUseCase
 import com.example.edusync.domain.use_case.chat.RefreshInviteCodeUseCase
 import com.example.edusync.domain.use_case.chat.RemoveChatParticipantUseCase
+import com.example.edusync.domain.use_case.favorite.AddToFavoritesUseCase
+import com.example.edusync.domain.use_case.favorite.GetFavoritesUseCase
+import com.example.edusync.domain.use_case.favorite.RemoveFromFavoritesUseCase
 import com.example.edusync.domain.use_case.file.GetFileByIdUseCase
 import com.example.edusync.domain.use_case.message.DeleteMessageUseCase
 import com.example.edusync.domain.use_case.message.EditMessageUseCase
@@ -40,8 +43,10 @@ import com.example.edusync.domain.use_case.poll.DeletePollUseCase
 import com.example.edusync.domain.use_case.poll.GetPollsUseCase
 import com.example.edusync.domain.use_case.poll.UnvotePollUseCase
 import com.example.edusync.domain.use_case.poll.VotePollUseCase
+import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.views.group.components.chatBubble.ChatItem
+import com.example.edusync.presentation.views.group.components.fileAttachment.isImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,6 +88,10 @@ class GroupViewModel(
     private val unvotePollUseCase: UnvotePollUseCase,
     private val getPollsUseCase: GetPollsUseCase,
     private val deletePollUseCase: DeletePollUseCase,
+
+    private val addToFavoritesUseCase: AddToFavoritesUseCase,
+    private val removeFromFavoritesUseCase: RemoveFromFavoritesUseCase,
+    private val getFavoritesUseCase: GetFavoritesUseCase
 ) : ViewModel() {
 
     private val _highlightedMessage = MutableLiveData<Message?>()
@@ -125,6 +134,20 @@ class GroupViewModel(
 
     private val _isMessagesLoaded = MutableStateFlow(false)
 
+    private val _favoriteIds = MutableStateFlow<Set<Int>>(emptySet())
+    val favoriteIds: StateFlow<Set<Int>> = _favoriteIds
+
+    init {
+        viewModelScope.launch {
+            getFavoritesUseCase().collect { result ->
+                if (result is Resource.Success) {
+                    val ids = result.data.orEmpty().map { it.id }
+                    _favoriteIds.value = ids.toSet()
+                }
+            }
+        }
+    }
+
     init {
         viewModelScope.launch {
             selectedFiles.collect { files ->
@@ -136,7 +159,7 @@ class GroupViewModel(
     }
 
     private fun updateChatItems() {
-        val creator = participants.value?.firstOrNull { it.isTeacher }
+        participants.value?.firstOrNull { it.isTeacher }
         val allMessages = (_realtimeMessages.value + _messages.value)
             .distinctBy { it.id }
             .toMutableList()
@@ -179,10 +202,44 @@ class GroupViewModel(
         }
     }
 
-    fun toggleFileSelection(file: FileAttachment) {
-        _selectedFiles.update { current ->
-            current.toMutableSet().apply {
-                if (contains(file)) remove(file) else add(file)
+    fun toggleFileSelection(file: FileAttachment, context: Context) {
+        val mimeType = getMimeType(file.uri, context)
+        if (mimeType.startsWith("application")) {
+            _selectedFiles.update { current ->
+                current.toMutableSet().apply {
+                    if (contains(file)) remove(file) else add(file)
+                }
+            }
+        }
+    }
+
+    fun addOrRemoveSelectedFavorites() {
+        viewModelScope.launch {
+            val current = _favoriteIds.value.toSet()
+            val selected = selectedFiles.value
+                .filterNot { it.isImage() }
+                .mapNotNull { it.id }
+
+            val newSet = current.toMutableSet()
+
+            selected.forEach { fileId ->
+                launch {
+                    if (current.contains(fileId)) {
+                        removeFromFavoritesUseCase(fileId).collect { result ->
+                            if (result is Resource.Success) {
+                                newSet.remove(fileId)
+                                _favoriteIds.value = newSet.toSet()
+                            }
+                        }
+                    } else {
+                        addToFavoritesUseCase(fileId).collect { result ->
+                            if (result is Resource.Success) {
+                                newSet.add(fileId)
+                                _favoriteIds.value = newSet.toSet()
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -234,11 +291,13 @@ class GroupViewModel(
         fileId: Int,
         fileUrl: String? = null
     ): FileAttachment? {
-        val fileName = getFileNameFromUrl(fileUrl) ?: "file_$fileId"
+        val rawName = getFileNameFromUrl(fileUrl) ?: "file_$fileId"
+        val fileName = rawName.replaceFirst(Regex("^\\d+_"), "")
         val cachedFile = getCachedFile(fileId, fileName, context)
 
         if (cachedFile.exists()) {
             return FileAttachment(
+                id = fileId,
                 uri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.provider",
@@ -256,6 +315,7 @@ class GroupViewModel(
                     val (body, _) = resource.data ?: return@collect
                     saveFileToCache(body, cachedFile)
                     result = FileAttachment(
+                        id = fileId,
                         uri = FileProvider.getUriForFile(
                             context,
                             "${context.packageName}.provider",
@@ -546,49 +606,6 @@ class GroupViewModel(
         return Uri.parse(cleaned)
     }
 
-    private fun downloadAndOpenFile(uri: Uri, context: Context) {
-        viewModelScope.launch {
-            try {
-                val file = withContext(Dispatchers.IO) {
-                    val url = URL(uri.toString())
-                    val connection = url.openConnection() as HttpURLConnection
-                    Log.d("DownloadDebug", "Downloading from $uri")
-                    connection.connect()
-
-                    val responseCode = connection.responseCode
-                    Log.d("DownloadDebug", "Response code: $responseCode")
-
-                    if (responseCode != HttpURLConnection.HTTP_OK) {
-                        val errorText = connection.errorStream?.bufferedReader()?.readText()
-                        Log.e("DownloadDebug", "Error stream: $errorText")
-                        throw Exception("HTTP error $responseCode")
-                    }
-
-                    val inputStream = connection.inputStream
-                    val tempFile = File.createTempFile("download", null, context.cacheDir)
-                    tempFile.outputStream().use { output -> inputStream.copyTo(output) }
-                    tempFile
-                }
-
-                val contentUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.provider",
-                    file
-                )
-
-                val openIntent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(contentUri, getMimeType(contentUri, context))
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-
-                context.startActivity(openIntent)
-            } catch (e: Exception) {
-                Log.e("DownloadDebug", "Exception: ${e.message}", e)
-                Toast.makeText(context, "Не удалось загрузить файл", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     fun receiveMessageFromDto(dto: MessageDto, context: Context) {
         viewModelScope.launch {
             val usersMap = _participants.value.orEmpty().associateBy { it.id }
@@ -768,11 +785,11 @@ class GroupViewModel(
         val fileSize = getFileSize(uri, context)
 
         val newFile = FileAttachment(
+            id = null,
             uri = uri,
             fileName = fileName ?: "Файл",
             fileSize = fileSize ?: "0 Б"
         )
-
         _attachedFiles.value = _attachedFiles.value.orEmpty() + newFile
     }
 
@@ -943,16 +960,49 @@ class GroupViewModel(
     }
 
     fun openFile(uri: Uri, context: Context) {
-        if (uri.scheme == "http" || uri.scheme == "https") {
-            downloadAndOpenFile(uri, context)
+        val isPdf = uri.toString().lowercase().endsWith(".pdf")
+        val mimeType = getMimeType(uri, context)
+
+        if (isPdf || mimeType == "application/pdf") {
+            viewModelScope.launch {
+                try {
+                    if (uri.scheme == "http" || uri.scheme == "https") {
+                        val file = withContext(Dispatchers.IO) {
+                            val url = URL(uri.toString())
+                            val connection = url.openConnection() as HttpURLConnection
+                            connection.connect()
+
+                            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                                throw Exception("HTTP error ${connection.responseCode}")
+                            }
+
+                            val inputStream = connection.inputStream
+                            val tempFile = File.createTempFile("download", ".pdf", context.cacheDir)
+                            tempFile.outputStream().use { output -> inputStream.copyTo(output) }
+                            tempFile
+                        }
+
+                        FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.provider",
+                            file
+                        )
+                    } else {
+                        uri
+                    }
+                    navigator.navigate(Destination.PdfScreenDestination(uri = uri.toString()))
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Не удалось открыть PDF", Toast.LENGTH_SHORT).show()
+                }
+            }
             return
         }
 
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, getMimeType(uri, context))
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
         try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
             context.startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(context, "Ошибка открытия файла", Toast.LENGTH_SHORT).show()
@@ -973,6 +1023,10 @@ class GroupViewModel(
                 else -> "*/*"
             }
         }
+    }
+
+    private fun cleanFileName(fileUrl: String): String {
+        return fileUrl.substringAfterLast('/').substringAfter('_')
     }
 
     private fun mapDtoToMessage(dto: MessageDto, poll: PollData? = null): Message {
@@ -1003,8 +1057,9 @@ class GroupViewModel(
             isMe = dto.user_id == currentUserId,
             files = dto.files?.map {
                 FileAttachment(
+                    id = it.id,
                     uri = resolveFileUri(it.file_url),
-                    fileName = "Файл",
+                    fileName = cleanFileName(it.file_url),
                     fileSize = "—"
                 )
             } ?: emptyList(),

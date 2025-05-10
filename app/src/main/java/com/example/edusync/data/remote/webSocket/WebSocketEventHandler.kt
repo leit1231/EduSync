@@ -3,8 +3,6 @@ package com.example.edusync.data.remote.webSocket
 import android.content.Context
 import android.util.Log
 import com.example.edusync.data.remote.dto.MessageDto
-import com.example.edusync.domain.model.message.FileAttachment
-import com.example.edusync.domain.model.message.Message
 import com.example.edusync.domain.model.message.PollData
 import com.example.edusync.presentation.viewModels.group.GroupViewModel
 import com.google.gson.Gson
@@ -12,11 +10,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 import org.json.JSONObject
 
 class WebSocketEventHandler(
-    private val context: Context, // ⬅️ добавлено
+    private val context: Context,
     private val socketManager: WebSocketManager,
     private val groupViewModelProvider: (chatId: Int) -> GroupViewModel?
 ) {
@@ -85,11 +82,11 @@ class WebSocketEventHandler(
                     val senderName = resolveSenderName(viewModel.currentUserId, chatId)
 
                     viewModel.receiveMessage(
-                        text = "", // потому что это не текст, а опрос
+                        text = "",
                         sender = senderName,
                         userId = viewModel.currentUserId,
-                        files = emptyList(), // нет файлов, только опрос
-                        pollData = pollData // добавим параметр
+                        files = emptyList(),
+                        pollData = pollData
                     )
                 }
 
@@ -101,19 +98,6 @@ class WebSocketEventHandler(
 
         } catch (e: Exception) {
             Log.e("WebSocketEventHandler", "Error parsing message: ${e.message}", e)
-        }
-    }
-
-
-    private fun parseFiles(array: JSONArray?): List<FileAttachment> {
-        if (array == null) return emptyList()
-        return List(array.length()) { i ->
-            val obj = array.getJSONObject(i)
-            FileAttachment(
-                uri = android.net.Uri.parse(obj.getString("uri")),
-                fileName = obj.getString("fileName"),
-                fileSize = obj.getString("fileSize")
-            )
         }
     }
 

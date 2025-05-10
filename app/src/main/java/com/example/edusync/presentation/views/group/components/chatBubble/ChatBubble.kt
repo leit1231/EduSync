@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -100,7 +101,7 @@ fun ChatBubble(
             .combinedClickable(
                 onClick = {
                     if (isInSelectionMode) {
-                        message.files.forEach { viewModel.toggleFileSelection(it) }
+                        message.files.forEach { viewModel.toggleFileSelection(it, context) }
                     } else {
                         if (repliedMessage != null) {
                             viewModel.scrollToMessage(repliedMessage)
@@ -112,7 +113,7 @@ fun ChatBubble(
                 onLongClick = {
                     if (message.files.isNotEmpty()) {
                         viewModel.enterSelectionMode()
-                        message.files.forEach { viewModel.toggleFileSelection(it) }
+                        message.files.forEach { viewModel.toggleFileSelection(it, context) }
                     }
                 }
             ),
@@ -221,7 +222,8 @@ fun ChatBubble(
                         file = file,
                         viewModel = viewModel,
                         onFileClicked = { uri -> viewModel.openFile(uri, context) },
-                        isInSelectionMode = isInSelectionMode
+                        isInSelectionMode = isInSelectionMode,
+                        context = context
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }

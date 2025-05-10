@@ -13,29 +13,39 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.edusync.common.Constants
 import com.example.edusync.presentation.components.custom_text_field.search_field.SearchField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.favorite.FavoritesViewModel
 import com.example.edusync.presentation.views.favorities.component.FileItemView
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FavoritiesScreen() {
-    val isTeacher = true
+    val context = LocalContext.current
     val viewModel: FavoritesViewModel = koinViewModel()
-    val favoriteFiles by remember { derivedStateOf { viewModel.favoriteFiles } }
     val searchQuery = remember { mutableStateOf("") }
-    val displayedFiles by remember { derivedStateOf { viewModel.displayedFiles } }
+    val displayedFiles by viewModel.displayedFiles.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadFavorites(context)
+    }
 
     Column(
         modifier = Modifier
@@ -73,34 +83,20 @@ fun FavoritiesScreen() {
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                items(favoriteFiles, key = { it.id }) { file ->
+                items(displayedFiles, key = { it.id }) { file ->
                     FileItemView(
                         file = file,
-                        onFavoriteToggle = { viewModel.toggleFavorite(file) },
-                        onDownloadToggle = { viewModel.toggleDownload(file) },
-                        isTeacher = isTeacher
+                        onFavoriteToggle = {
+                            coroutineScope.launch {
+                                viewModel.toggleFavorite(file, context)
+                            }
+                        },
+                        onDownloadToggle = { viewModel.toggleDownload(file, context) },
+                        onFileOpen = {
+                            viewModel.openFile(file, context)
+                        }
                     )
                 }
-            }
-        }
-        if (isTeacher) {
-            Button(
-                onClick = {
-                    //TODO
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Primary,
-                    disabledContainerColor = AppColors.SecondaryTransparent
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Text(
-                    text = "Загрузить файл",
-                    style = AppTypography.body1.copy(fontSize = 14.sp),
-                    color = AppColors.Background
-                )
             }
         }
     }

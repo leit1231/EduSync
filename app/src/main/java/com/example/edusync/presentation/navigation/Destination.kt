@@ -51,6 +51,9 @@ sealed interface Destination {
     data object FavoritiesScreen: Destination
 
     @Serializable
+    data class PdfScreenDestination(val uri: String) : Destination
+
+    @Serializable
     data object ProfileScreen: Destination
 
     @Serializable

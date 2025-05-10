@@ -38,10 +38,12 @@ val viewModelModule = module {
     viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { FavoritesViewModel(get()) }
+    viewModel { FavoritesViewModel(get(), get(), get(), get()) }
     viewModel { MaterialsScreenViewModel(get(), get(), get(), get(), get()) }
     viewModel { CreateGroupViewModel(get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
-    viewModel { GroupViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { GroupViewModel(
+        get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
+    )}
     viewModel { AboutAppScreenViewModel(get(), get()) }
 }
