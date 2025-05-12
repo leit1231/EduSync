@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.theme.ui.EduSyncTheme
@@ -19,13 +20,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             EduSyncTheme {
                 val navController = rememberNavController()
                 val navigator = koinInject<Navigator>()
                 CompositionLocalProvider(
                     LocalNavigator provides navigator
-                ) { Navigator(navController = navController, navigator) }
+                ) {
+                    Navigator(navController = navController, navigator)
+                }
             }
         }
     }

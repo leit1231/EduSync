@@ -12,4 +12,5 @@ interface UserRepository {
     suspend fun refresh(refreshToken: String): Result<AuthResponse>
     suspend fun getProfile(): Result<User>
     suspend fun updateProfile(request: UpdateProfileRequest): Result<AuthResponse>
+    suspend fun deleteAccount(refreshToken: String): Result<String>
 }

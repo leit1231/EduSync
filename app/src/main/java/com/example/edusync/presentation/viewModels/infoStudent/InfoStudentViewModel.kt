@@ -173,7 +173,7 @@ class InfoStudentViewModel(
     private fun goToConfirmEmailScreen(){
         viewModelScope.launch {
             navigator.navigate(
-                destination = Destination.ConfirmEmailScreen
+                destination = Destination.ConfirmEmailScreen(email, password)
             )
         }
     }

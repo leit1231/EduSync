@@ -37,3 +37,7 @@ data class UpdateProfileRequest(
     val institution_id: Int,
     val group_id: Int
 )
+
+data class DeleteAccountRequest(
+    val refresh_token: String
+)

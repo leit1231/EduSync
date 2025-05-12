@@ -6,9 +6,9 @@ import com.example.edusync.data.remote.dto.ChatUser
 import com.example.edusync.data.remote.dto.CreateChatRequest
 import com.example.edusync.data.remote.dto.CreateChatResponse
 import com.example.edusync.data.remote.dto.CreatePollRequest
+import com.example.edusync.data.remote.dto.DeleteAccountRequest
 import com.example.edusync.data.remote.dto.EditMessageResponse
 import com.example.edusync.data.remote.dto.FavoriteFileDto
-import com.example.edusync.data.remote.dto.FileDto
 import com.example.edusync.data.remote.dto.GroupResponse
 import com.example.edusync.data.remote.dto.InstituteResponse
 import com.example.edusync.data.remote.dto.JoinByInviteRequest
@@ -20,12 +20,15 @@ import com.example.edusync.data.remote.dto.PollResponse
 import com.example.edusync.data.remote.dto.RefreshInviteCodeResponse
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
+import com.example.edusync.data.remote.dto.RequestResetPasswordDto
+import com.example.edusync.data.remote.dto.ResetPasswordDto
 import com.example.edusync.data.remote.dto.ScheduleItem
 import com.example.edusync.data.remote.dto.ScheduleUpdateRequest
 import com.example.edusync.data.remote.dto.SubjectResponse
 import com.example.edusync.data.remote.dto.TeacherInitialsResponse
 import com.example.edusync.data.remote.dto.UpdateProfileRequest
 import com.example.edusync.data.remote.dto.UserProfileResponse
+import com.example.edusync.data.remote.dto.VerifyResetPasswordDto
 import com.example.edusync.data.remote.dto.VoteRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -68,6 +71,12 @@ interface EduSyncApiService {
         @Header("Authorization") token: String,
         @Body body: UpdateProfileRequest
     ): Response<AuthResponse>
+
+    @HTTP(method = "DELETE", path = "api/profile", hasBody = true)
+    suspend fun deleteAccount(
+        @Header("Authorization") accessToken: String,
+        @Body request: DeleteAccountRequest
+    ): Response<Map<String, String>>
 
     // Получение групп
     @GET("api/group/institution/{id}")
@@ -288,4 +297,14 @@ interface EduSyncApiService {
         @Path("chatId") chatId: Int,
         @Path("pollId") pollId: Int
     ): Response<Unit>
+
+    //Сменить пароль
+    @POST("/api/confirm/request")
+    suspend fun requestPasswordReset(@Body body: RequestResetPasswordDto): Response<Map<String, String>>
+
+    @POST("/api/confirm/verify")
+    suspend fun verifyResetCode(@Body body: VerifyResetPasswordDto): Response<Map<String, String>>
+
+    @POST("/api/confirm/reset")
+    suspend fun resetPassword(@Body body: ResetPasswordDto): Response<Map<String, String>>
 }

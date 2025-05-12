@@ -25,20 +25,20 @@ import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
 @Composable
-fun DeleteAccountWindow(onClick:() -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+fun DeleteAccountWindow(onClick: () -> Unit, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-    modifier = modifier
-    .padding(16.dp)
-    .fillMaxWidth()
-    .background(
-    color = AppColors.Background,
-    shape = RoundedCornerShape(16.dp)
-    )
-    .border(
-    border = BorderStroke(1.dp, AppColors.Primary),
-    shape = RoundedCornerShape(16.dp)
-    ),
-    horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .background(
+                color = AppColors.Background,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .border(
+                border = BorderStroke(1.dp, AppColors.Primary),
+                shape = RoundedCornerShape(16.dp)
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
             modifier = Modifier
@@ -66,8 +66,10 @@ fun DeleteAccountWindow(onClick:() -> Unit, onDismiss: () -> Unit, modifier: Mod
                 modifier = Modifier.padding(vertical = 14.dp)
             )
             Row {
-                Button(onClick = {onDismiss()},
-                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary)) {
+                Button(
+                    onClick = { onDismiss() },
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary)
+                ) {
                     Text(
                         text = "Отменить",
                         fontWeight = FontWeight.Medium,
@@ -77,8 +79,11 @@ fun DeleteAccountWindow(onClick:() -> Unit, onDismiss: () -> Unit, modifier: Mod
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { onClick
-                    onDismiss()},
+                Button(
+                    onClick = {
+                        onClick()
+                        onDismiss()
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     border = BorderStroke(1.dp, color = AppColors.Error)

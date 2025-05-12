@@ -22,6 +22,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
 import com.example.edusync.presentation.theme.ui.AppColors
+import com.example.edusync.presentation.viewModels.changePasswordAfterForgot.ChangePasswordAfterForgotViewModel
+import com.example.edusync.presentation.viewModels.confirmEmail.ConfirmEmailViewModel
 import com.example.edusync.presentation.viewModels.infoStudent.InfoStudentViewModel
 import com.example.edusync.presentation.viewModels.search.SearchViewModel
 import com.example.edusync.presentation.views.aboutApp.AboutAppScreen
@@ -123,7 +125,9 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                         InfoScreen(viewModel)
                     }
                     composable<Destination.ConfirmEmailScreen> {
-                        ConfirmEmailScreen()
+                        val (email, password) = it.toRoute<Destination.ConfirmEmailScreen>()
+                        val viewModel: ConfirmEmailViewModel = koinViewModel(parameters = { parametersOf(email, password) })
+                        ConfirmEmailScreen(viewModel)
                     }
                 }
 
@@ -137,7 +141,9 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                         EnterCodeScreen()
                     }
                     composable<Destination.ChangePasswordScreen> {
-                        ChangePasswordAfterForgotScreen()
+                        val (code) = it.toRoute<Destination.ChangePasswordScreen>()
+                        val viewModel: ChangePasswordAfterForgotViewModel = koinViewModel(parameters = { parametersOf(code) })
+                        ChangePasswordAfterForgotScreen(viewModel)
                     }
                 }
 

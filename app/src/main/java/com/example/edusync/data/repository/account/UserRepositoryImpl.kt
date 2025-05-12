@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.api.EduSyncApiService
 import com.example.edusync.data.remote.dto.AuthResponse
+import com.example.edusync.data.remote.dto.DeleteAccountRequest
 import com.example.edusync.data.remote.dto.LoginRequest
 import com.example.edusync.data.remote.dto.RefreshRequest
 import com.example.edusync.data.remote.dto.RegisterRequest
@@ -58,6 +59,16 @@ class UserRepositoryImpl(
             prefs.saveAccessToken(it.access_token)
             prefs.saveRefreshToken(it.refresh_token)
         }
+
+    override suspend fun deleteAccount(refreshToken: String): Result<String> =
+        executor.execute { accessToken ->
+            api.deleteAccount(
+                accessToken = accessToken,
+                request = DeleteAccountRequest(refreshToken)
+            )
+        }.map { it["message"] ?: "Аккаунт удалён" }
+            .also { if (it.isSuccess) prefs.clearUserData() }
+
 
     private inline fun <T> safeApiCall(call: () -> Response<T>): Result<T> =
         try {

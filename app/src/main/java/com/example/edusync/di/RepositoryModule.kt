@@ -1,6 +1,7 @@
 package com.example.edusync.di
 
 import com.example.edusync.data.repository.account.UserRepositoryImpl
+import com.example.edusync.data.repository.changePassword.ChangePasswordImpl
 import com.example.edusync.data.repository.chat.ChatRepositoryImpl
 import com.example.edusync.domain.use_case.chat.CreateChatUseCase
 import com.example.edusync.domain.use_case.chat.DeleteChatUseCase
@@ -19,6 +20,7 @@ import com.example.edusync.data.repository.schedule.ReminderRepository
 import com.example.edusync.data.repository.schedule.ScheduleRepositoryImpl
 import com.example.edusync.data.repository.subject.SubjectRepositoryImpl
 import com.example.edusync.domain.repository.account.UserRepository
+import com.example.edusync.domain.repository.changePassword.ChangePassword
 import com.example.edusync.domain.repository.chat.ChatRepository
 import com.example.edusync.domain.repository.favorite.FavoriteRepository
 import com.example.edusync.domain.repository.file.FileRepository
@@ -28,12 +30,16 @@ import com.example.edusync.domain.repository.message.MessageRepository
 import com.example.edusync.domain.repository.poll.PollRepository
 import com.example.edusync.domain.repository.schedule.ScheduleRepository
 import com.example.edusync.domain.repository.subject.SubjectRepository
+import com.example.edusync.domain.use_case.account.DeleteAccountUseCase
 import com.example.edusync.domain.use_case.account.GetProfileUseCase
 import com.example.edusync.domain.use_case.account.LoginUseCase
 import com.example.edusync.domain.use_case.account.LogoutUseCase
 import com.example.edusync.domain.use_case.account.RefreshTokenUseCase
 import com.example.edusync.domain.use_case.account.RegisterUseCase
 import com.example.edusync.domain.use_case.account.UpdateProfileUseCase
+import com.example.edusync.domain.use_case.changePassword.RequestPasswordResetUseCase
+import com.example.edusync.domain.use_case.changePassword.ResetPasswordUseCase
+import com.example.edusync.domain.use_case.changePassword.VerifyResetCodeUseCase
 import com.example.edusync.domain.use_case.chat.GetChatsUseCase
 import com.example.edusync.domain.use_case.favorite.AddToFavoritesUseCase
 import com.example.edusync.domain.use_case.favorite.GetFavoritesUseCase
@@ -68,15 +74,12 @@ import org.koin.dsl.module
 val repositoryModule = module {
 
     single<UserRepository> { UserRepositoryImpl(get(), get()) }
-
     single<InstituteRepository> {
         InstituteRepositoryImpl(get(), get())
     }
-
     single<GroupRepository> {
         GroupRepositoryImpl(get(), get())
     }
-
     single<ScheduleRepository> { ScheduleRepositoryImpl(get(), get(), get(), get(), get()) }
     single<SubjectRepository> { SubjectRepositoryImpl(get(), get()) }
     single<ChatRepository> { ChatRepositoryImpl(get(), get()) }
@@ -84,6 +87,7 @@ val repositoryModule = module {
     single<FileRepository> { FileRepositoryImpl(get(), get()) }
     single<FavoriteRepository> { FavoriteRepositoryImpl(get(), get()) }
     single<PollRepository> { PollRepositoryImpl(get(), get()) }
+    single<ChangePassword>{ ChangePasswordImpl(get()) }
     single { ReminderRepository(get()) }
 
     factory { RegisterUseCase(get()) }
@@ -92,6 +96,7 @@ val repositoryModule = module {
     factory { RefreshTokenUseCase(get()) }
     factory { GetProfileUseCase(get()) }
     factory { UpdateProfileUseCase(get()) }
+    factory { DeleteAccountUseCase(get()) }
 
     factory { GetGroupsByInstitutionIdUseCase(get()) }
     factory { GetGroupByIdUseCase(get()) }
@@ -136,4 +141,8 @@ val repositoryModule = module {
     factory { VotePollUseCase(get()) }
     factory { UnvotePollUseCase(get()) }
     factory { DeletePollUseCase(get()) }
+
+    factory { RequestPasswordResetUseCase(get()) }
+    factory { ResetPasswordUseCase(get()) }
+    factory { VerifyResetCodeUseCase(get()) }
 }

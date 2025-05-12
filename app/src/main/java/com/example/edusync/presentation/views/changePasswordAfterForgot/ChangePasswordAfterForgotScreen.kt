@@ -30,11 +30,9 @@ import com.example.edusync.presentation.components.custom_text_field.password_te
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.changePasswordAfterForgot.ChangePasswordAfterForgotViewModel
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun ChangePasswordAfterForgotScreen() {
-    val viewModel: ChangePasswordAfterForgotViewModel = koinViewModel()
+fun ChangePasswordAfterForgotScreen(viewModel: ChangePasswordAfterForgotViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     Column(

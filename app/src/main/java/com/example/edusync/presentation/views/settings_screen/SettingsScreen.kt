@@ -172,7 +172,7 @@ fun SettingsScreen() {
                     .clickable { isLogoutDialogVisible.value = false }
             )
             DeleteAccountWindow(
-                onClick = { viewModel.navigateToLogin() },
+                onClick = { viewModel.deleteAccount() },
                 onDismiss = { isLogoutDialogVisible.value = false },
                 modifier = Modifier
                     .align(Alignment.Center)

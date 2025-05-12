@@ -36,7 +36,7 @@ sealed interface Destination {
     data object EnterCodeScreen: Destination
 
     @Serializable
-    data object ChangePasswordScreen: Destination
+    data class ChangePasswordScreen(val code: String): Destination
 
     @Serializable
     data class InfoScreen(val email: String, val password: String, val role: Boolean): Destination
@@ -75,6 +75,5 @@ sealed interface Destination {
     data object AllScheduleLayout: Destination
 
     @Serializable
-    data object ConfirmEmailScreen: Destination
-
+    data class ConfirmEmailScreen(val email: String, val password: String) : Destination
 }

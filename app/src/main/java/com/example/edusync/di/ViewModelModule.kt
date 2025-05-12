@@ -22,28 +22,79 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val viewModelModule = module {
-    viewModel { ConfirmEmailViewModel(get()) }
+    viewModel { parameters ->
+        ConfirmEmailViewModel(
+            email = parameters.get(), password = parameters.get(), get(), get(), get()
+        )
+    }
     viewModel { SplashViewMode(get()) }
     viewModel { OnboardingViewModel(get()) }
     viewModel { LoginViewModel(get(), get(), get()) }
     viewModel { RegisterViewModel(get()) }
-    viewModel { ForgotPasswordViewModel(get()) }
-    viewModel { EnterCodeViewModel(get()) }
-    viewModel { ChangePasswordAfterForgotViewModel(get()) }
-    viewModel {
-        parameters ->
-        InfoStudentViewModel(get(), get(), get(), email = parameters.get(), password = parameters.get(), role = parameters.get(), get()
+    viewModel { ForgotPasswordViewModel(get(), get()) }
+    viewModel { EnterCodeViewModel(get(), get()) }
+    viewModel {parameters ->
+        ChangePasswordAfterForgotViewModel(get(), code = parameters.get(), get()
         )
     }
-    viewModel { MainScreenViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { parameters ->
+        InfoStudentViewModel(
+            get(),
+            get(),
+            get(),
+            email = parameters.get(),
+            password = parameters.get(),
+            role = parameters.get(),
+            get()
+        )
+    }
+    viewModel {
+        MainScreenViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { ProfileScreenViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { FavoritesViewModel(get(), get(), get(), get()) }
     viewModel { MaterialsScreenViewModel(get(), get(), get(), get(), get()) }
     viewModel { CreateGroupViewModel(get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
-    viewModel { GroupViewModel(
-        get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
-    )}
+    viewModel {
+        GroupViewModel(
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get(),
+            get()
+        )
+    }
     viewModel { AboutAppScreenViewModel(get(), get()) }
 }
