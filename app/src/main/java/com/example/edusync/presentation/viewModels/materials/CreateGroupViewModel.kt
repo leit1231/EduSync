@@ -1,6 +1,5 @@
 package com.example.edusync.presentation.viewModels.materials
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.common.Resource
@@ -90,7 +89,7 @@ class CreateGroupViewModel(
         val subjectId = _subjects.value[uiState.value.selectedSubject]
 
         if (group == null || subjectId == null) {
-            onError("Выберите группу и предмет")
+            _uiState.update { it.copy(errorMessage = "Выберите группу и предмет") }
             return
         }
 
@@ -99,10 +98,14 @@ class CreateGroupViewModel(
             createChatUseCase(request).collect { result ->
                 when (result) {
                     is Resource.Success -> {
-                        Log.d("CreateChat", "Chat created: ${result.data}")
                         result.data?.chat_info?.invite_link?.let(onSuccess)
+                        _uiState.update { it.copy(errorMessage = "") }
                     }
-                    is Resource.Error -> onError(result.message ?: "Ошибка создания")
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(errorMessage = result.message ?: "Ошибка создания чата")
+                        }
+                    }
                     else -> {}
                 }
             }

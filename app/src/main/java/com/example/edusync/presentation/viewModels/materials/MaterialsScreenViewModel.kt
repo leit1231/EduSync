@@ -45,6 +45,9 @@ class MaterialsScreenViewModel(
     private var disconnectJob: Job? = null
     private val chatIds: MutableSet<Int> = mutableSetOf()
 
+    var isLoading = mutableStateOf(false)
+    var hasError = mutableStateOf(false)
+
     init {
         loadGroups()
         loadChats()
@@ -73,6 +76,20 @@ class MaterialsScreenViewModel(
     override fun onCleared() {
         super.onCleared()
         disconnectWebSocket()
+    }
+
+    fun handleInviteCodeIfNeeded(inviteCode: String) {
+        if (inviteCode.isBlank() || prefs.wasInviteCodeHandled(inviteCode)) return
+
+        joinByInvite(
+            inviteCode = inviteCode,
+            onSuccess = {
+                prefs.setInviteCodeHandled(inviteCode)
+            },
+            onError = {
+                prefs.setInviteCodeHandled(inviteCode)
+            }
+        )
     }
 
     private fun onChatsLoaded(ids: List<Int>) {
@@ -123,6 +140,32 @@ class MaterialsScreenViewModel(
         }
     }
 
+    fun reloadChatsSilently() {
+        viewModelScope.launch {
+            getChatsUseCase().collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        val newChats = result.data ?: emptyList()
+                        if (newChats != _chats) {
+                            _chats.clear()
+                            _chats.addAll(newChats)
+                            prefs.saveChats(newChats.map { it.toChatInfo() })
+                            filterChats()
+                            onChatsLoaded(newChats.map { it.id })
+                        }
+                        hasError.value = false
+                    }
+
+                    is Resource.Error -> {
+                        hasError.value = true
+                    }
+
+                    else -> {}
+                }
+            }
+        }
+    }
+
     fun joinByInvite(inviteCode: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             joinChatByInviteUseCase(inviteCode).collect { result ->
@@ -142,6 +185,9 @@ class MaterialsScreenViewModel(
 
     private fun loadChats() {
         viewModelScope.launch {
+            isLoading.value = true
+            hasError.value = false
+
             getChatsUseCase().collect { result ->
                 when (result) {
                     is Resource.Success -> {
@@ -151,9 +197,21 @@ class MaterialsScreenViewModel(
                         prefs.saveChats(resultChats.map { it.toChatInfo() })
                         filterChats()
                         onChatsLoaded(resultChats.map { it.id })
+
+                        isLoading.value = false
+                        hasError.value = false
                     }
-                    is Resource.Error -> {}
-                    else -> {}
+
+                    is Resource.Error -> {
+                        isLoading.value = false
+                        hasError.value = true
+                        _chats.clear()
+                        _filteredChats.value = emptyList()
+                    }
+
+                    else -> {
+                        isLoading.value = false
+                    }
                 }
             }
         }

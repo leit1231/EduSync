@@ -1,19 +1,18 @@
 package com.example.edusync.presentation.views.group.components.topBar
 
-import android.util.Log
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.group.GroupViewModel
@@ -24,16 +23,13 @@ import com.example.edusync.presentation.views.group.components.fileAttachment.is
 fun SelectionTopBar(viewModel: GroupViewModel) {
     val selectedFiles by viewModel.selectedFiles.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteIds.collectAsStateWithLifecycle()
-    LaunchedEffect(favoriteIds) {
-        Log.d("SelectionTopBar", "favoriteIds updated: $favoriteIds")
-    }
 
     val nonImageFiles = remember(selectedFiles) {
         selectedFiles.filterNot { it.isImage() }
     }
 
     val allSelectedFav = selectedFiles
-            .filterNot { it.isImage() }
+        .filterNot { it.isImage() }
         .all { file -> file.id != null && favoriteIds.contains(file.id) }
 
 
@@ -42,7 +38,7 @@ fun SelectionTopBar(viewModel: GroupViewModel) {
         TopAppBar(
             title = {
                 Text(
-                    text = "Выбрано ${nonImageFiles.size} файлов",
+                    text = stringResource(R.string.files_selected, nonImageFiles.size),
                     style = AppTypography.body1.copy(fontSize = 16.sp)
                 )
             },

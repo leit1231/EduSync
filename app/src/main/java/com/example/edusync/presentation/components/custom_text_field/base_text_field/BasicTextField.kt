@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -39,8 +41,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
+import ru.eduHub.edusync.R
 
 @Composable
 fun BaseTextField(
@@ -53,7 +55,7 @@ fun BaseTextField(
     textStyle: TextStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Start),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     trailingIcon: (@Composable (() -> Unit))? = null,
     maxLines: Int = 1,
     isScrollable: Boolean = false,
@@ -61,12 +63,14 @@ fun BaseTextField(
     backgroundColor: Color = AppColors.Background,
     borderColor: Color = AppColors.Secondary,
     shape: Shape = RoundedCornerShape(5.dp),
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    focusRequester: FocusRequester = remember { FocusRequester() },
+    onFocusChange: (Boolean) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val isMultiLine = maxLines > 1
     var isFocused by remember { mutableStateOf(false) }
-    val focusRequester = FocusRequester()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val animatedBorderColor = animateColorAsState(
         targetValue = when {
@@ -115,7 +119,7 @@ fun BaseTextField(
                 visualTransformation = visualTransformation,
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
                     .align(if (isMultiLine) Alignment.TopStart else Alignment.CenterStart)
                     .padding(
@@ -124,7 +128,11 @@ fun BaseTextField(
                     )
                     .let { if (isScrollable) it.horizontalScroll(scrollState) else it }
                     .focusRequester(focusRequester)
-                    .onFocusChanged { isFocused = it.isFocused },
+                    .onFocusChanged {
+                        isFocused = it.isFocused
+                        onFocusChange(it.isFocused)
+                        if (it.isFocused) keyboardController?.show()
+                    },
                 maxLines = maxLines,
                 enabled = enabled
             )

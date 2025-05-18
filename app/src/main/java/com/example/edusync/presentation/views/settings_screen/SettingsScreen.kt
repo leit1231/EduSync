@@ -26,8 +26,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,10 +34,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.modal_window.DeleteAccountWindow
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -51,9 +50,11 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen() {
 
     val viewModel: SettingsViewModel = koinViewModel()
-    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+//    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val isLogoutDialogVisible = remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val emailSubject = stringResource(R.string.feedback_email_subject)
+    val noEmailAppText = stringResource(R.string.no_email_app)
 
     Column(
         modifier = Modifier
@@ -77,7 +78,7 @@ fun SettingsScreen() {
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "Настройки",
+                text = stringResource(R.string.settings),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary,
@@ -94,28 +95,32 @@ fun SettingsScreen() {
                 .fillMaxWidth()
                 .border(1.dp, Color.Green, RoundedCornerShape(8.dp))
         ) {
+//            SettingsItem(
+//                title = stringResource(R.string.notification),
+//                toggleState = notificationsEnabled,
+//                onToggleChange = { viewModel.toggleNotifications(it) }
+//            )
+//
+//            HorizontalDivider(thickness = 1.dp, color = Color.Green)
+
             SettingsItem(
-                title = "Уведомления",
-                toggleState = notificationsEnabled,
-                onToggleChange = { viewModel.toggleNotifications(it) }
-            )
-            HorizontalDivider(thickness = 1.dp, color = Color.Green)
-            SettingsItem(
-                title = "Планшетка",
+                title = stringResource(R.string.tablet_files),
                 onClick = {
                     val url = "https://drive.google.com/drive/folders/1kUYiSAafghhYR0ARyXwPW1HZPpHcFIag?usp=sharing"
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     context.startActivity(intent)
                 }
             )
+
             HorizontalDivider(thickness = 1.dp, color = Color.Green)
+
             SettingsItem(
-                title = "Обратная связь",
+                title = stringResource(R.string.feedback),
                 onClick = {
                     val email = "edusync56@gmail.com"
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse("mailto:$email")
-                        putExtra(Intent.EXTRA_SUBJECT, "Обратная связь по приложению EduSync")
+                        putExtra(Intent.EXTRA_SUBJECT, emailSubject)
                     }
 
                     try {
@@ -123,14 +128,17 @@ fun SettingsScreen() {
                     } catch (e: ActivityNotFoundException) {
                         Toast.makeText(
                             context,
-                            "Не найдено приложение для отправки почты",
+                            noEmailAppText,
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 }
             )
+
             HorizontalDivider(thickness = 1.dp, color = Color.Green)
-            SettingsItem(title = "О приложении",
+
+            SettingsItem(
+                title = stringResource(R.string.about_app),
                 onClick = {
                     viewModel.navigateToAboutAppScreen()
                 }
@@ -155,7 +163,7 @@ fun SettingsScreen() {
                 .height(40.dp)
         ) {
             Text(
-                text = "Удалить аккаунт",
+                text = stringResource(R.string.delete_account),
                 color = AppColors.Secondary,
                 style = AppTypography.body1.copy(fontSize = 14.sp),
                 maxLines = 1

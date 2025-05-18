@@ -12,6 +12,7 @@ import com.example.edusync.data.remote.dto.UpdateProfileRequest
 import com.example.edusync.data.repository.TokenRequestExecutor
 import com.example.edusync.domain.model.account.User
 import com.example.edusync.domain.repository.account.UserRepository
+import org.json.JSONObject
 import retrofit2.Response
 
 class UserRepositoryImpl(
@@ -70,16 +71,25 @@ class UserRepositoryImpl(
             .also { if (it.isSuccess) prefs.clearUserData() }
 
 
-    private inline fun <T> safeApiCall(call: () -> Response<T>): Result<T> =
-        try {
+    private inline fun <T> safeApiCall(call: () -> Response<T>): Result<T> {
+        return try {
             val response = call()
+
             if (response.isSuccessful) {
                 response.body()?.let { Result.success(it) }
-                    ?: Result.failure(Throwable("Empty body"))
+                    ?: Result.failure(Exception("Пустое тело ответа"))
             } else {
-                Result.failure(Throwable("HTTP ${response.code()}"))
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    JSONObject(errorBody ?: "{}").optString("error", "Ошибка: HTTP ${response.code()}")
+                } catch (e: Exception) {
+                    "Ошибка: HTTP ${response.code()}"
+                }
+
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
 }

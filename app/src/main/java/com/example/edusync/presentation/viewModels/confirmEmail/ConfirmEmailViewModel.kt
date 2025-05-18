@@ -38,7 +38,12 @@ class ConfirmEmailViewModel(
                                 when (profileResult) {
                                     is Resource.Success -> goToMainScreenInternal()
                                     is Resource.Error -> {
-                                        _state.update { it.copy(isLoading = false) }
+                                        _state.update {
+                                            it.copy(
+                                                isLoading = false,
+                                                error = profileResult.message
+                                            )
+                                        }
                                     }
                                     is Resource.Loading -> {
                                         _state.update { it.copy(isLoading = true) }
@@ -49,7 +54,12 @@ class ConfirmEmailViewModel(
                     }
 
                     is Resource.Error -> {
-                        _state.update { it.copy(isLoading = false) }
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                error = loginResult.message
+                            )
+                        }
                     }
 
                     else -> {}

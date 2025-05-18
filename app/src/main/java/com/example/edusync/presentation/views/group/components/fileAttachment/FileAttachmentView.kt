@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.domain.model.message.FileAttachment
 import com.example.edusync.presentation.theme.ui.AppColors
 

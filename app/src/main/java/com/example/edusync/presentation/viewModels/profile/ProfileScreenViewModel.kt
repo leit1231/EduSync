@@ -38,6 +38,9 @@ class ProfileScreenViewModel(
     private val _isLogoutDialogVisible = mutableStateOf(false)
     val isLogoutDialogVisible: State<Boolean> = _isLogoutDialogVisible
 
+    var expandedUniversity by mutableStateOf(false)
+    var expandedGroup by mutableStateOf(false)
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             encryptedSharedPreference.getUser()
@@ -48,21 +51,26 @@ class ProfileScreenViewModel(
     private fun loadUserData() {
         viewModelScope.launch {
             val user = encryptedSharedPreference.getUser()
-            Log.d("LoadUserData", "Loaded user: $user")
-            val fullName = user?.fullName?.split(" ")
-            if (fullName != null) {
-                _uiState.value = _uiState.value.copy(
-                    surname = fullName.getOrElse(0) { "" },
-                    name = fullName.getOrElse(1) { "" },
-                    patronymic = fullName.getOrElse(2) { "" }
-                )
-            }
+            val fullName = user?.fullName?.split(" ") ?: listOf("", "", "")
+            val originalSurname = fullName.getOrElse(0) { "" }
+            val originalName = fullName.getOrElse(1) { "" }
+            val originalPatronymic = fullName.getOrElse(2) { "" }
+
+            _uiState.value = _uiState.value.copy(
+                surname = originalSurname,
+                name = originalName,
+                patronymic = originalPatronymic,
+                originalSurname = originalSurname,
+                originalName = originalName,
+                originalPatronymic = originalPatronymic,
+                isTeacher = user?.isTeacher ?: false
+            )
+
             if (user != null) {
                 loadInstitutes(user.institutionId, user.groupId)
             }
         }
     }
-
 
     private fun loadInstitutes(institutionId: Int, groupId: Int) {
         viewModelScope.launch {
@@ -70,12 +78,15 @@ class ProfileScreenViewModel(
                 when (resource) {
                     is Resource.Success -> {
                         val institutes = resource.data ?: emptyList()
-                        institutionIdMap =
-                            institutes.associateBy({ it.id }, { it.getDisplayName() })
+                        institutionIdMap = institutes.associateBy({ it.id }, { it.getDisplayName() })
+                        val universityName = institutionIdMap[institutionId] ?: ""
+
                         _uiState.value = _uiState.value.copy(
                             availableUniversities = institutes.map { it.getDisplayName() },
-                            selectedUniversity = institutionIdMap[institutionId] ?: ""
+                            selectedUniversity = universityName,
+                            originalUniversity = universityName
                         )
+
                         loadGroups(institutionId, groupId)
                     }
 
@@ -99,9 +110,12 @@ class ProfileScreenViewModel(
                     is Resource.Success -> {
                         val groups = resource.data ?: emptyList()
                         groupIdMap = groups.associateBy({ it.id }, { it.name })
+                        val groupName = groupIdMap[groupId].orEmpty()
+
                         _uiState.value = _uiState.value.copy(
                             availableGroups = groups.map { it.name },
-                            selectedGroup = groupIdMap[groupId].orEmpty()
+                            selectedGroup = groupName,
+                            originalGroup = groupName
                         )
                     }
 
@@ -118,79 +132,16 @@ class ProfileScreenViewModel(
         }
     }
 
-    fun performLogout() {
-        viewModelScope.launch {
-            logoutUseCase()
-                .collect { resource ->
-                    when (resource) {
-                        is Resource.Success -> {
-                            encryptedSharedPreference.clearUserData()
-                            goToLogin()
-                        }
-
-                        is Resource.Error -> {
-                            encryptedSharedPreference.clearUserData()
-                            goToLogin()
-                            hideLogoutDialog()
-                        }
-
-                        else -> {}
-                    }
-                }
-        }
-    }
-
-    fun goToSettings() {
-        viewModelScope.launch {
-            navigator.navigate(
-                destination = Destination.SettingsScreen
-            )
-        }
-    }
-
-    fun showLogoutDialog() {
-        _isLogoutDialogVisible.value = true
-    }
-
-    fun hideLogoutDialog() {
-        _isLogoutDialogVisible.value = false
-    }
-
-    private fun goToLogin() {
-        viewModelScope.launch {
-            navigator.navigate(
-                destination = Destination.AuthGraph,
-                navOptions = {
-                    popUpTo(Destination.MainGraph) {
-                        inclusive = true
-                    }
-                }
-            )
-        }
-    }
-
-    var expandedUniversity by mutableStateOf(false)
-    var expandedGroup by mutableStateOf(false)
-
     fun onSurnameChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(
-            surname = newValue,
-            isDataChanged = true
-        )
+        _uiState.value = _uiState.value.copy(surname = newValue)
     }
 
     fun onNameChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(
-            name = newValue,
-            isDataChanged = true
-        )
+        _uiState.value = _uiState.value.copy(name = newValue)
     }
 
     fun onPatronymicChange(newValue: String) {
-        _uiState.value = _uiState.value.copy(
-            patronymic = newValue,
-            isDataChanged = true
-        )
+        _uiState.value = _uiState.value.copy(patronymic = newValue)
     }
 
     fun onUniversitySelected(displayName: String) {
@@ -201,8 +152,7 @@ class ProfileScreenViewModel(
             _uiState.value = _uiState.value.copy(
                 selectedUniversity = displayName,
                 selectedGroup = "",
-                availableGroups = emptyList(),
-                isDataChanged = true
+                availableGroups = emptyList()
             )
 
             getGroupsUseCase(institutionId).collect { resource ->
@@ -221,10 +171,7 @@ class ProfileScreenViewModel(
     }
 
     fun onGroupSelected(newValue: String) {
-        _uiState.value = _uiState.value.copy(
-            selectedGroup = newValue,
-            isDataChanged = true
-        )
+        _uiState.value = _uiState.value.copy(selectedGroup = newValue)
     }
 
     fun saveChanges() {
@@ -232,8 +179,10 @@ class ProfileScreenViewModel(
             val user = encryptedSharedPreference.getUser() ?: return@launch
 
             val fullName = "${_uiState.value.surname} ${_uiState.value.name} ${_uiState.value.patronymic}"
-            val institutionId = institutionIdMap.entries.find { it.value == _uiState.value.selectedUniversity }?.key ?: return@launch
-            val groupId = if (user.isTeacher) 0 else groupIdMap.entries.find { it.value == _uiState.value.selectedGroup }?.key ?: return@launch
+            val institutionId = institutionIdMap.entries.find { it.value == _uiState.value.selectedUniversity }?.key
+                ?: return@launch
+            val groupId = if (user.isTeacher) 0 else groupIdMap.entries.find { it.value == _uiState.value.selectedGroup }?.key
+                ?: return@launch
 
             updateProfileUseCase(
                 UpdateProfileRequest(
@@ -244,7 +193,6 @@ class ProfileScreenViewModel(
             ).collect { result ->
                 when (result) {
                     is Resource.Success -> {
-                        result.data ?: return@collect
                         encryptedSharedPreference.saveUser(
                             user.copy(
                                 fullName = fullName,
@@ -252,7 +200,7 @@ class ProfileScreenViewModel(
                                 groupId = groupId
                             )
                         )
-                        _uiState.value = _uiState.value.copy(isDataChanged = false)
+                        loadUserData()
                     }
 
                     is Resource.Error -> {
@@ -262,6 +210,41 @@ class ProfileScreenViewModel(
                     else -> Unit
                 }
             }
+        }
+    }
+
+    fun performLogout() {
+        viewModelScope.launch {
+            logoutUseCase().collect {
+                encryptedSharedPreference.clearUserData()
+                goToLogin()
+                hideLogoutDialog()
+            }
+        }
+    }
+
+    fun showLogoutDialog() {
+        _isLogoutDialogVisible.value = true
+    }
+
+    fun hideLogoutDialog() {
+        _isLogoutDialogVisible.value = false
+    }
+
+    fun goToSettings() {
+        viewModelScope.launch {
+            navigator.navigate(destination = Destination.SettingsScreen)
+        }
+    }
+
+    private fun goToLogin() {
+        viewModelScope.launch {
+            navigator.navigate(
+                destination = Destination.AuthGraph,
+                navOptions = {
+                    popUpTo(Destination.MainGraph) { inclusive = true }
+                }
+            )
         }
     }
 }

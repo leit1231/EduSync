@@ -5,6 +5,7 @@ import com.example.edusync.data.remote.dto.RequestResetPasswordDto
 import com.example.edusync.data.remote.dto.ResetPasswordDto
 import com.example.edusync.data.remote.dto.VerifyResetPasswordDto
 import com.example.edusync.domain.repository.changePassword.ChangePassword
+import org.json.JSONObject
 import retrofit2.Response
 
 class ChangePasswordImpl(
@@ -23,16 +24,25 @@ class ChangePasswordImpl(
         safeApiCall { api.resetPassword(ResetPasswordDto(code = code, new_password = newPassword)) }
             .map { it["message"] ?: "No message" }
 
-    private inline fun <T> safeApiCall(call: () -> Response<T>): Result<T> =
-        try {
+    private inline fun <T> safeApiCall(call: () -> Response<T>): Result<T> {
+        return try {
             val response = call()
+
             if (response.isSuccessful) {
                 response.body()?.let { Result.success(it) }
-                    ?: Result.failure(Throwable("Empty body"))
+                    ?: Result.failure(Exception("Пустое тело ответа"))
             } else {
-                Result.failure(Throwable("HTTP ${response.code()}"))
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = try {
+                    JSONObject(errorBody ?: "{}").optString("error", "Ошибка: HTTP ${response.code()}")
+                } catch (e: Exception) {
+                    "Ошибка: HTTP ${response.code()}"
+                }
+
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
 }

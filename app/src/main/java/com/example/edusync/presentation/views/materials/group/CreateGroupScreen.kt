@@ -27,10 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.dropdownMenu.CustomDropdownMenu
 import com.example.edusync.presentation.components.modal_window.CreateGroupModalWindow
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -71,7 +72,7 @@ fun CreateGroupScreen() {
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "Создание группы",
+                text = stringResource(R.string.create_group),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary,
@@ -84,7 +85,7 @@ fun CreateGroupScreen() {
         Spacer(modifier = Modifier.height(32.dp))
 
         CustomDropdownMenu(
-            label = "Выберите группу",
+            label = stringResource(R.string.select_group_on_create),
             options = groups.map { it.name },
             selectedOption = uiState.selectedGroup,
             onOptionSelected = viewModel::onGroupSelected,
@@ -97,7 +98,7 @@ fun CreateGroupScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         CustomDropdownMenu(
-            label = "Выберите предмет",
+            label = stringResource(R.string.select_subject),
             options = subjects,
             selectedOption = uiState.selectedSubject,
             onOptionSelected = viewModel::onSubjectSelected,
@@ -109,6 +110,16 @@ fun CreateGroupScreen() {
 
         Spacer(modifier = Modifier.weight(1f))
 
+        if (uiState.errorMessage.isNotBlank()) {
+            Text(
+                text = uiState.errorMessage,
+                color = Color.Red,
+                style = AppTypography.body1.copy(fontSize = 14.sp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            )
+        }
         Button(
             onClick = {
                 viewModel.createChat(
@@ -117,7 +128,6 @@ fun CreateGroupScreen() {
                         isModalWindowVisible.value = true
                     },
                     onError = {
-                        // TODO: show Snackbar or Toast
                     }
                 )
             },
@@ -127,7 +137,7 @@ fun CreateGroupScreen() {
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Сохранить",
+                text = stringResource(R.string.save),
                 style = AppTypography.body1.copy(fontSize = 14.sp),
             )
         }

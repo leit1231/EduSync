@@ -63,7 +63,13 @@ class EnterCodeViewModel(
                         navigator.navigate(Destination.ChangePasswordScreen(code))
                     }
                     is Resource.Error -> {
-                        _state.update { it.copy(isLoading = false, focusedIndex = 0) }
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                generalError = result.message,
+                                focusedIndex = 0
+                            )
+                        }
                     }
                 }
             }

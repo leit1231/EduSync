@@ -25,11 +25,11 @@ class ChangePasswordAfterForgotViewModel(
     }
 
     fun goToLogin() {
-
         val password = _uiState.value.newPassword
+        val error = validatePassword(password)
 
-        if (password.isBlank()) {
-            _uiState.value = _uiState.value.copy(passwordError = "Введите новый пароль")
+        if (error != null) {
+            _uiState.value = _uiState.value.copy(passwordError = error)
             return
         }
 
@@ -37,7 +37,7 @@ class ChangePasswordAfterForgotViewModel(
             resetPasswordUseCase(code, password).collect { result ->
                 when (result) {
                     is Resource.Loading -> {
-                        _uiState.value = _uiState.value.copy(passwordError = "")
+                        _uiState.value = _uiState.value.copy(passwordError = "", generalError = "")
                     }
                     is Resource.Success -> {
                         navigator.navigate(
@@ -51,11 +51,22 @@ class ChangePasswordAfterForgotViewModel(
                     }
                     is Resource.Error -> {
                         _uiState.value = _uiState.value.copy(
-                            passwordError = result.message ?: "Ошибка смены пароля"
+                            generalError = result.message ?: "Ошибка смены пароля"
                         )
                     }
                 }
             }
+        }
+    }
+
+    private fun validatePassword(password: String): String? {
+        val passwordRegex = "^(?=.*[0-9])(?=.*[!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?])[A-Za-z0-9!@#\$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?]{8,30}\$".toRegex()
+
+        return when {
+            password.isEmpty() -> "Поле не должно быть пустым!"
+            password.startsWith(' ') -> "Поле не должно начинаться с пробела"
+            !password.matches(passwordRegex) -> "Пароль должен содержать 8-30 символов, включая цифры, спецсимволы и латинские буквы"
+            else -> null
         }
     }
 

@@ -25,9 +25,3 @@ data class PollOptionDto(
 data class PollResponse(
     val poll_id: Int
 )
-
-data class OptionDto(
-    val id: Int,
-    val text: String,
-    val votes: Int
-)

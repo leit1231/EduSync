@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.base_text_field.BaseTextField
 import com.example.edusync.presentation.theme.ui.AppColors
 

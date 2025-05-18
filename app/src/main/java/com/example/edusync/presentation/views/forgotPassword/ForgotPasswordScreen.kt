@@ -22,10 +22,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.email_text_field.EmailTextField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -61,7 +62,7 @@ fun ForgotPasswordScreen() {
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "Восстановление пароля",
+                        text = stringResource(R.string.password_recovery),
                         textAlign = TextAlign.Center,
                         style = AppTypography.title.copy(fontSize = 24.sp),
                         color = AppColors.Secondary
@@ -81,6 +82,18 @@ fun ForgotPasswordScreen() {
             }
         }
 
+        if (!viewState.generalError.isNullOrEmpty()) {
+            Text(
+                text = viewState.generalError ?: "",
+                color = AppColors.Error,
+                style = AppTypography.body1.copy(fontSize = 14.sp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 80.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
         Button(
             onClick = { viewModel.goToEnterCode() },
             colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
@@ -89,7 +102,7 @@ fun ForgotPasswordScreen() {
                 .fillMaxWidth()
                 .padding(bottom = 32.dp)
         ) {
-            Text("Далее", style = AppTypography.body1.copy(fontSize = 14.sp))
+            Text(text = stringResource(R.string.next), style = AppTypography.body1.copy(fontSize = 14.sp))
         }
     }
 }

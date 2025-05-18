@@ -5,10 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.example.edusync.common.Resource
 import com.example.edusync.domain.model.favorietesFiles.FileItem
 import com.example.edusync.domain.model.message.FileAttachment
@@ -40,6 +42,9 @@ class FavoritesViewModel(
 
     private var currentQuery: String = ""
 
+    var isLoading by mutableStateOf(true)
+    var hasError by mutableStateOf(false)
+
     fun filterFavorites(query: String) {
         currentQuery = query
         _displayedFiles.value = allFiles.filter {
@@ -51,7 +56,7 @@ class FavoritesViewModel(
         viewModelScope.launch {
             removeFromFavoritesUseCase(file.id).collect { result ->
                 if (result is Resource.Success) {
-                    _favoriteFiles.update { it.filterNot { it.id == file.id } }
+                    _favoriteFiles.update { it -> it.filterNot { it.id == file.id } }
                     allFiles = allFiles.filterNot { it.id == file.id }
                     _displayedFiles.value = allFiles
                 } else if (result is Resource.Error) {
@@ -99,60 +104,101 @@ class FavoritesViewModel(
 
     fun loadFavorites(context: Context) {
         viewModelScope.launch {
-            getFavoritesUseCase().collect { result ->
-                if (result is Resource.Success) {
-                    val files = result.data.orEmpty()
-                    val attachments = mutableListOf<FileAttachment>()
-                    val fileItems = mutableListOf<FileItem>()
+            isLoading = true
+            hasError = false
 
-                    files.forEach { fav ->
-                        getFileByIdUseCase(fav.id, fav.file_url).collect { fileRes ->
-                            if (fileRes is Resource.Success) {
-                                val (body, _) = fileRes.data ?: return@collect
-                                val fileName = extractFileName(fav.file_url)
+            try {
+                getFavoritesUseCase().collect { result ->
+                    when (result) {
+                        is Resource.Success -> {
+                            val favorites = result.data ?: emptyList()
 
-                                val cachedFile = File(context.cacheDir, "${fav.id}-$fileName")
-                                if (!cachedFile.exists()) {
-                                    saveFileToCache(body, cachedFile)
-                                }
-
-                                val downloadsFile = File(
-                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                    "${fav.id}-$fileName"
-                                )
-
-                                val attachment = FileAttachment(
-                                    id = fav.id,
-                                    uri = FileProvider.getUriForFile(
-                                        context,
-                                        context.packageName + ".provider",
-                                        cachedFile
-                                    ),
-                                    fileName = fileName,
-                                    fileSize = formatSize(cachedFile.length())
-                                )
-
-                                attachments.add(attachment)
-
-                                fileItems.add(
-                                    FileItem(
-                                        id = fav.id,
-                                        name = fileName,
-                                        size = formatSize(cachedFile.length()),
-                                        uri = attachment.uri,
-                                        isFavorite = true,
-                                        isDownload = downloadsFile.exists()
-                                    )
-                                )
+                            if (favorites.isEmpty()) {
+                                allFiles = emptyList()
+                                _displayedFiles.value = emptyList()
+                                _favoriteFiles.value = emptyList()
+                                isLoading = false
+                                hasError = false
+                                return@collect
                             }
-                        }
-                    }
 
-                    _favoriteFiles.value = attachments
-                    allFiles = fileItems
-                    _displayedFiles.value = allFiles
-                    filterFavorites(currentQuery)
+                            val attachments = mutableListOf<FileAttachment>()
+                            val fileItems = mutableListOf<FileItem>()
+
+                            kotlinx.coroutines.coroutineScope {
+                                favorites.map { fav ->
+                                    launch {
+                                        try {
+                                            getFileByIdUseCase(fav.id, fav.file_url).collect { fileRes ->
+                                                if (fileRes is Resource.Success) {
+                                                    val (body, _) = fileRes.data ?: return@collect
+                                                    val fileName = extractFileName(fav.file_url)
+
+                                                    val cachedFile = File(context.cacheDir, "${fav.id}-$fileName")
+                                                    if (!cachedFile.exists()) {
+                                                        saveFileToCache(body, cachedFile)
+                                                    }
+
+                                                    val downloadsFile = File(
+                                                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                                                        "${fav.id}-$fileName"
+                                                    )
+
+                                                    val attachment = FileAttachment(
+                                                        id = fav.id,
+                                                        uri = FileProvider.getUriForFile(
+                                                            context,
+                                                            context.packageName + ".provider",
+                                                            cachedFile
+                                                        ),
+                                                        fileName = fileName,
+                                                        fileSize = formatSize(cachedFile.length())
+                                                    )
+
+                                                    attachments.add(attachment)
+
+                                                    fileItems.add(
+                                                        FileItem(
+                                                            id = fav.id,
+                                                            name = fileName,
+                                                            size = formatSize(cachedFile.length()),
+                                                            uri = attachment.uri,
+                                                            isFavorite = true,
+                                                            isDownload = downloadsFile.exists()
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            println("Ошибка получения файла ${fav.id}: ${e.message}")
+                                        }
+                                    }
+                                }.forEach { it.join() }
+                            }
+
+                            _favoriteFiles.value = attachments
+                            allFiles = fileItems
+                            hasError = false
+                            _displayedFiles.value = allFiles
+
+                            filterFavorites(currentQuery)
+
+                            isLoading = false
+                            hasError = false
+                        }
+
+                        is Resource.Error -> {
+                            isLoading = false
+                            hasError = true
+                        }
+
+                        else -> Unit
+                    }
                 }
+            } catch (e: Exception) {
+                println("Ошибка получения избранных файлов: ${e.message}")
+                isLoading = false
+                hasError = true
             }
         }
     }

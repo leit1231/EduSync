@@ -12,7 +12,8 @@ data class Message(
     val showSenderName: Boolean = true,
     val isEdited: Boolean = false,
     val replyToMessageId: Int? = null,
-    val pollData: PollData? = null
+    val pollData: PollData? = null,
+    val timestampMillis: Long
 )
 
 data class FileAttachment(
@@ -26,8 +27,10 @@ data class PollData(
     val id: Int,
     val question: String,
     val createdAt: String,
+    val timestampMillis: Long = 0L,
     val options: List<Option>,
-    val selectedOption: Int? = null
+    val selectedOption: Int? = null,
+    val createdByUserId: Int? = null
 ) {
     val totalVotes: Int
         get() = options.sumOf { it.votes }

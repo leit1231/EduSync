@@ -38,13 +38,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.presentation.views.main.component.dateItem.toCalendar
@@ -129,14 +130,15 @@ fun PairItem(
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Изменить") },
+                        text = { Text(stringResource(R.string.change)) },
                         onClick = {
                             onEditClick(pair)
                             expanded = false
                         }
                     )
+
                     DropdownMenuItem(
-                        text = { Text("Удалить") },
+                        text = { Text(stringResource(R.string.delete)) },
                         onClick = {
                             onDeleteClick(pair)
                             expanded = false

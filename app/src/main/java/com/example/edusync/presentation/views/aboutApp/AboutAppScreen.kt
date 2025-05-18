@@ -19,10 +19,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.aboutApp.AboutAppScreenViewModel
@@ -55,7 +56,7 @@ fun AboutAppScreen() {
             Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "О приложении",
+                text = stringResource(id = R.string.about_application),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary,
@@ -80,9 +81,14 @@ fun AboutAppScreen() {
                 modifier = Modifier.size(200.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Edu Sync", style = AppTypography.body1, fontSize = 24.sp, color = AppColors.Secondary)
+            Text(text = stringResource(R.string.app_name), style = AppTypography.body1, fontSize = 24.sp, color = AppColors.Secondary)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Версия: $version", style = AppTypography.body1, fontSize = 14.sp, color = AppColors.Secondary)
+            Text(
+                text = stringResource(id = R.string.version, version),
+                style = AppTypography.body1,
+                fontSize = 14.sp,
+                color = AppColors.Secondary
+            )
         }
     }
 }

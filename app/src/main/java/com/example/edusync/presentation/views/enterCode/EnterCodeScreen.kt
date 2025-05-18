@@ -27,10 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.otp_input_field.OtpInputField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -66,7 +67,7 @@ fun EnterCodeScreen() {
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Введите код",
+                text = stringResource(R.string.enter_code),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary
@@ -101,6 +102,16 @@ fun EnterCodeScreen() {
 
         Spacer(modifier = Modifier.weight(1f))
 
+        if (!state.generalError.isNullOrEmpty()) {
+            Text(
+                text = state.generalError ?: "",
+                color = AppColors.Error,
+                style = AppTypography.body1.copy(fontSize = 14.sp),
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+        }
         val isButtonEnabled = state.code.all { it != null }
         Button(
             onClick = {
@@ -116,7 +127,7 @@ fun EnterCodeScreen() {
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Далее",
+                text = stringResource(R.string.next),
                 style = AppTypography.body1.copy(fontSize = 14.sp),
                 color = colorResource(
                     id = if (isButtonEnabled) R.color.background

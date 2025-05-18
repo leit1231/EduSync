@@ -25,10 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.domain.model.chats.ChatUser
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -63,7 +64,7 @@ fun ParticipantsPopup(
                     modifier = Modifier.padding(20.dp)
                 )
                 Text(
-                    text = "Участников: ${participants.size}",
+                    text = stringResource(R.string.participants_count, participants.size),
                     color = Color.White.copy(alpha = 0.7f),
                     style = AppTypography.body1.copy(fontSize = 14.sp),
                     modifier = Modifier.padding(horizontal = 16.dp)

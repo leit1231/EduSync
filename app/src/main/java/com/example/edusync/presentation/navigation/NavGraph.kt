@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -52,7 +51,7 @@ import org.koin.core.parameter.parametersOf
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Navigator(navController: NavHostController, navigator: Navigator) {
+fun Navigator(navController: NavHostController, navigator: Navigator, inviteCode: String? = null) {
 
     val currentDestination = navController.currentBackStackEntryAsState()
 
@@ -155,7 +154,7 @@ fun Navigator(navController: NavHostController, navigator: Navigator) {
                         MainScreen(args.groupId, args.groupName, args.teacherId, args.teacherName)
                     }
                     composable<Destination.MaterialsScreen> {
-                        MaterialsScreen()
+                        MaterialsScreen(inviteCode = inviteCode)
                     }
                     composable<Destination.FavoritiesScreen> {
                         FavoritiesScreen()

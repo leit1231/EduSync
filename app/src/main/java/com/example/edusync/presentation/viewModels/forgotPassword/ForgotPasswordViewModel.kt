@@ -20,25 +20,50 @@ class ForgotPasswordViewModel(
     val viewState: LiveData<ForgotPasswordState> = _viewState
 
     fun onEmailChanged(newEmail: String) {
-        val error = if (newEmail.isBlank()) "Введите email" else null
-        _viewState.value = _viewState.value?.copy(email = newEmail, emailError = error)
+        val error = validateEmail(newEmail)
+        _viewState.value = _viewState.value?.copy(
+            email = newEmail,
+            emailError = error,
+            generalError = null
+        )
+    }
+
+    private fun validateEmail(email: String): String? {
+        val emailRegex = "^[a-zA-Z0-9._%+-]{3,}@[a-zA-Z0-9.-]{3,}\\.[a-zA-Z]{2,}\$".toRegex()
+
+        return when {
+            email.isEmpty() -> "Поле не должно быть пустым!"
+            email.startsWith(' ') -> "Поле не должно начинаться с пробела"
+            email.firstOrNull()?.isDigit() == true -> "Email не должен начинаться с цифры"
+            !email.matches(emailRegex) -> "Некорректный формат email"
+            else -> null
+        }
     }
 
     fun goToEnterCode() {
-        val email = _viewState.value?.email.orEmpty()
-        if (email.isBlank()) return
+        val currentState = _viewState.value ?: return
+        val emailError = validateEmail(currentState.email)
+        if (emailError != null) {
+            _viewState.value = currentState.copy(emailError = emailError)
+            return
+        }
 
         viewModelScope.launch {
-            requestPasswordResetUseCase(email).collect { result ->
+            requestPasswordResetUseCase(currentState.email).collect { result ->
                 when (result) {
                     is Resource.Loading -> {
-                        _viewState.value = _viewState.value?.copy(emailError = null)
+                        _viewState.value = _viewState.value?.copy(
+                            emailError = null,
+                            generalError = null
+                        )
                     }
                     is Resource.Success -> {
                         navigator.navigate(Destination.EnterCodeScreen)
                     }
                     is Resource.Error -> {
-                        _viewState.value = _viewState.value?.copy(emailError = result.message ?: "Ошибка запроса")
+                        _viewState.value = _viewState.value?.copy(
+                            generalError = result.message
+                        )
                     }
                 }
             }

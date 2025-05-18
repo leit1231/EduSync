@@ -6,7 +6,6 @@ import androidx.security.crypto.MasterKey
 import com.example.edusync.domain.model.account.User
 import com.example.edusync.domain.model.chats.ChatInfo
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 class EncryptedSharedPreference(context: Context) {
 
@@ -98,9 +97,13 @@ class EncryptedSharedPreference(context: Context) {
             .apply()
     }
 
-    fun getChats(): List<ChatInfo>? {
-        val json = sharedPreferences.getString("chats_list", null) ?: return null
-        val type = object : TypeToken<List<ChatInfo>>() {}.type
-        return Gson().fromJson(json, type)
+    fun setInviteCodeHandled(code: String) {
+        sharedPreferences.edit()
+            .putBoolean("invite_handled_$code", true)
+            .apply()
+    }
+
+    fun wasInviteCodeHandled(code: String): Boolean {
+        return sharedPreferences.getBoolean("invite_handled_$code", false)
     }
 }

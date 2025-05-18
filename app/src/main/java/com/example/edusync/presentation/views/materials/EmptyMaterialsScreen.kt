@@ -18,11 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.modal_window.JoinGroupModalWindow
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -33,6 +34,7 @@ import org.koin.androidx.compose.koinViewModel
 fun EmptyMaterialsScreen(isTeacher: Boolean) {
     val viewModel = koinViewModel<MaterialsScreenViewModel>()
     var isModalOpen by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -47,9 +49,9 @@ fun EmptyMaterialsScreen(isTeacher: Boolean) {
 
         Text(
             text = if (isTeacher)
-                "У вас пока нет групп со студентами, но вы можете создать группу и пригласить туда студентов"
+                stringResource(R.string.no_teacher_groups)
             else
-                "У вас пока нет группы с преподавателем, попросите его создать группу, или войдите используя специальный код",
+                stringResource(R.string.no_student_group),
             textAlign = TextAlign.Center,
             style = AppTypography.body1.copy(fontSize = 16.sp),
             color = AppColors.Secondary
@@ -64,7 +66,7 @@ fun EmptyMaterialsScreen(isTeacher: Boolean) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Добавить группу",
+                    text = stringResource(R.string.add_group),
                     style = AppTypography.body1.copy(fontSize = 14.sp),
                     color = AppColors.Background
                 )
@@ -76,7 +78,7 @@ fun EmptyMaterialsScreen(isTeacher: Boolean) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Присоединиться к группе",
+                    text = stringResource(R.string.join_the_group),
                     style = AppTypography.body1.copy(fontSize = 14.sp),
                     color = AppColors.Background
                 )
@@ -86,17 +88,25 @@ fun EmptyMaterialsScreen(isTeacher: Boolean) {
 
     if (isModalOpen) {
         androidx.compose.ui.window.Dialog(
-            onDismissRequest = { isModalOpen = false },
+            onDismissRequest = {
+                isModalOpen = false
+                errorMessage = ""
+            },
             properties = DialogProperties(usePlatformDefaultWidth = false)
-        )
-        {
+        ) {
             JoinGroupModalWindow(
                 modifier = Modifier.fillMaxWidth(),
+                errorMessage = errorMessage,
                 onJoin = { code ->
                     viewModel.joinByInvite(
                         inviteCode = code,
-                        onSuccess = { isModalOpen = false },
-                        onError = { /* TODO: показать Snackbar */ }
+                        onSuccess = {
+                            isModalOpen = false
+                            errorMessage = ""
+                        },
+                        onError = { msg ->
+                            errorMessage = msg
+                        }
                     )
                 }
             )

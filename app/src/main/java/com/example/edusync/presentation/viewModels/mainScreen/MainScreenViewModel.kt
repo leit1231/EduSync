@@ -88,6 +88,8 @@ class MainScreenViewModel(
 
     private val _subjectNames = MutableStateFlow<List<String>>(emptyList())
 
+    private var loadedSubjectsGroupId: Int? = null
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val user = encryptedSharedPreference.getUser()
@@ -167,16 +169,21 @@ class MainScreenViewModel(
             _state.update { it.copy(scheduleLoading = LoadingState.Loading) }
 
             if (!hasInternet) {
-                val cached = scheduleRepository.getCachedGroupSchedule(groupId)
-                if (cached != null) {
-                    val reminders = reminderRepository.getReminders(groupId = groupId, teacherId = null)
-                    _state.update {
-                        it.copy(
-                            schedule = cached.toDomain("Кэш").withReminders(reminders),
-                            scheduleLoading = LoadingState.Success
-                        )
+                try {
+                    val cached = scheduleRepository.getCachedGroupSchedule(groupId)
+                    if (cached != null) {
+                        val reminders = reminderRepository.getReminders(groupId = groupId, teacherId = null)
+                        _state.update {
+                            it.copy(
+                                schedule = cached.toDomain("Кэш").withReminders(reminders),
+                                scheduleLoading = LoadingState.Success
+                            )
+                        }
+                    } else {
+                        _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
                     }
-                } else {
+                } catch (e: Exception) {
+                    Log.e("MainScreenViewModel", "Ошибка чтения кэша расписания группы: ${e.message}")
                     _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
                 }
                 return@launch
@@ -199,15 +206,17 @@ class MainScreenViewModel(
                                 _state.update { it.copy(scheduleLoading = LoadingState.Empty) }
                             }
                         }
+
                         is Resource.Error -> _state.update {
-                            it.copy(scheduleLoading = LoadingState.Error(resource.message ?: ""))
+                            it.copy(scheduleLoading = LoadingState.Error(resource.message ?: "Ошибка загрузки расписания"))
                         }
-                        is Resource.Loading -> {}
+
+                        else -> Unit
                     }
                 }
             } catch (e: Exception) {
                 _state.update {
-                    it.copy(scheduleLoading = LoadingState.Error(e.message ?: "Ошибка загрузки"))
+                    it.copy(scheduleLoading = LoadingState.Error(e.message ?: "Ошибка загрузки расписания"))
                 }
             }
         }
@@ -364,8 +373,18 @@ class MainScreenViewModel(
     }
 
     fun loadSubjects(groupId: Int) {
+        if (loadedSubjectsGroupId == groupId && _subjectList.value.isNotEmpty()) return
+
         viewModelScope.launch {
+            val hasInternet = NetworkUtils.hasInternetConnection(context)
+            if (!hasInternet) {
+                _subjectList.value = emptyList()
+                _subjectNames.value = emptyList()
+                return@launch
+            }
+
             getSubjectsByGroupUseCase(groupId).onSuccess { subjects ->
+                loadedSubjectsGroupId = groupId
                 _subjectList.value = subjects
                 _subjectNames.value = subjects.map { it.name }
             }.onFailure {

@@ -15,19 +15,24 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.confirmEmail.ConfirmEmailViewModel
 
 @Composable
 fun ConfirmEmailScreen(viewModel: ConfirmEmailViewModel) {
+
+    val state by viewModel.state.collectAsState()
 
     val hiddenEmail = "*".repeat(viewModel.email.substringBefore("@").length) +
             "@" +
@@ -48,7 +53,7 @@ fun ConfirmEmailScreen(viewModel: ConfirmEmailViewModel) {
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Подтверждение почты",
+                text = stringResource(R.string.confirm_email),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary
@@ -66,10 +71,22 @@ fun ConfirmEmailScreen(viewModel: ConfirmEmailViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Вы успешно зарегистрировались!\nНа вашу почту $hiddenEmail отправлено сообщение с ссылкой для активации аккаунта.",
+                text = stringResource(id = R.string.registration_success, hiddenEmail),
                 textAlign = TextAlign.Center,
                 style = AppTypography.body1.copy(fontSize = 16.sp),
                 color = AppColors.Secondary
+            )
+        }
+
+        if (!state.error.isNullOrEmpty()) {
+            Text(
+                text = state.error ?: "",
+                color = AppColors.Error,
+                style = AppTypography.body1.copy(fontSize = 14.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
             )
         }
 
@@ -86,7 +103,7 @@ fun ConfirmEmailScreen(viewModel: ConfirmEmailViewModel) {
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Далее",
+                text = stringResource(R.string.next),
                 style = AppTypography.body1.copy(fontSize = 14.sp),
                 color = colorResource(R.color.background)
             )

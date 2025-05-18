@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,8 +10,17 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+fun getLocalProperty(key: String): String {
+    val props = Properties()
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        props.load(file.inputStream())
+    }
+    return props.getProperty(key) ?: throw GradleException("Property $key not found in local.properties")
+}
+
 android {
-    namespace = "com.example.edusync"
+    namespace = "ru.eduHub.edusync"
     compileSdk = 35
 
     defaultConfig {
@@ -24,6 +35,8 @@ android {
 
     buildTypes {
         release {
+            buildConfigField("String", "BASE_URL", "\"${getLocalProperty("BASE_URL")}\"")
+            buildConfigField("String", "WS_URL", "\"${getLocalProperty("WS_URL")}\"")
             signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             proguardFiles(
@@ -41,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -48,6 +62,7 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha03")
     implementation("androidx.compose.material3:material3")
     implementation(libs.androidx.core.ktx)
+    implementation("androidx.activity:activity-ktx:1.10.1")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))

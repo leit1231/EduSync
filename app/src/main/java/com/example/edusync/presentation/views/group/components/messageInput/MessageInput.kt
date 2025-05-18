@@ -1,6 +1,9 @@
 package com.example.edusync.presentation.views.group.components.messageInput
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,15 +32,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 import com.example.edusync.presentation.viewModels.group.GroupViewModel
@@ -49,21 +58,43 @@ fun MessageInput(
     chatId: Int,
     context: Context = LocalContext.current
 ) {
-    var messageText by remember { mutableStateOf("") }
+    var messageText by remember { mutableStateOf(TextFieldValue("")) }
     val attachedFiles by viewModel.attachedFiles.observeAsState(emptyList())
     val replyMessage by viewModel.replyMessage.observeAsState()
     val editingMessage by viewModel.editingMessage.observeAsState()
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenMultipleDocuments()
+    val documentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
     ) { uris -> uris.forEach { uri -> viewModel.attachFile(uri, context) } }
 
-    LaunchedEffect(editingMessage) {
-        messageText = editingMessage?.text ?: ""
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.values.all { it }
+        if (granted) {
+            documentLauncher.launch(arrayOf("*/*"))
+        } else {
+            Toast.makeText(context, "Разрешение на чтение файлов не предоставлено", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    Column(modifier = Modifier.padding(top = 8.dp)) {
+    LaunchedEffect(editingMessage) {
+        messageText = TextFieldValue(
+            text = editingMessage?.text ?: "",
+            selection = TextRange((editingMessage?.text ?: "").length)
+        )
+        editingMessage?.let {
+            focusRequester.requestFocus()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .imePadding()
+    ) {
         replyMessage?.let { message ->
             Row(
                 modifier = Modifier
@@ -76,7 +107,7 @@ fun MessageInput(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "В ответ",
+                            text = stringResource(R.string.in_answer),
                             color = AppColors.Primary,
                             style = AppTypography.body1.copy(fontSize = 14.sp)
                         )
@@ -100,10 +131,13 @@ fun MessageInput(
 
                         message.files.isNotEmpty() -> {
                             val imageCount = message.files.count { it.isImage() }
+                            val text = when {
+                                imageCount == 1 -> stringResource(R.string.single_photo)
+                                imageCount > 1 -> stringResource(R.string.multiple_photos, imageCount)
+                                else -> stringResource(R.string.file_label, message.files.first().fileName)
+                            }
                             Text(
-                                text = if (imageCount > 0)
-                                    if (imageCount == 1) "Фотография" else "Фотографии ($imageCount)"
-                                else "Файл: ${message.files.first().fileName}",
+                                text = text,
                                 style = AppTypography.body1.copy(fontSize = 12.sp),
                                 color = AppColors.Secondary
                             )
@@ -114,7 +148,7 @@ fun MessageInput(
                 IconButton(onClick = { viewModel.clearReply() }) {
                     Icon(
                         painterResource(R.drawable.ic_close),
-                        "Отменить",
+                        contentDescription = "Отменить",
                         tint = AppColors.Primary
                     )
                 }
@@ -136,12 +170,15 @@ fun MessageInput(
 
         TextField(
             value = messageText,
-            onValueChange = { messageText = it },
+            onValueChange = {
+                if (it.text.length <= 1000) messageText = it
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 56.dp),
+                .heightIn(min = 56.dp)
+                .focusRequester(focusRequester),
             placeholder = {
-                Text("Введите сообщение", color = AppColors.Secondary)
+                Text(stringResource(R.string.enter_message), color = AppColors.Secondary)
             },
             leadingIcon = {
                 Icon(
@@ -153,7 +190,14 @@ fun MessageInput(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            launcher.launch(arrayOf("image/*", "application/*"))
+                            focusManager.clearFocus()
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                permissionLauncher.launch(
+                                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+                                )
+                            } else {
+                                documentLauncher.launch(arrayOf("*/*"))
+                            }
                         }
                         .padding(horizontal = 8.dp)
                 )
@@ -166,17 +210,14 @@ fun MessageInput(
                             contentDescription = "Сохранить",
                             tint = AppColors.Primary,
                             modifier = Modifier
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    viewModel.editingMessage.value?.id?.let { id ->
+                                .clickable {
+                                    editingMessage?.id?.let { id ->
                                         viewModel.editMessage(
                                             chatId = chatId,
                                             messageId = id,
-                                            newText = messageText,
-                                            onSuccess = { messageText = "" },
-                                            onError = { /* показать ошибку */ }
+                                            newText = messageText.text,
+                                            onSuccess = { messageText = TextFieldValue("") },
+                                            onError = { }
                                         )
                                     }
                                 }
@@ -187,12 +228,9 @@ fun MessageInput(
                             contentDescription = "Отменить",
                             tint = AppColors.Error,
                             modifier = Modifier
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
+                                .clickable {
                                     viewModel.cancelEditing()
-                                    messageText = ""
+                                    messageText = TextFieldValue("")
                                 }
                                 .padding(horizontal = 8.dp)
                         )
@@ -203,16 +241,18 @@ fun MessageInput(
                         contentDescription = "Отправить",
                         tint = AppColors.Secondary,
                         modifier = Modifier
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
+                            .clickable {
                                 if (replyMessage != null) {
-                                    viewModel.replyToMessage(chatId, replyMessage!!.id, messageText, context)
+                                    viewModel.replyToMessage(
+                                        chatId,
+                                        replyMessage!!.id,
+                                        messageText.text,
+                                        context
+                                    )
                                 } else {
-                                    viewModel.sendMessage(chatId, messageText, context)
+                                    viewModel.sendMessage(chatId, messageText.text, context)
                                 }
-                                messageText = ""
+                                messageText = TextFieldValue("")
                             }
                             .padding(horizontal = 8.dp)
                     )
@@ -221,21 +261,23 @@ fun MessageInput(
             keyboardActions = KeyboardActions(
                 onSend = {
                     if (editingMessage != null) {
-                        viewModel.editingMessage.value?.id?.let { id ->
+                        editingMessage?.id?.let { id ->
                             viewModel.editMessage(
                                 chatId = chatId,
                                 messageId = id,
-                                newText = messageText,
-                                onSuccess = { messageText = "" },
-                                onError = { /* показать ошибку */ }
+                                newText = messageText.text,
+                                onSuccess = { messageText = TextFieldValue("") },
+                                onError = { }
                             )
                         }
                     } else if (replyMessage != null) {
-                        viewModel.replyToMessage(chatId, replyMessage!!.id, messageText, context)
+                        viewModel.replyToMessage(chatId, replyMessage!!.id, messageText.text, context)
                     } else {
-                        viewModel.sendMessage(chatId, messageText, context)
+                        viewModel.sendMessage(chatId, messageText.text, context)
                     }
-                    focusManager.clearFocus()
+                    if (editingMessage == null && replyMessage == null) {
+                        focusManager.clearFocus()
+                    }
                 }
             ),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
@@ -243,14 +285,11 @@ fun MessageInput(
             colors = TextFieldDefaults.colors(
                 focusedTextColor = AppColors.Secondary,
                 unfocusedTextColor = AppColors.Secondary,
-                disabledTextColor = AppColors.Secondary.copy(alpha = 0.5f),
                 cursorColor = AppColors.Primary,
                 focusedContainerColor = AppColors.OnBackground,
                 unfocusedContainerColor = AppColors.OnBackground,
-                disabledContainerColor = AppColors.OnBackground,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent,
                 focusedPlaceholderColor = AppColors.Secondary.copy(alpha = 0.5f),
                 unfocusedPlaceholderColor = AppColors.Secondary.copy(alpha = 0.5f)
             )

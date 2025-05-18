@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.email_text_field.EmailTextField
 import com.example.edusync.presentation.components.custom_text_field.password_text_field.PasswordTextField
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -63,7 +65,7 @@ fun Login() {
         ) {
 
             Text(
-                text = "Вход",
+                text = stringResource(R.string.login),
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary,
                 textAlign = TextAlign.Center,
@@ -96,7 +98,7 @@ fun Login() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Забыли пароль?",
+                    text = stringResource(R.string.forgoat_password),
                     modifier = Modifier
                         .clickable { viewModel.goToForgotPassword() },
                     style = AppTypography.body1.copy(fontSize = 16.sp),
@@ -105,6 +107,15 @@ fun Login() {
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            if (!state.generalError.isNullOrEmpty()) {
+                Text(
+                    text = state.generalError ?: "",
+                    color = Color.Red,
+                    style = AppTypography.body1.copy(fontSize = 14.sp),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
 
             Button(
                 onClick = { viewModel.onLoginClicked()},
@@ -118,13 +129,13 @@ fun Login() {
             ) {
                 if (state.isLoading) {
                     Text(
-                        "Загрузка...",
+                        stringResource(R.string.loading),
                         color = AppColors.Background,
                         style = AppTypography.title.copy(fontSize = 14.sp),
                     )
                 } else {
                     Text(
-                        "Войти",
+                        stringResource(R.string.login),
                         color = AppColors.Background,
                         style = AppTypography.title.copy(fontSize = 14.sp),
                     )
@@ -134,7 +145,7 @@ fun Login() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Нет аккаунта?",
+                text = stringResource(R.string.no_account),
                 style = AppTypography.body1.copy(fontSize = 16.sp),
                 color = AppColors.Secondary
             )
@@ -154,7 +165,7 @@ fun Login() {
                 modifier = Modifier.size(180.dp, 40.dp)
             ) {
                 Text(
-                    text = "Зарегистрироваться",
+                    text = stringResource(R.string.register),
                     color = AppColors.Secondary,
                     style = AppTypography.body1.copy(fontSize = 14.sp),
                     maxLines = 1
@@ -165,15 +176,17 @@ fun Login() {
 
             val annotatedString = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = Color.White, fontSize = 14.sp)) {
-                    append("При регистрации и входе\nвы соглашаетесь с ")
-
-                    pushStringAnnotation(tag = "URL", annotation = "https://rksi.ru/mobile_schedule")
-                    withStyle(style = SpanStyle(color = Color.Red)) {
-                        append("политикой конфиденциальности")
-                    }
-                    pop()
+                    append(stringResource(R.string.privacy_text_start))
+                    append("\n")
                 }
+
+                pushStringAnnotation(tag = "URL", annotation = "https://docs.google.com/document/d/1j5fQgOuJsxGygoJ3G4PW2ccAlLxSk71XrlIoGCSaC88/edit?usp=sharing")
+                withStyle(style = SpanStyle(color = Color.Red, fontSize = 14.sp)) {
+                    append(stringResource(R.string.privacy_link_text))
+                }
+                pop()
             }
+
 
             val context = LocalContext.current
             val textLayoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }

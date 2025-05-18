@@ -1,6 +1,7 @@
 package com.example.edusync.data.remote.webSocket
 
 import android.util.Log
+import com.example.edusync.common.Constants
 import kotlinx.coroutines.flow.MutableSharedFlow
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -25,7 +26,7 @@ object WebSocketManager {
         this.token = token
 
         val request = Request.Builder()
-            .url("ws://192.168.0.28:8080/api/ws")
+            .url(Constants.WS_URL)
             .addHeader("Authorization", token)
             .build()
 
@@ -58,15 +59,6 @@ object WebSocketManager {
             .put("chat_id", chatId)
             .toString()
         Log.d("WebSocket", "SUBSCRIBE: $json")
-        webSocket?.send(json)
-    }
-
-    fun sendMessage(chatId: Int, text: String) {
-        val json = JSONObject()
-            .put("action", "send")
-            .put("chat_id", chatId)
-            .put("text", text)
-            .toString()
         webSocket?.send(json)
     }
 

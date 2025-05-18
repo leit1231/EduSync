@@ -52,8 +52,7 @@ class LoginViewModel(
                     is Resource.Error -> {
                         _uiState.update {
                             it.copy(
-                                emailError = resource.message,
-                                passwordError = resource.message,
+                                generalError = resource.message,
                                 isLoading = false
                             )
                         }

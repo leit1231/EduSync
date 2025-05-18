@@ -11,7 +11,7 @@ import okio.BufferedSink
 import okio.source
 
 object FileUtil {
-    fun getFileFromUri(context: Context, uri: Uri): MultipartBody.Part? {
+    fun getFileFromUri(context: Context, uri: Uri): MultipartBody.Part {
         val contentResolver = context.contentResolver
 
         val fileName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->

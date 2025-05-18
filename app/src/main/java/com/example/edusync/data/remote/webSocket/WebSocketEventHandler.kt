@@ -11,6 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 class WebSocketEventHandler(
     private val context: Context,
@@ -34,35 +37,49 @@ class WebSocketEventHandler(
             val json = JSONObject(raw)
             val event = json.getString("event")
             val message = json.getJSONObject("data")
-            val chatId = message.getInt("chat_id")
             val gson = Gson()
 
-            val viewModel = groupViewModelProvider(chatId)
-            if (viewModel == null) {
-                Log.d("WebSocket", "No ViewModel yet for chatId=$chatId. Buffering...")
-                WebSocketController.bufferMessage(chatId, raw)
-                return
-            }
-
             when (event) {
-                "message:new" -> {
-                    val messageDto = gson.fromJson(message.toString(), MessageDto::class.java)
-                    viewModel.receiveMessageFromDto(messageDto, context)
-                }
+                "message:new", "message:updated", "message:delete" -> {
+                    var chatId = message.optInt("chat_id", -1)
+                    if (chatId == -1 && event.startsWith("message")) {
+                        val messageId = message.optInt("id", -1)
+                        chatId = WebSocketController.findChatIdByMessageId(messageId) ?: -1
+                    }
 
-                "message:delete" -> {
-                    val id = message.getInt("id")
-                    viewModel.deleteMessageLocally(id)
-                }
+                    if (chatId == -1) {
+                        Log.e("WebSocketEventHandler", "Unable to resolve chat_id in $event")
+                        return
+                    }
 
-                "message:updated" -> {
-                    val messageDto = gson.fromJson(message.toString(), MessageDto::class.java)
-                    viewModel.updateMessageFromDto(messageDto)
+                    val viewModel = WebSocketController.getViewModel(chatId)
+                    if (viewModel == null) {
+                        Log.d("WebSocket", "No ViewModel yet for chatId=$chatId. Buffering...")
+                        WebSocketController.bufferMessage(chatId, raw)
+                        return
+                    }
+
+                    when (event) {
+                        "message:new" -> {
+                            val messageDto = gson.fromJson(message.toString(), MessageDto::class.java)
+                            viewModel.receiveMessageFromDto(messageDto, context)
+                        }
+
+                        "message:updated" -> {
+                            val messageDto = gson.fromJson(message.toString(), MessageDto::class.java)
+                            viewModel.updateMessageFromDto(messageDto)
+                        }
+
+                        "message:delete" -> {
+                            val id = message.getInt("id")
+                            viewModel.deleteMessageLocally(id)
+                        }
+                    }
                 }
 
                 "poll:new" -> {
-                    val poll = message
-                    val optionsArray = poll.getJSONArray("options")
+                    val createdAtIso = message.getString("created_at")
+                    val optionsArray = message.getJSONArray("options")
                     val options = List(optionsArray.length()) { i ->
                         val opt = optionsArray.getJSONObject(i)
                         PollData.Option(
@@ -73,26 +90,35 @@ class WebSocketEventHandler(
                     }
 
                     val pollData = PollData(
-                        id = poll.getInt("id"),
-                        question = poll.getString("question"),
-                        createdAt = poll.getString("created_at"),
+                        id = message.getInt("id"),
+                        question = message.getString("question"),
+                        createdAt = formatTimestamp(createdAtIso),
+                        timestampMillis = parseIsoTimestampToMillis(createdAtIso),
                         options = options
                     )
 
-                    val senderName = resolveSenderName(viewModel.currentUserId, chatId)
-
-                    viewModel.receiveMessage(
-                        text = "",
-                        sender = senderName,
-                        userId = viewModel.currentUserId,
-                        files = emptyList(),
-                        pollData = pollData
-                    )
+                    WebSocketController.getAllChatIds().forEach { chatId ->
+                        val viewModel = WebSocketController.getViewModel(chatId)
+                        val teacher = viewModel?.participants?.value?.firstOrNull { it.isTeacher }
+                        if (viewModel != null && teacher != null) {
+                            viewModel.receiveMessage(
+                                text = "",
+                                sender = teacher.fullName,
+                                userId = teacher.id,
+                                files = emptyList(),
+                                pollData = pollData
+                            )
+                        }
+                    }
                 }
 
                 "poll:delete" -> {
                     val pollId = message.getInt("id")
-                    viewModel.removePollLocally(pollId)
+
+                    WebSocketController.getAllChatIds().forEach { chatId ->
+                        val viewModel = WebSocketController.getViewModel(chatId)
+                        viewModel?.removePollLocally(pollId)
+                    }
                 }
             }
 
@@ -101,9 +127,38 @@ class WebSocketEventHandler(
         }
     }
 
-    private fun resolveSenderName(userId: Int, chatId: Int): String {
-        return groupViewModelProvider(chatId)?.participants?.value
-            ?.firstOrNull { it.id == userId }?.fullName ?: "Неизвестный"
+    private fun parseIsoTimestampToMillis(iso: String): Long {
+        return try {
+            val trimmed = iso
+                .substringBefore("Z")
+                .takeWhile { it != '.' } + "." +
+                    iso.substringAfter(".", "000000").padEnd(6, '0').take(6) + "Z"
+
+            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+            format.timeZone = TimeZone.getTimeZone("UTC")
+            format.parse(trimmed)?.time ?: 0L
+        } catch (e: Exception) {
+            Log.e("WebSocketEventHandler", "Failed to parse millis from $iso", e)
+            0L
+        }
+    }
+
+    private fun formatTimestamp(isoString: String): String {
+        return try {
+            val trimmed = isoString
+                .substringBefore("Z")
+                .takeWhile { it != '.' } + "." +
+                    isoString.substringAfter(".", "000000").padEnd(6, '0').take(6) + "Z"
+
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = inputFormat.parse(trimmed) ?: return isoString
+
+            val outputFormat = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
+            outputFormat.format(date)
+        } catch (e: Exception) {
+            isoString
+        }
     }
 
     companion object {

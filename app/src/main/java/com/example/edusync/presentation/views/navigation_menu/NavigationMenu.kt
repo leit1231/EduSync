@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.navigation.Destination
 import com.example.edusync.presentation.navigation.Navigator
 import com.example.edusync.presentation.theme.ui.AppColors

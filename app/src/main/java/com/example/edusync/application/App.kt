@@ -31,7 +31,7 @@ class App : Application() {
         }
 
         WebSocketEventHandler(
-            context = this,
+            context = applicationContext,
             socketManager = WebSocketManager,
             groupViewModelProvider = { chatId ->
                 WebSocketController.getViewModel(chatId)

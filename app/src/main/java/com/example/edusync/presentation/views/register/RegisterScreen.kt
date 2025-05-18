@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.email_text_field.EmailTextField
 import com.example.edusync.presentation.components.custom_text_field.password_text_field.PasswordTextField
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -66,7 +68,7 @@ fun RegisterScreen() {
             .padding(16.dp)
     ) {
         Text(
-            text = "Регистрация",
+            text = stringResource(R.string.registration),
             style = AppTypography.body1.copy(fontSize = 24.sp),
             color = AppColors.Secondary,
             textAlign = TextAlign.Center,
@@ -95,7 +97,7 @@ fun RegisterScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         PasswordTextField(
-            label = "Подтвердите пароль",
+            label = stringResource(R.string.confirm_password),
             value = state.passwordConfirmation,
             onValueChange = viewModel::setConfirmPassword,
             isError = state.passwordConfirmationError != null,
@@ -120,7 +122,7 @@ fun RegisterScreen() {
 
         if (isTeacherSelected) {
             Text(
-                text = "*Чтобы зарегистрироваться как преподаватель необходимо ввести корпоративную почту",
+                text = stringResource(R.string.coop_email),
                 color = AppColors.Secondary,
                 style = AppTypography.body1.copy(fontSize = 12.sp),
                 modifier = Modifier
@@ -142,7 +144,7 @@ fun RegisterScreen() {
             )
         ) {
             Text(
-                text = "Регистрация",
+                text = stringResource(R.string.registration),
                 color = AppColors.Background,
                 style = AppTypography.title.copy(fontSize = 14.sp)
             )
@@ -151,7 +153,7 @@ fun RegisterScreen() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Есть аккаунт?",
+            text = stringResource(R.string.have_account),
             style = AppTypography.body1.copy(fontSize = 16.sp),
             color = AppColors.Secondary
         )
@@ -171,7 +173,7 @@ fun RegisterScreen() {
             modifier = Modifier.size(180.dp, 40.dp)
         ) {
             Text(
-                text = "Войти",
+                text = stringResource(R.string.enter),
                 color = AppColors.Secondary,
                 style = AppTypography.title.copy(fontSize = 14.sp),
             )
@@ -181,14 +183,15 @@ fun RegisterScreen() {
 
         val annotatedString = buildAnnotatedString {
             withStyle(style = SpanStyle(color = Color.White, fontSize = 14.sp)) {
-                append("При регистрации и входе\nвы соглашаетесь с ")
-
-                pushStringAnnotation(tag = "URL", annotation = "https://gitlab.serega-pirat.ru/")
-                withStyle(style = SpanStyle(color = Color.Red)) {
-                    append("политикой конфиденциальности")
-                }
-                pop()
+                append(stringResource(R.string.privacy_text_start))
+                append("\n")
             }
+
+            pushStringAnnotation(tag = "URL", annotation = "https://docs.google.com/document/d/1j5fQgOuJsxGygoJ3G4PW2ccAlLxSk71XrlIoGCSaC88/edit?usp=sharing")
+            withStyle(style = SpanStyle(color = Color.Red, fontSize = 14.sp)) {
+                append(stringResource(R.string.privacy_link_text))
+            }
+            pop()
         }
 
         val context = LocalContext.current

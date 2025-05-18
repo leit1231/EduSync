@@ -26,8 +26,9 @@ class LoginUseCase(
                 val authResponse = result.getOrNull()
                 emit(Resource.Success(authResponse))
             } else {
-                emit(Resource.Error("Неверный логин или пароль", null))
-                Log.d("Login_in_account", "$result")
+                val errorMessage = result.exceptionOrNull()?.message ?: "Неизвестная ошибка"
+                emit(Resource.Error(errorMessage, null))
+                Log.d("Login_in_account", "Ошибка авторизации: $errorMessage")
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Неизвестная ошибка", null))

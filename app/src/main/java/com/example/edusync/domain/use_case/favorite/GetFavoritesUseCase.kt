@@ -14,9 +14,18 @@ class GetFavoritesUseCase(
     operator fun invoke(): Flow<Resource<List<FavoriteFileDto>>> = flow {
         emit(Resource.Loading())
         val result = repository.getFavorites()
-        emit(result.fold(
-            onSuccess = { Resource.Success(it) },
-            onFailure = { Resource.Error("Ошибка загрузки избранного", null) }
-        ))
+        val resource = result.fold(
+            onSuccess = { favorites ->
+                Resource.Success(favorites ?: emptyList())
+            },
+            onFailure = { error ->
+                if (error.message?.contains("Пустое тело ответа") == true) {
+                    Resource.Success(emptyList())
+                } else {
+                    Resource.Error("Ошибка загрузки избранного", emptyList())
+                }
+            }
+        )
+        emit(resource)
     }.flowOn(Dispatchers.IO)
 }

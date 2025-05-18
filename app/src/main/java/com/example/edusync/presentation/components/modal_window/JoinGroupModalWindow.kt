@@ -30,7 +30,8 @@ import com.example.edusync.presentation.theme.ui.AppTypography
 @Composable
 fun JoinGroupModalWindow(
     modifier: Modifier = Modifier,
-    onJoin: (String) -> Unit
+    onJoin: (String) -> Unit,
+    errorMessage: String
 ) {
     var code by remember { mutableStateOf("") }
 
@@ -51,11 +52,7 @@ fun JoinGroupModalWindow(
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
-                .background(
-                    color = AppColors.Background,
-                    shape = RoundedCornerShape(16.dp)
-                ),
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -72,20 +69,26 @@ fun JoinGroupModalWindow(
                 value = code,
                 onValueChange = { newValue -> code = newValue },
                 label = "Введите код",
-                isError = false,
-                errorMessage = "",
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (errorMessage.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorMessage,
+                    color = AppColors.Error,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             Button(
                 onClick = { onJoin(code) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.Primary
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = "Присоединиться",

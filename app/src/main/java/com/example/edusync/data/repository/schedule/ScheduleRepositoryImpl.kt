@@ -1,5 +1,6 @@
 package com.example.edusync.data.repository.schedule
 
+import android.util.Log
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.local.entities.AppDatabase
 import com.example.edusync.data.local.entities.ScheduleDao
@@ -72,8 +73,16 @@ class ScheduleRepositoryImpl(
     }
 
     override suspend fun getCachedGroupSchedule(groupId: Int): List<ScheduleItem>? {
-        return scheduleDao.getGroupSchedule(groupId)?.let { Json.decodeFromString(it.scheduleJson) }
+        return try {
+            scheduleDao.getGroupSchedule(groupId)?.let {
+                Json.decodeFromString(it.scheduleJson)
+            }
+        } catch (e: Exception) {
+            Log.e("ScheduleRepository", "Ошибка парсинга кэшированного расписания группы: ${e.message}")
+            null
+        }
     }
+
 
     override suspend fun getCachedTeacherSchedule(teacherId: Int): List<ScheduleItem>? {
         return scheduleDao.getTeacherSchedule(teacherId)?.let { Json.decodeFromString(it.scheduleJson) }

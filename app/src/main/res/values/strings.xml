@@ -1,3 +1,104 @@
 <resources>
     <string name="app_name">EduSync</string>
+    <string name="about_application">О приложении</string>
+    <string name="version">Версия: %1$s</string>
+    <string name="change_password">Сменить пароль</string>
+    <string name="new_password">Новый пароль</string>
+    <string name="save">Сохранить</string>
+    <string name="confirm_email">Подтверждение почты</string>
+    <string name="next">Далее</string>
+    <string name="registration_success">
+    Вы успешно зарегистрировались!&#10;На вашу почту %1$s отправлено сообщение с ссылкой для активации аккаунта.
+    </string>
+    <string name="enter_code">Введите код</string>
+    <string name="no_favorites_hint">
+    У вас пока нет избранных файлов,&#10;нажмите на файл и кликните на знак избранного
+    </string>
+    <string name="favorites">Избранное</string>
+    <string name="search_file">Поиск файла по названию</string>
+    <string name="password_recovery">Восстановление пароля</string>
+    <string name="single_photo">Фотография</string>
+    <string name="multiple_photos">Фотографии (%1$d)</string>
+    <string name="file_label">Файл: %1$s</string>
+    <string name="unvote">Отменить голос</string>
+    <string name="delete_poll">Удалить опрос</string>
+    <string name="answer">Ответить</string>
+    <string name="copy">"Копировать"</string>
+    <string name="change">Изменить</string>
+    <string name="delete">Удалить</string>
+    <string name="in_answer">В ответ</string>
+    <string name="enter_message">Введите сообщение</string>
+    <string name="search_material">Поиск материалов</string>
+    <string name="add_student">Добавить студента</string>
+    <string name="create_poll">Создать опрос</string>
+    <string name="create_notification">Создать уведомление</string>
+    <string name="delete_group">Удалить группу</string>
+    <string name="exit_group">Выйти из группы</string>
+    <string name="enable_notifications">Включить уведомления</string>
+    <string name="disable_notifications">Выключить уведомления</string>
+    <string name="participants_count">Участников: %1$d</string>
+    <string name="question">Вопрос</string>
+    <string name="question_error">Введите вопрос</string>
+    <string name="answer_option_label">Вариант %1$d</string>
+    <string name="answer_option_error">Введите вариант ответа</string>
+    <string name="remove_option">Удалить вариант</string>
+    <string name="add_variant">Добавить вариант</string>
+    <string name="files_selected">Выбрано %1$d файлов</string>
+    <string name="filling_profile">Заполнение профиля</string>
+    <string name="select_your_education">Выберите ваше учебное заведение</string>
+    <string name="select_your_group">Выберите вашу группу</string>
+    <string name="first_name">Фамилия</string>
+    <string name="last_name">Имя</string>
+    <string name="middle_name">Отчество</string>
+    <string name="login">Вход</string>
+    <string name="forgoat_password">Забыли пароль?</string>
+    <string name="loading">Загрузка...</string>
+    <string name="no_account">Нет аккаунта?</string>
+    <string name="register">Зарегистрироваться</string>
+    <string name="privacy_text_start">При регистрации и входе&#10;вы соглашаетесь с </string>
+    <string name="privacy_link_text">политикой конфиденциальности</string>
+    <string name="teacher">Преподаватель</string>
+    <string name="group">Группа</string>
+    <string name="schedule">Расписание</string>
+    <string name="schedule_of_week">Пары на неделю</string>
+    <string name="no_schedule">Расписание отсутствует</string>
+    <string name="no_material">Группы отсутствует</string>
+    <string name="no_favorite">Избранное отсутствует</string>
+    <string name="update">Обновить</string>
+    <string name="create_group">Создание группы</string>
+    <string name="select_group_on_create">Выберите группу</string>
+    <string name="select_subject">Выберите предмет</string>
+    <string name="add_group">Добавить группу</string>
+    <string name="join_the_group">Присоединиться к группе</string>
+    <string name="no_teacher_groups">
+    У вас пока нет групп со студентами, но вы можете создать группу и пригласить туда студентов
+    </string>
+    <string name="no_student_group">
+    У вас пока нет группы с преподавателем, попросите его создать группу, или войдите используя специальный код
+    </string>
+    <string name="materials">Материалы</string>
+    <string name="search_chat">Поиск чата</string>
+    <string name="onboarding_title_schedule">Просмотр и изменение расписания</string>
+    <string name="onboarding_title_chat">Общайтесь с преподавателем</string>
+    <string name="onboarding_title_files">Все файлы в одном месте</string>
+    <string name="onboarding_desc_schedule">Возможность просматривать и отмечать отдельные пары как особенные</string>
+    <string name="onboarding_desc_chat">Теперь можно общаться с преподавателем прямо в приложении</string>
+    <string name="onboarding_desc_files">Все важные файлы будут храниться в одном месте</string>
+    <string name="view_pdf">Просмотр PDF</string>
+    <string name="profile">Профиль</string>
+    <string name="logout">Выйти из аккаунта</string>
+    <string name="student">Студент</string>
+    <string name="registration">Регистрация</string>
+    <string name="confirm_password">Подтвердите пароль</string>
+    <string name="coop_email">*Чтобы зарегистрироваться как преподаватель необходимо ввести корпоративную почту</string>
+    <string name="have_account">Есть аккаунт?</string>
+    <string name="enter">Войти</string>
+    <string name="settings">Настройки</string>
+    <string name="notification">Уведомления</string>
+    <string name="delete_account">Удалить аккаунт</string>
+    <string name="tablet_files">Планшетка</string>
+    <string name="feedback">Обратная связь</string>
+    <string name="about_app">О приложении</string>
+    <string name="feedback_email_subject">Обратная связь по приложению EduSync</string>
+    <string name="no_email_app">Не найдено приложение для отправки почты</string>
 </resources>

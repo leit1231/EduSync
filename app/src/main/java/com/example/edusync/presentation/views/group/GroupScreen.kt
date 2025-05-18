@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -46,7 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.common.Constants
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.data.remote.webSocket.WebSocketController
@@ -64,6 +63,7 @@ import com.example.edusync.presentation.views.group.components.chatBubble.ChatBu
 import com.example.edusync.presentation.views.group.components.chatBubble.ChatItem
 import com.example.edusync.presentation.views.group.components.messageInput.MessageInput
 import com.example.edusync.presentation.views.group.components.popUp.ShowGroupDropdownMenu
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.roundToInt
@@ -108,11 +108,13 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
 
     var showScrollToBottom by remember { mutableStateOf(false) }
 
-    LaunchedEffect(pagingMessages.itemCount) {
-        if (pagingMessages.itemCount > 0) {
-            listState.scrollToItem(index = 0)
-        }
+    LaunchedEffect(isSearchActive) {
+        snapshotFlow { pagingMessages.itemSnapshotList.items }
+            .collectLatest { items ->
+                viewModel.updateVisibleMessages(items)
+            }
     }
+
 
     LaunchedEffect(pagingMessages.itemSnapshotList.items) {
         viewModel.updateVisibleMessages(pagingMessages.itemSnapshotList.items)
@@ -130,24 +132,15 @@ fun GroupScreen(groupId: Destination.GroupScreen, groupName: Destination.GroupSc
         }
     }
 
-    LaunchedEffect(participants) {
-        if (participants.isNotEmpty()) {
-            viewModel.loadPagedMessages(chatId = chatId, context = context)
-        }
-    }
-
     LaunchedEffect(Unit) {
-        viewModel.updateCurrentUserId(currentUserId)
-        viewModel.loadParticipants(chatId)
-        viewModel.loadPolls(chatId)
-        WebSocketController.register(chatId, viewModel)
-        WebSocketController.subscribeToChat(chatId)
+        viewModel.initChatSession(chatId = chatId, userId = currentUserId, context = context)
     }
 
     DisposableEffect(Unit) {
         onDispose {
             WebSocketController.unregister(chatId)
             viewModel.clearRealtimeMessages()
+            viewModel.resetChatSession()
         }
     }
 

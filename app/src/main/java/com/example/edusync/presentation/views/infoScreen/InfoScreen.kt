@@ -14,9 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.dropdownMenu.CustomDropdownMenu
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -37,7 +39,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Заполнение профиля",
+            text = stringResource(R.string.filling_profile),
             color = AppColors.Secondary,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
@@ -51,7 +53,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
                 viewModel.onSurnameChange(newValue)
                 viewModel.validateSurname()
             },
-            label = "Фамилия",
+            label = stringResource(R.string.first_name),
             isError = viewModel.surnameError.value != null,
             errorMessage = viewModel.surnameError.value
         )
@@ -64,7 +66,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
                 viewModel.onNameChange(newValue)
                 viewModel.validateName()
             },
-            label = "Имя",
+            label = stringResource(R.string.last_name),
             isError = viewModel.nameError.value != null,
             errorMessage = viewModel.nameError.value
         )
@@ -77,7 +79,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
                 viewModel.onPatronymicChange(newValue)
                 viewModel.validatePatronymic()
             },
-            label = "Отчество",
+            label = stringResource(R.string.middle_name),
             isError = viewModel.patronymicError.value != null,
             errorMessage = viewModel.patronymicError.value
         )
@@ -85,7 +87,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         CustomDropdownMenu(
-            label = "Выберите ваше учебное заведение",
+            label = stringResource(R.string.select_your_education),
             options = uiState.availableUniversities,
             selectedOption = uiState.selectedUniversity,
             onOptionSelected = viewModel::onUniversitySelected,
@@ -98,7 +100,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
 
         if (uiState.selectedUniversity.isNotEmpty() && !isTeacher) {
             CustomDropdownMenu(
-                label = "Выберите вашу группу",
+                label = stringResource(R.string.select_your_group),
                 options = uiState.availableGroups,
                 selectedOption = uiState.selectedGroup,
                 onOptionSelected = viewModel::onGroupSelected,
@@ -133,7 +135,7 @@ fun InfoScreen(viewModel: InfoStudentViewModel) {
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Сохранить",
+                text = stringResource(R.string.save),
                 style = AppTypography.body1.copy(fontSize = 14.sp),
             )
         }

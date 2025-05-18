@@ -19,6 +19,7 @@ import com.example.edusync.common.Constants.BASE_URL
 import com.example.edusync.common.Resource
 import com.example.edusync.data.remote.dto.CreatePollRequest
 import com.example.edusync.data.remote.dto.MessageDto
+import com.example.edusync.data.remote.webSocket.WebSocketController
 import com.example.edusync.domain.model.chats.ChatUser
 import com.example.edusync.domain.model.message.FileAttachment
 import com.example.edusync.domain.model.message.Message
@@ -122,7 +123,7 @@ class GroupViewModel(
     private val _inviteCode = MutableLiveData<String?>()
     val inviteCode: LiveData<String?> = _inviteCode
 
-    var currentUserId: Int = -1
+    private var currentUserId: Int = -1
     private val pendingMessages = mutableListOf<Triple<String, Int, List<FileAttachment>>>()
 
     val messageFlow = MutableStateFlow<PagingData<Message>>(PagingData.empty())
@@ -137,6 +138,10 @@ class GroupViewModel(
     private val _favoriteIds = MutableStateFlow<Set<Int>>(emptySet())
     val favoriteIds: StateFlow<Set<Int>> = _favoriteIds
 
+    private var isPollsLoaded = false
+    private var isMessagesLoaded = false
+    private var isParticipantsLoaded = false
+
     init {
         viewModelScope.launch {
             getFavoritesUseCase().collect { result ->
@@ -145,11 +150,6 @@ class GroupViewModel(
                     _favoriteIds.value = ids.toSet()
                 }
             }
-        }
-    }
-
-    init {
-        viewModelScope.launch {
             selectedFiles.collect { files ->
                 if (files.isEmpty()) {
                     exitSelectionMode()
@@ -158,22 +158,31 @@ class GroupViewModel(
         }
     }
 
+    fun initChatSession(chatId: Int, userId: Int, context: Context) {
+        updateCurrentUserId(userId)
+        loadParticipants(chatId)
+        loadPagedMessages(chatId, context = context)
+        loadPolls(chatId)
+    }
+
     private fun updateChatItems() {
-        participants.value?.firstOrNull { it.isTeacher }
+        val teacher = participants.value?.firstOrNull { it.isTeacher }
+
         val allMessages = (_realtimeMessages.value + _messages.value)
             .distinctBy { it.id }
             .toMutableList()
 
         val pollMessages = _polls.value
+            .filter { it.timestampMillis > 0 }
             .filterNot { poll -> allMessages.any { it.pollData?.id == poll.id } }
             .map { poll ->
-                val creator = participants.value?.firstOrNull { it.isTeacher }
                 Message(
-                    id = Int.MAX_VALUE - poll.id,
+                    id = -poll.id,
                     text = null,
-                    sender = creator?.fullName ?: "Преподаватель",
+                    sender = teacher?.fullName ?: "Преподаватель",
                     timestamp = poll.createdAt,
-                    isMe = creator?.id == currentUserId,
+                    timestampMillis = poll.timestampMillis,
+                    isMe = teacher?.id == currentUserId,
                     pollData = poll,
                     files = emptyList()
                 )
@@ -182,7 +191,7 @@ class GroupViewModel(
         allMessages.addAll(pollMessages)
 
         val messageItems = allMessages
-            .sortedByDescending { parseTimestamp(it.timestamp) }
+            .sortedByDescending { it.timestampMillis }
             .map { ChatItem.MessageItem(it) }
 
         _chatItems.value = messageItems
@@ -191,15 +200,6 @@ class GroupViewModel(
     fun updateVisibleMessages(pagedMessages: List<Message>) {
         _messages.value = pagedMessages
         updateChatItems()
-    }
-
-    private fun parseTimestamp(timestamp: String): Long {
-        return try {
-            val format = SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
-            format.parse(timestamp)?.time ?: 0L
-        } catch (e: Exception) {
-            0L
-        }
     }
 
     fun toggleFileSelection(file: FileAttachment, context: Context) {
@@ -250,18 +250,27 @@ class GroupViewModel(
                 if (it.id == dto.id) it.copy(text = dto.text, isEdited = true) else it
             }
         }
+        updateChatItems()
     }
+
 
     fun deleteMessageLocally(messageId: Int) {
         _realtimeMessages.update { it.filterNot { msg -> msg.id == messageId } }
         _messages.update { it.filterNot { msg -> msg.id == messageId } }
+        updateChatItems()
     }
 
-    fun loadParticipants(chatId: Int) {
+    private fun loadParticipants(chatId: Int) {
+        if (isParticipantsLoaded) return
+        isParticipantsLoaded = true
         viewModelScope.launch {
             getChatParticipantsUseCase(chatId).collect { result ->
                 if (result is Resource.Success) {
                     _participants.value = result.data ?: emptyList()
+
+                    WebSocketController.register(chatId, this@GroupViewModel)
+                    WebSocketController.subscribeToChat(chatId)
+
                     val toDeliver = pendingMessages.toList()
                     pendingMessages.clear()
                     toDeliver.forEach { (text, userId, files) ->
@@ -272,8 +281,14 @@ class GroupViewModel(
         }
     }
 
-    fun updateCurrentUserId(id: Int) {
+    private fun updateCurrentUserId(id: Int) {
         currentUserId = id
+    }
+
+    fun resetChatSession() {
+        isPollsLoaded = false
+        isMessagesLoaded = false
+        isParticipantsLoaded = false
     }
 
     fun removeParticipant(chatId: Int, userId: Int) {
@@ -349,16 +364,19 @@ class GroupViewModel(
         _realtimeMessages.value = emptyList()
     }
 
-    fun loadPolls(chatId: Int) {
+    private fun loadPolls(chatId: Int) {
+        if (isPollsLoaded) return
+        isPollsLoaded = true
         viewModelScope.launch {
             getPollsUseCase(chatId).collect { result ->
                 when (result) {
                     is Resource.Success -> {
-                        _polls.value = result.data?.map { dto ->
+                        val updatedPolls = result.data?.map { dto ->
                             PollData(
                                 id = dto.id,
                                 question = dto.question,
                                 createdAt = formatTimestamp(dto.created_at),
+                                timestampMillis = parseIsoTimestampToMillis(dto.created_at),
                                 options = dto.options.map {
                                     PollData.Option(
                                         id = it.id,
@@ -368,14 +386,27 @@ class GroupViewModel(
                                 }
                             )
                         } ?: emptyList()
-                        updateChatItems()
+
+                        _polls.value = updatedPolls
+
+                        val teacher = participants.value?.firstOrNull { it.isTeacher } ?: return@collect
+
+                        updatedPolls.forEach { poll ->
+                            receiveMessage(
+                                text = "",
+                                sender = teacher.fullName,
+                                userId = teacher.id,
+                                files = emptyList(),
+                                pollData = poll
+                            )
+                        }
                     }
 
                     is Resource.Error -> {
                         Log.e("GroupVM", "Ошибка загрузки опросов: ${result.message}")
                     }
 
-                    else -> {}
+                    else -> Unit
                 }
             }
         }
@@ -443,30 +474,11 @@ class GroupViewModel(
         }
     }
 
-    fun loadPagedMessages(chatId: Int, query: String? = null, context: Context) {
+    private fun loadPagedMessages(chatId: Int, query: String? = null, context: Context) {
+        if (isMessagesLoaded) return
+        isMessagesLoaded = true
         viewModelScope.launch {
             _isMessagesLoaded.value = false
-
-            val polls = getPollsUseCase(chatId).mapNotNull { result ->
-                when (result) {
-                    is Resource.Success -> result.data?.map { dto ->
-                        PollData(
-                            id = dto.id,
-                            question = dto.question,
-                            createdAt = formatTimestamp(dto.created_at),
-                            options = dto.options.map {
-                                PollData.Option(it.id, it.text, it.votes)
-                            }
-                        )
-                    }
-
-                    else -> null
-                }
-            }
-
-            polls.collectLatest {
-                _polls.value = it
-            }
 
             messagePagingUseCase.getMessages(chatId, query)
                 .flow
@@ -480,12 +492,15 @@ class GroupViewModel(
     }
 
     private suspend fun enrichMessageFromDto(dto: MessageDto, context: Context): Message {
+        WebSocketController.mapMessageIdToChat(dto.id, dto.chat_id)
+
         val files = dto.files?.mapNotNull { file ->
             fetchFile(context, file.id, file.file_url)
         } ?: emptyList()
 
         return mapDtoToMessage(dto).copy(files = files)
     }
+
 
 
     fun replyToMessage(chatId: Int, parentId: Int, text: String, context: Context) {
@@ -574,11 +589,14 @@ class GroupViewModel(
     fun exitSearchMode(chatId: Int, context: Context) {
         _messages.value = emptyList()
         _realtimeMessages.value = emptyList()
+        isMessagesLoaded = false
+        _isMessagesLoaded.value = false
+
         viewModelScope.launch {
-            loadPagedMessages(chatId = chatId, context = context)
-            loadPolls(chatId)
+            loadPagedMessages(chatId = chatId, query = null, context = context)
         }
     }
+
 
     private fun formatTimestamp(date: Date): String {
         return try {
@@ -606,10 +624,29 @@ class GroupViewModel(
         return Uri.parse(cleaned)
     }
 
+    private fun parseIsoTimestampToMillis(isoString: String): Long {
+        return try {
+            val trimmed = isoString.substringBefore("Z")
+                .takeWhile { it != '.' } +
+                    "." + isoString.substringAfter(".", "000000").padEnd(6, '0').take(6) + "Z"
+
+            val inputFormat =
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+            inputFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = inputFormat.parse(trimmed)
+            date?.time ?: 0L
+        } catch (e: Exception) {
+            Log.e("TimeParse", "Error parsing $isoString: ${e.message}")
+            0L
+        }
+    }
+
     fun receiveMessageFromDto(dto: MessageDto, context: Context) {
         viewModelScope.launch {
+            WebSocketController.mapMessageIdToChat(dto.id, dto.chat_id)
             val usersMap = _participants.value.orEmpty().associateBy { it.id }
             val senderName = usersMap[dto.user_id]?.fullName ?: "Неизвестный"
+            val millis = parseIsoTimestampToMillis(dto.created_at)
 
             val files = dto.files?.mapNotNull { file ->
                 fetchFile(context, file.id, file.file_url)
@@ -631,6 +668,7 @@ class GroupViewModel(
                 text = dto.text,
                 sender = senderName,
                 timestamp = formatTimestamp(dto.created_at),
+                timestampMillis = millis,
                 isMe = dto.user_id == currentUserId,
                 files = files,
                 replyToMessageId = dto.parent_message_id,
@@ -683,7 +721,7 @@ class GroupViewModel(
 
         if (trimmedText.isBlank() && files.isEmpty()) return
 
-        val fileList = files.mapNotNull {
+        val fileList = files.map {
             FileUtil.getFileFromUri(context, it.uri)
         }
 
@@ -757,18 +795,32 @@ class GroupViewModel(
             return
         }
 
+        pollData?.let { poll ->
+            val alreadyExists = _polls.value.any { it.id == poll.id }
+            if (!alreadyExists) {
+                _polls.update { it + poll }
+            }
+        }
+        updateChatItems()
+
         val previousMessage = _messages.value.firstOrNull()
         val newMessage = Message(
-            id = (_messages.value.maxOfOrNull { it.id } ?: 0) + 1,
+            id = (_messages.value.filter { it.id > 0 }.maxOfOrNull { it.id } ?: 0) + 1,
             text = text,
             sender = resolvedName,
-            timestamp = formatTimestamp(Date()),
+            timestamp = pollData?.createdAt ?: formatTimestamp(Date()),
+            timestampMillis = pollData?.timestampMillis ?: System.currentTimeMillis(),
             isMe = userId == currentUserId,
             files = files,
             pollData = pollData,
             showSenderName = previousMessage?.sender != resolvedName
         )
-        _messages.value = listOf(newMessage) + _messages.value
+
+        _realtimeMessages.update { list ->
+            if (list.any { it.id == newMessage.id }) list else listOf(newMessage) + list
+        }
+
+        updateChatItems()
         Log.d("receiveMessage", "Displayed: $resolvedName -> $text")
     }
 
@@ -781,16 +833,33 @@ class GroupViewModel(
     }
 
     fun attachFile(uri: Uri, context: Context) {
-        val fileName = getFileName(uri, context)
-        val fileSize = getFileSize(uri, context)
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        var sizeInBytes = 0L
 
-        val newFile = FileAttachment(
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
+                sizeInBytes = if (sizeIndex >= 0) it.getLong(sizeIndex) else 0L
+                if (sizeInBytes > 10 * 1024 * 1024) {
+                    Toast.makeText(context, "Файл превышает 10МБ", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+        }
+
+        val fileName = getFileName(uri, context) ?: "Без имени"
+        val fileSize = formatFileSize(sizeInBytes)
+
+        val attachment = FileAttachment(
             id = null,
             uri = uri,
-            fileName = fileName ?: "Файл",
-            fileSize = fileSize ?: "0 Б"
+            fileName = fileName,
+            fileSize = fileSize
         )
-        _attachedFiles.value = _attachedFiles.value.orEmpty() + newFile
+
+        val currentList = _attachedFiles.value.orEmpty()
+        _attachedFiles.value = currentList + attachment
     }
 
     fun removeFile(file: FileAttachment) {
@@ -822,7 +891,7 @@ class GroupViewModel(
         }
     }
 
-    fun voteInPoll(chatId: Int, pollId: Int, optionId: Int) {
+    fun voteInPoll(chatId: Int, pollId: Int, optionId: Int, context: Context) {
         viewModelScope.launch {
             votePollUseCase(chatId, pollId, optionId).collect { result ->
                 when (result) {
@@ -842,11 +911,43 @@ class GroupViewModel(
                                 } else poll
                             }
                         }
+
+                        val updatedPoll = _polls.value.firstOrNull { it.id == pollId }
+                        updatedPoll?.let { poll ->
+                            _messages.update { list ->
+                                list.map { msg ->
+                                    if (msg.pollData?.id == pollId) msg.copy(pollData = poll) else msg
+                                }
+                            }
+
+                            _realtimeMessages.update { list ->
+                                list.map { msg ->
+                                    if (msg.pollData?.id == pollId) msg.copy(pollData = poll) else msg
+                                }
+                            }
+                        }
+
                         updateChatItems()
                     }
 
                     is Resource.Error -> {
                         Log.e("GroupVM", "Ошибка голосования: ${result.message}")
+
+                        val shownText = when {
+                            result.message?.contains("уже проголосовали", ignoreCase = true) == true -> {
+                                "Вы уже проголосовали в этом опросе"
+                            }
+
+                            result.message?.contains("cannot vote", ignoreCase = true) == true -> {
+                                "Вы уже голосовали"
+                            }
+
+                            else -> {
+                                result.message ?: "Ошибка голосования"
+                            }
+                        }
+
+                        Toast.makeText(context, shownText, Toast.LENGTH_SHORT).show()
                     }
 
                     else -> Unit
@@ -887,10 +988,37 @@ class GroupViewModel(
     fun unvotePoll(chatId: Int, pollId: Int, optionId: Int) {
         viewModelScope.launch {
             unvotePollUseCase(chatId, pollId, optionId).collect { result ->
-                when (result) {
-                    is Resource.Success -> loadPolls(chatId)
-                    is Resource.Error -> Log.e("GroupVM", "Ошибка отмены голоса: ${result.message}")
-                    else -> {}
+                if (result is Resource.Success) {
+                    _polls.update { polls ->
+                        polls.map { poll ->
+                            if (poll.id == pollId && poll.selectedOption == optionId) {
+                                val updatedOptions = poll.options.map { opt ->
+                                    if (opt.id == optionId) opt.copy(votes = opt.votes - 1)
+                                    else opt
+                                }
+                                poll.copy(options = updatedOptions, selectedOption = null)
+                            } else poll
+                        }
+                    }
+
+                    val updatedPoll = _polls.value.firstOrNull { it.id == pollId }
+                    if (updatedPoll != null) {
+                        _messages.update { list ->
+                            list.map { msg ->
+                                if (msg.pollData?.id == pollId) msg.copy(pollData = updatedPoll) else msg
+                            }
+                        }
+
+                        _realtimeMessages.update { list ->
+                            list.map { msg ->
+                                if (msg.pollData?.id == pollId) msg.copy(pollData = updatedPoll) else msg
+                            }
+                        }
+                    }
+
+                    updateChatItems()
+                } else if (result is Resource.Error) {
+                    Log.e("GroupVM", "Ошибка отмены голоса: ${result.message}")
                 }
             }
         }
@@ -937,19 +1065,16 @@ class GroupViewModel(
         }
     }
 
-
     fun removePollLocally(pollId: Int) {
+        Log.d("PollDebug", "Удаляем опрос $pollId локально")
         _polls.update { it.filterNot { poll -> poll.id == pollId } }
+
+        _messages.update { it.filterNot { msg -> msg.pollData?.id == pollId } }
+        _realtimeMessages.update { it.filterNot { msg -> msg.pollData?.id == pollId } }
+
+        updateChatItems()
     }
 
-    private fun getFileSize(uri: Uri, context: Context): String? {
-        return context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            cursor.moveToFirst()
-            cursor.getColumnIndex(OpenableColumns.SIZE).let {
-                if (it != -1) formatFileSize(cursor.getLong(it)) else null
-            }
-        }
-    }
 
     private fun formatFileSize(sizeBytes: Long): String {
         return when {
@@ -1034,6 +1159,8 @@ class GroupViewModel(
             ?.firstOrNull { it.id == dto.user_id }
             ?.fullName ?: "Неизвестный"
 
+        val millis = parseIsoTimestampToMillis(dto.created_at)
+
         val pollData = poll ?: dto.poll?.let {
             PollData(
                 id = it.id,
@@ -1054,6 +1181,7 @@ class GroupViewModel(
             text = dto.text,
             sender = senderName,
             timestamp = formatTimestamp(dto.created_at),
+            timestampMillis = millis,
             isMe = dto.user_id == currentUserId,
             files = dto.files?.map {
                 FileAttachment(

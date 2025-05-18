@@ -17,8 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.viewModels.onboarding.OnboardingViewModel
 import com.example.edusync.presentation.views.onboarding.onboardingIndicator.OnboardingIndicator
@@ -44,20 +45,20 @@ fun OnboardingPagerScreen() {
             when (page) {
                 0 -> OnboardingScreen(
                     image = R.drawable.onboarding_screen1,
-                    title = "Просмотр и изменение расписания",
-                    description = "Возможность просматривать и отмечать отдельные пары как особенные"
+                    title = stringResource(R.string.onboarding_title_schedule),
+                    description = stringResource(R.string.onboarding_desc_schedule)
                 )
 
                 1 -> OnboardingScreen(
                     image = R.drawable.onboarding_screen2,
-                    title = "Общайтесь с преподавателем",
-                    description = "Теперь можно общаться с преподавателем прямо в приложении"
+                    title = stringResource(R.string.onboarding_title_chat),
+                    description = stringResource(R.string.onboarding_desc_chat)
                 )
 
                 2 -> OnboardingScreen(
                     image = R.drawable.onboarding_screen3,
-                    title = "Все файлы в одном месте",
-                    description = "Все важные файлы будут храниться в одном месте"
+                    title = stringResource(R.string.onboarding_title_files),
+                    description = stringResource(R.string.onboarding_desc_files)
                 )
             }
         }
@@ -87,9 +88,8 @@ fun OnboardingPagerScreen() {
                 ),
                 shape = RoundedCornerShape(100.dp),
             ) {
-                Text(text = "Далее", color = AppColors.Background)
+                Text(text = stringResource(R.string.next), color = AppColors.Background)
             }
         }
     }
-
 }

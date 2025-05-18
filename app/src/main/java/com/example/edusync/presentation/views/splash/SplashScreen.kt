@@ -14,10 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.data.local.EncryptedSharedPreference
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -56,7 +57,7 @@ fun SplashScreen() {
                 tint = AppColors.Primary
             )
             Text(
-                text = "Edu Sync",
+                text = stringResource(R.string.app_name),
                 style = AppTypography.body1,
                 textAlign = TextAlign.Center,
                 color = AppColors.Secondary,

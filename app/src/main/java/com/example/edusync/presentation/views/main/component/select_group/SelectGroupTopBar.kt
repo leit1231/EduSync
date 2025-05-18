@@ -18,10 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
@@ -78,7 +79,7 @@ fun SelectGroupTopBar(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Группа",
+                        text = stringResource(R.string.group),
                         style = AppTypography.body1.copy(fontSize = 16.sp),
                         color = AppColors.Secondary,
                         textAlign = TextAlign.Center
@@ -127,7 +128,7 @@ fun SelectGroupTopBar(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Преподаватель",
+                        text = stringResource(R.string.teacher),
                         style = AppTypography.body1.copy(fontSize = 16.sp),
                         color = AppColors.Secondary,
                         textAlign = TextAlign.Center

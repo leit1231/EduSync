@@ -21,10 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.common.Constants
 import com.example.edusync.common.LoadingState
 import com.example.edusync.data.local.SelectedScheduleStorage
@@ -97,7 +98,7 @@ fun MainScreen(
                             Log.d("MainScreen", "teacherInitialsList: $teacherInitialsList")
 
                             val generated = viewModel.generateTeacherInitials(user.fullName)
-                                .replace("\\s+".toRegex(), " ")  // ← нормализуем
+                                .replace("\\s+".toRegex(), " ")
                                 .trim()
 
                             teacherInitialsList.forEach {
@@ -141,7 +142,7 @@ fun MainScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Расписание",
+                text = stringResource(R.string.schedule),
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary,
                 textAlign = TextAlign.Center,
@@ -185,7 +186,7 @@ fun MainScreen(
         } else ""
 
         Text(
-            text = if (isAllScheduleVisible) periodText else "Пары на неделю",
+            text = if (isAllScheduleVisible) periodText else stringResource(R.string.schedule_of_week),
             style = AppTypography.body1.copy(fontSize = 16.sp),
             color = AppColors.Secondary,
             textAlign = TextAlign.Center,

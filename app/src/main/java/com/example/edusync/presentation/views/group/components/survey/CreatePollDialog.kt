@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -28,12 +29,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -52,7 +54,8 @@ fun CreatePollDialog(
         properties = DialogProperties(
             dismissOnBackPress = true,
             dismissOnClickOutside = true,
-            usePlatformDefaultWidth = false
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
         )
     ) {
         Box(
@@ -60,6 +63,7 @@ fun CreatePollDialog(
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
                 .clickable { onDismiss() }
+                .imePadding()
         ) {
             Column(
                 modifier = Modifier
@@ -82,7 +86,7 @@ fun CreatePollDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Создать опрос",
+                        text = stringResource(R.string.create_poll),
                         fontWeight = FontWeight.Medium,
                         color = AppColors.Secondary,
                         style = AppTypography.title.copy(fontSize = 24.sp)
@@ -94,9 +98,9 @@ fun CreatePollDialog(
                     GenericTextField(
                         value = question,
                         onValueChange = { question = it },
-                        label = "Вопрос",
+                        label = stringResource(R.string.question),
                         isError = question.isBlank() && options.any { it.isNotBlank() },
-                        errorMessage = "Введите вопрос",
+                        errorMessage = stringResource(R.string.question_error),
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 1
                     )
@@ -112,9 +116,9 @@ fun CreatePollDialog(
                             GenericTextField(
                                 value = text,
                                 onValueChange = { options[index] = it },
-                                label = "Вариант ${index + 1}",
+                                label = stringResource(R.string.answer_option_label, index + 1),
                                 isError = text.isBlank() && question.isNotBlank(),
-                                errorMessage = "Введите вариант ответа",
+                                errorMessage = stringResource(R.string.answer_option_error),
                             )
 
                             IconButton(
@@ -123,7 +127,7 @@ fun CreatePollDialog(
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.ic_close),
-                                    contentDescription = "Удалить вариант"
+                                    contentDescription = stringResource(R.string.remove_option)
                                 )
                             }
                         }
@@ -139,7 +143,7 @@ fun CreatePollDialog(
                             contentColor = AppColors.Primary
                         )
                     ) {
-                        Text("Добавить вариант")
+                        Text(stringResource(R.string.add_variant))
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -158,7 +162,7 @@ fun CreatePollDialog(
                         enabled = isValid
                     ) {
                         Text(
-                            text = "Создать опрос",
+                            text = stringResource(R.string.create_poll),
                             style = AppTypography.body1.copy(fontSize = 14.sp)
                         )
                     }

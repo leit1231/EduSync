@@ -9,9 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
 
@@ -29,8 +30,7 @@ fun EmptyFavoritesScreen() {
             tint = AppColors.Secondary
         )
         Text(
-            text = "У вас пока нет избранных файлов,\n" +
-                    " нажмите на файл и кликните на знак избранного",
+            text = stringResource(id = R.string.no_favorites_hint),
             textAlign = TextAlign.Center,
             style = AppTypography.body1.copy(fontSize = 16.sp),
             color = AppColors.Secondary

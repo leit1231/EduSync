@@ -25,7 +25,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.eduHub.edusync.R
 import com.example.edusync.domain.model.message.Message
 import com.example.edusync.presentation.components.modal_window.DeleteMessageWindow
 import com.example.edusync.presentation.theme.ui.AppColors
@@ -63,6 +65,7 @@ fun ChatBubble(
     allMessages: List<Message>,
     isTeacher: Boolean
 ) {
+    val focusManager = LocalFocusManager.current
     var expanded by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val bubbleColor = if (message.isMe) AppColors.Background else AppColors.ChatColor
@@ -100,6 +103,9 @@ fun ChatBubble(
             .padding(8.dp)
             .combinedClickable(
                 onClick = {
+                    if (!expanded && !isInSelectionMode) {
+                        focusManager.clearFocus(force = false)
+                    }
                     if (isInSelectionMode) {
                         message.files.forEach { viewModel.toggleFileSelection(it, context) }
                     } else {
@@ -175,14 +181,19 @@ fun ChatBubble(
                             it.files.isNotEmpty() -> {
                                 val imageCount = it.files.count { it.isImage() }
                                 if (imageCount > 0) {
+                                    val text = if (imageCount == 1) {
+                                        stringResource(R.string.single_photo)
+                                    } else {
+                                        stringResource(R.string.multiple_photos, imageCount)
+                                    }
                                     Text(
-                                        text = if (imageCount == 1) "Фотография" else "Фотографии ($imageCount)",
+                                        text = text,
                                         color = AppColors.Secondary.copy(alpha = 0.7f),
                                         style = AppTypography.body1.copy(fontSize = 12.sp)
                                     )
                                 } else {
                                     Text(
-                                        text = "Файл: ${it.files.first().fileName}",
+                                        text = stringResource(R.string.file_label, it.files.first().fileName),
                                         color = AppColors.Secondary.copy(alpha = 0.7f),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
@@ -211,7 +222,7 @@ fun ChatBubble(
                         selected = answers.find { it.id == poll.selectedOption },
                         onClick = { selectedAnswer ->
                             if (poll.selectedOption == null) {
-                                viewModel.voteInPoll(chatId, poll.id, selectedAnswer.id)
+                                viewModel.voteInPoll(chatId, poll.id, selectedAnswer.id, context)
                             }
                         }
                     )
@@ -262,7 +273,7 @@ fun ChatBubble(
                 ) {
                     if (hasVoted) {
                         DropdownMenuItem(
-                            text = { Text("Отменить голос") },
+                            text = { Text(stringResource(R.string.unvote)) },
                             onClick = {
                                 expanded = false
                                 val selectedOption = message.pollData.selectedOption
@@ -276,7 +287,7 @@ fun ChatBubble(
                     }
                     if (isTeacher) {
                         DropdownMenuItem(
-                            text = { Text("Удалить опрос") },
+                            text = { Text(stringResource(R.string.delete_poll)) },
                             onClick = {
                                 expanded = false
                                 viewModel.deletePoll(chatId, message.pollData.id)
@@ -293,25 +304,24 @@ fun ChatBubble(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Ответить") },
+                        text = { Text(stringResource(R.string.answer), style = AppTypography.body1) },
                         onClick = {
                             expanded = false
                             viewModel.setReplyMessage(message)
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Копировать", style = AppTypography.body1) },
+                        text = { Text(stringResource(R.string.copy), style = AppTypography.body1) },
                         onClick = {
                             expanded = false
                             message.text?.let {
                                 clipboardManager.setText(AnnotatedString(it))
-                                Toast.makeText(context, "Текст скопирован", Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
                     if (message.isMe) {
                         DropdownMenuItem(
-                            text = { Text("Изменить", style = AppTypography.body1) },
+                            text = { Text(stringResource(R.string.change), style = AppTypography.body1) },
                             onClick = {
                                 expanded = false
                                 viewModel.startEditing(message.id, allMessages)
@@ -320,7 +330,7 @@ fun ChatBubble(
                     }
                     if (isTeacher || message.isMe) {
                         DropdownMenuItem(
-                            text = { Text("Удалить", style = AppTypography.body1) },
+                            text = { Text(stringResource(R.string.delete), style = AppTypography.body1) },
                             onClick = {
                                 expanded = false
                                 messageToDelete = message.id

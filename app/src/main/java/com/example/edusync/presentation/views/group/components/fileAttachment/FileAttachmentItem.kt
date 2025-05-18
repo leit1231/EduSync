@@ -23,14 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.domain.model.message.FileAttachment
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.viewModels.group.GroupViewModel

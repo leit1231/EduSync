@@ -26,10 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.common.Constants
 import com.example.edusync.presentation.components.custom_text_field.dropdownMenu.CustomDropdownMenu
 import com.example.edusync.presentation.components.custom_text_field.generic_text_field.GenericTextField
@@ -56,7 +57,7 @@ fun ProfileScreen() {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Профиль",
+                text = stringResource(R.string.profile),
                 modifier = Modifier.offset(x = 16.dp),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
@@ -80,7 +81,7 @@ fun ProfileScreen() {
         GenericTextField(
             value = uiState.surname,
             onValueChange = viewModel::onSurnameChange,
-            label = "Фамилия"
+            label = stringResource(R.string.first_name)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -88,7 +89,7 @@ fun ProfileScreen() {
         GenericTextField(
             value = uiState.name,
             onValueChange = viewModel::onNameChange,
-            label = "Имя"
+            label = stringResource(R.string.last_name)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -96,13 +97,13 @@ fun ProfileScreen() {
         GenericTextField(
             value = uiState.patronymic,
             onValueChange = viewModel::onPatronymicChange,
-            label = "Отчество"
+            label = stringResource(R.string.middle_name)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         CustomDropdownMenu(
-            label = "Выберите ваше учебное заведение",
+            label = stringResource(R.string.select_your_education),
             options = uiState.availableUniversities,
             selectedOption = uiState.selectedUniversity,
             onOptionSelected = viewModel::onUniversitySelected,
@@ -115,7 +116,7 @@ fun ProfileScreen() {
 
         if (!isTeacher) {
             CustomDropdownMenu(
-                label = "Выберите вашу группу",
+                label = stringResource(R.string.select_your_group),
                 options = uiState.availableGroups,
                 selectedOption = uiState.selectedGroup,
                 onOptionSelected = viewModel::onGroupSelected,
@@ -128,7 +129,7 @@ fun ProfileScreen() {
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { viewModel.saveChanges()},
+            onClick = { viewModel.saveChanges() },
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (uiState.isSaveEnabled) AppColors.Primary else AppColors.SecondaryTransparent
             ),
@@ -136,7 +137,7 @@ fun ProfileScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Сохранить",
+                text = stringResource(R.string.save),
                 style = AppTypography.body1.copy(fontSize = 14.sp),
             )
         }
@@ -157,7 +158,7 @@ fun ProfileScreen() {
                 .height(40.dp)
         ) {
             Text(
-                text = "Выйти из аккаунта",
+                text = stringResource(R.string.logout),
                 color = AppColors.Secondary,
                 style = AppTypography.body1.copy(fontSize = 14.sp),
                 maxLines = 1

@@ -36,14 +36,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.data.local.SelectedScheduleStorage
 import com.example.edusync.presentation.components.modal_window.CreateEditPairDialog
-import com.example.edusync.presentation.components.modal_window.CreateReminder
 import com.example.edusync.presentation.viewModels.mainScreen.MainScreenViewModel
 import com.example.edusync.domain.model.schedule.PairItem
 import com.example.edusync.domain.model.schedule.Schedule
+import com.example.edusync.presentation.components.modal_window.CreateReminderOverlay
 import com.example.edusync.presentation.views.main.component.dateItem.DateItem
 import com.example.edusync.presentation.views.main.component.pair.PairItem
 import kotlinx.coroutines.delay
@@ -66,6 +67,10 @@ fun ScheduleLayout(
     val selectedPair = viewModel.selectedPair.collectAsState().value
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    var showReminder by remember { mutableStateOf(false) }
+    var reminderText by remember { mutableStateOf("") }
+    var pairForReminder by remember { mutableStateOf<PairItem?>(null) }
 
     val state by viewModel.state.collectAsState()
     val user = viewModel.getUser()
@@ -83,6 +88,16 @@ fun ScheduleLayout(
     val userTeacherId = viewModel.getTeacherId()
     val myGroup = remember(user?.groupId) {
         mutableStateOf<String?>(null)
+    }
+    var renderReminderDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(showReminder) {
+        if (showReminder) {
+            delay(50)
+            renderReminderDialog = true
+        } else {
+            renderReminderDialog = false
+        }
     }
 
     LaunchedEffect(user?.groupId) {
@@ -111,9 +126,11 @@ fun ScheduleLayout(
                         }
                     ) {
                         val popUpExpanded = remember { mutableStateOf(false) }
-                        Box(modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        ) {
                             DateItem(
                                 day = data.days[page],
                                 onClick = { popUpExpanded.value = true },
@@ -162,9 +179,6 @@ fun ScheduleLayout(
                 }
 
                 items(data.days[page].pairs) { pair ->
-                    var showReminder by remember { mutableStateOf(false) }
-                    var currentReminderText by remember { mutableStateOf("") }
-
                     PairItem(
                         pair = pair,
                         isEditMode = isEditMode,
@@ -176,20 +190,13 @@ fun ScheduleLayout(
                         },
                         onDeleteClick = onDeleteClick,
                         onReminderClick = {
-                            currentReminderText = pair.pairInfo.firstOrNull()?.warn.orEmpty()
+                            focusManager.clearFocus(force = true)
+                            reminderText = pair.pairInfo.firstOrNull()?.warn.orEmpty()
+                            pairForReminder = pair
                             showReminder = true
                         },
                         isTeacherSchedule = isTeacherSchedule
                     )
-
-                    if (showReminder) {
-                        CreateReminder(
-                            pair = pair,
-                            initialText = currentReminderText,
-                            onDismiss = { showReminder = false },
-                            onSave = { p, text -> viewModel.saveReminder(p, text) }
-                        )
-                    }
                 }
             }
         }
@@ -230,6 +237,20 @@ fun ScheduleLayout(
             )
         }
 
+        if (showReminder && pairForReminder != null) {
+            CreateReminderOverlay(
+                pair = pairForReminder!!,
+                initialText = reminderText,
+                onSave = { p, text ->
+                    viewModel.saveReminder(p, text)
+                },
+                onRequestClose = {
+                    showReminder = false
+                    pairForReminder = null
+                }
+            )
+        }
+
         if (isEditMode) {
             FloatingActionButton(
                 onClick = {
@@ -244,7 +265,7 @@ fun ScheduleLayout(
                     .padding(16.dp)
             ) {
                 Icon(
-                    Icons.Default.Add,
+                    imageVector = Icons.Default.Add,
                     contentDescription = "Добавить пару",
                     tint = AppColors.Background
                 )

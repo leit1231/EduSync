@@ -3,7 +3,6 @@ package com.example.edusync.presentation.viewModels.aboutApp
 import android.app.Application
 import android.content.pm.PackageManager
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.edusync.presentation.navigation.Navigator
 import kotlinx.coroutines.flow.MutableStateFlow

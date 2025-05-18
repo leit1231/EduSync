@@ -20,10 +20,11 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 
 @Composable
 fun ShowGroupDropdownMenu(
@@ -43,10 +44,16 @@ fun ShowGroupDropdownMenu(
     var anchorPosition by remember { mutableStateOf(Offset.Zero) }
     val density = LocalDensity.current
 
+    val searchMaterialText = stringResource(R.string.search_material)
+    val addStudentText = stringResource(R.string.add_student)
+    val createPollText = stringResource(R.string.create_poll)
+    val deleteGroupText = stringResource(R.string.delete_group)
+    val exitGroupText = stringResource(R.string.exit_group)
+
     val menuItems = remember(notificationsEnabled.value) {
         mutableListOf<MenuItemData>().apply {
             add(MenuItemData(
-                text = "Поиск материалов",
+                text = searchMaterialText,
                 iconRes = R.drawable.ic_search,
                 onClick = {
                     onSearchMaterialsClick()
@@ -63,7 +70,7 @@ fun ShowGroupDropdownMenu(
 //            ))
             if (isTeacher) {
                 add(MenuItemData(
-                    text = "Добавить студента",
+                    text = addStudentText,
                     iconRes = R.drawable.ic_add_person,
                     onClick = {
                         onAddStudentClick()
@@ -71,7 +78,7 @@ fun ShowGroupDropdownMenu(
                     }
                 ))
                 add(MenuItemData(
-                    text = "Создать опрос",
+                    text = createPollText,
                     iconRes = R.drawable.ic_check,
                     onClick = {
                         onCreatePollClick()
@@ -87,7 +94,7 @@ fun ShowGroupDropdownMenu(
 //                    }
 //                ))
                 add(MenuItemData(
-                    text = "Удалить группу",
+                    text = deleteGroupText,
                     iconRes = R.drawable.ic_delete,
                     onClick = {
                         onDeleteExitGroupClick()
@@ -96,7 +103,7 @@ fun ShowGroupDropdownMenu(
                 ))
             } else {
                 add(MenuItemData(
-                    text = "Выйти из группы",
+                    text = exitGroupText,
                     iconRes = R.drawable.ic_exit,
                     onClick = {
                         onDeleteExitGroupClick()

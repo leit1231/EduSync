@@ -22,10 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.components.custom_text_field.password_text_field.PasswordTextField
 import com.example.edusync.presentation.theme.ui.AppColors
 import com.example.edusync.presentation.theme.ui.AppTypography
@@ -54,7 +55,7 @@ fun ChangePasswordAfterForgotScreen(viewModel: ChangePasswordAfterForgotViewMode
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Сменить пароль",
+                text = stringResource(R.string.change_password),
                 textAlign = TextAlign.Center,
                 style = AppTypography.title.copy(fontSize = 24.sp),
                 color = AppColors.Secondary
@@ -67,13 +68,21 @@ fun ChangePasswordAfterForgotScreen(viewModel: ChangePasswordAfterForgotViewMode
         PasswordTextField(
             value = uiState.newPassword,
             onValueChange = { viewModel.onNewPasswordChanged(it) },
-            label = "Новый пароль",
+            label = stringResource(R.string.new_password),
             isError = uiState.passwordError.isNotEmpty(),
             errorMessage = uiState.passwordError
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
+        if (uiState.generalError.isNotEmpty()) {
+            Text(
+                text = uiState.generalError,
+                color = AppColors.Error,
+                style = AppTypography.body1.copy(fontSize = 14.sp),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
         Button(
             onClick = {
                 viewModel.goToLogin()
@@ -86,7 +95,7 @@ fun ChangePasswordAfterForgotScreen(viewModel: ChangePasswordAfterForgotViewMode
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Сохранить",
+                text = stringResource(R.string.save),
                 style = AppTypography.body1.copy(fontSize = 14.sp),
             )
         }

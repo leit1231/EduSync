@@ -22,8 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.edusync.R
+import ru.eduHub.edusync.R
 import com.example.edusync.presentation.theme.ui.AppColors
 
 @Composable
@@ -38,7 +39,7 @@ fun RoleSelectionButtons(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         RoleButton(
-            text = "Студент",
+            text = stringResource(R.string.student),
             isSelected = !selected,
             onClick = onStudentClick,
             icon = painterResource(R.drawable.ic_person),
@@ -47,7 +48,7 @@ fun RoleSelectionButtons(
                 .height(50.dp)
         )
         RoleButton(
-            text = "Преподаватель",
+            text = stringResource(R.string.teacher),
             isSelected = selected,
             onClick = onTeacherClick,
             icon = painterResource(R.drawable.ic_teacher),
